@@ -21,3 +21,10 @@ agent-browser | command -v agent-browser >/dev/null 2>&1 | npm install -g agent-
 uv            | command -v uv >/dev/null 2>&1 || [ -x "$HOME/.local/bin/uv" ] | curl -LsSf https://astral.sh/uv/install.sh \| sh | python,core | 빠른 Python 패키지/도구 관리자 (Astral). leann 등 Python CLI 설치에 사용
 leann         | command -v leann >/dev/null 2>&1 || [ -x "$HOME/.local/bin/leann" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install leann-core --with leann | rag,search,python | 저장공간 97% 절감 로컬 벡터 DB. 코드/문서/메일을 시맨틱 검색·RAG (StarTrail-org/LEANN)
 leann-mcp     | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q leann-server | if command -v claude >/dev/null 2>&1; then export PATH="$HOME/.local/bin:$PATH"; claude mcp add --scope user leann-server -- leann_mcp; else echo "skip: claude CLI not installed"; fi | rag,search,mcp | LEANN 을 Claude Code MCP 서버(leann-server)로 등록. 코드베이스 시맨틱 검색을 에이전트가 직접 사용
+
+# --- 문서 변환 -------------------------------------------------------------------
+markitdown    | command -v markitdown >/dev/null 2>&1 || [ -x "$HOME/.local/bin/markitdown" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install 'markitdown[all]' | docs,python | PDF/Word/PPT/Excel/HTML 등을 Markdown 으로 변환하는 CLI (Microsoft)
+
+# --- MCP 서버 (Claude Code) ---------------------------------------------------------
+context7-mcp  | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^context7' | if command -v claude >/dev/null 2>&1; then claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp; else echo "skip: claude CLI not installed"; fi | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7)
+playwright-mcp | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^playwright' | if command -v claude >/dev/null 2>&1; then claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest; else echo "skip: claude CLI not installed"; fi | mcp,browser | 에이전트가 실제 브라우저를 조작·검증하는 MCP (Microsoft Playwright)

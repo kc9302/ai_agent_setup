@@ -42,12 +42,16 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 
 | 저장소 | 설치 스킬 | 태그 | 설명 |
 |---|---|---|---|
-| [anthropics/skills](https://github.com/anthropics/skills) | docx, pdf, pptx, xlsx, skill-creator, webapp-testing | official, docs | Anthropic 공식 문서 생성·스킬 제작·웹앱 테스트 |
+| [anthropics/skills](https://github.com/anthropics/skills) | docx, pdf, pptx, xlsx, doc-coauthoring, mcp-builder, frontend-design, theme-factory, canvas-design, web-artifacts-builder, skill-creator, webapp-testing | official, docs, design | Anthropic 공식: 문서 생성·공동 작성, MCP 제작, 디자인, 테스트 |
 | [obra/superpowers](https://github.com/obra/superpowers) | 전체 | methodology | TDD·브레인스토밍·계획 등 개발 방법론 프레임워크 |
 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | 전체 | methodology | 프로덕션급 엔지니어링 스킬 (spec-driven, debugging, review …) |
 | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 전체 | behavior | LLM 코딩 함정을 피하는 행동 규칙 |
+| [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | 전체 | methodology | 최소주의 코딩 강제 (YAGNI, stdlib 우선). review/audit 포함 |
 | [tt-a1i/archify](https://github.com/tt-a1i/archify) | 전체 | diagram | 설명·코드 → 인터랙티브 아키텍처 다이어그램(HTML) |
+| [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 전체 (7) | design | UI/UX 디자인 DB, design-system, ui-styling, banner-design, slides(HTML 발표) |
 | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | react-best-practices, web-design-guidelines, composition-patterns, writing-guidelines | frontend | React·웹 디자인·작문 가이드라인 |
+| [blader/humanizer](https://github.com/blader/humanizer) | 전체 | writing | AI 말투 26개 패턴 제거 (영어) |
+| [huggingface/skills](https://github.com/huggingface/skills) | hf-cli, llm-trainer, datasets, papers, gradio, trackio, local-models, community-evals, spaces | ml | Hugging Face 공식 ML 스킬 |
 
 현재 별 수 보기: `bash scripts/stars.sh` · 각 스킬 상세 설명: [`CATALOG.md`](CATALOG.md)
 
@@ -60,6 +64,9 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 | [uv](https://github.com/astral-sh/uv) | `curl … astral.sh/uv/install.sh \| sh` | Python 패키지/도구 관리자. LEANN 의 전제 조건 |
 | [LEANN](https://github.com/StarTrail-org/LEANN) | `uv tool install leann-core --with leann` | 저장공간 97% 절감 로컬 벡터 DB. 코드·문서 시맨틱 검색/RAG |
 | leann-mcp | `claude mcp add … leann_mcp` | LEANN 을 Claude Code MCP 서버로 등록 (claude CLI 없으면 건너뜀) |
+| [markitdown](https://github.com/microsoft/markitdown) | `uv tool install 'markitdown[all]'` | PDF/Word/PPT/Excel → Markdown 변환 CLI |
+| [context7-mcp](https://github.com/upstash/context7) | `claude mcp add … @upstash/context7-mcp` | 라이브러리 최신 공식 문서 MCP |
+| [playwright-mcp](https://github.com/microsoft/playwright-mcp) | `claude mcp add … @playwright/mcp` | 브라우저 조작 MCP |
 
 각 항목이 **무엇이고 왜 넣었는지**, 설치 후 사용법은 [`CATALOG.md`](CATALOG.md) 에 정리되어 있습니다.
 

@@ -14,13 +14,21 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # --- 공식 / 기반 스킬 --------------------------------------------------------
-anthropics/skills                   | docx,pdf,pptx,xlsx,skill-creator,webapp-testing | official,docs,core | Anthropic 공식 스킬. 문서 생성(docx/pdf/pptx/xlsx), 스킬 제작, 웹앱 테스트
+anthropics/skills                   | docx,pdf,pptx,xlsx,skill-creator,webapp-testing,doc-coauthoring,mcp-builder,frontend-design,theme-factory,canvas-design,web-artifacts-builder | official,docs,design,core | Anthropic 공식 스킬. 문서 생성(docx/pdf/pptx/xlsx)·공동 문서 작성, MCP 서버 제작, 프론트엔드/테마/캔버스 디자인, 웹 아티팩트, 스킬 제작, 웹앱 테스트
 obra/superpowers                    | * | methodology,core     | TDD·브레인스토밍·계획 등 개발 방법론 스킬 프레임워크
 addyosmani/agent-skills             | * | methodology,core     | Addy Osmani 의 프로덕션급 엔지니어링 스킬 모음 (spec-driven, debugging, code-review 등)
 forrestchang/andrej-karpathy-skills | * | behavior,core        | Karpathy 가 지적한 LLM 코딩 함정을 피하도록 하는 행동 규칙 스킬
+DietrichGebert/ponytail             | * | methodology,core     | "가장 게으른 동작하는 해법" 강제. stdlib·내장 기능 우선, 과잉 설계 방지. review/audit/debt 스킬 포함
 
 # --- 시각화 / 다이어그램 ------------------------------------------------------
 tt-a1i/archify                      | * | diagram,visual       | 설명·코드를 인터랙티브 아키텍처/시퀀스/데이터플로우 다이어그램(HTML)으로 변환
 
-# --- 프론트엔드 / 웹 ----------------------------------------------------------
+# --- 디자인 / 프론트엔드 / 웹 --------------------------------------------------
+nextlevelbuilder/ui-ux-pro-max-skill | * | design,frontend     | UI/UX 디자인 인텔리전스 (ui-ux-pro-max) + design-system, ui-styling, banner-design, slides(HTML 발표자료), brand, design
 vercel-labs/agent-skills            | react-best-practices,web-design-guidelines,composition-patterns,writing-guidelines | frontend,web | Vercel 의 React/웹 디자인/작문 가이드라인 스킬
+
+# --- 글쓰기 ---------------------------------------------------------------------
+blader/humanizer                    | * | writing              | AI 특유의 말투(not X but Y, 강조 마무리, 억지 3단 나열 등 26개 패턴)를 제거해 사람이 쓴 글처럼 고침 (영어)
+
+# --- ML / Hugging Face ------------------------------------------------------------
+huggingface/skills                  | hf-cli,huggingface-llm-trainer,huggingface-datasets,huggingface-papers,huggingface-gradio,huggingface-trackio,huggingface-local-models,huggingface-community-evals,huggingface-spaces | ml | Hugging Face 공식 스킬. Hub CLI, TRL 학습, 데이터셋, 논문, Gradio, 실험 추적, 로컬 모델, 평가, Spaces 배포
