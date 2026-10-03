@@ -50,6 +50,19 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **왜**: 에이전트가 만드는 UI 가 "AI 가 만든 티" 나지 않게 하는 데이터 기반 가이드. 프론트엔드·마케팅 자산 양쪽을 덮는다.
 - **사용 예**: "이 랜딩 페이지 디자인 리뷰해줘", "SaaS 대시보드용 컬러/폰트 추천", "발표자료 slides 로 만들어줘".
 
+### mattpocock/skills — 설계 검증·인수인계 (선별 4개)
+- **무엇**: Matt Pocock 의 스킬 37개 중 superpowers·addyosmani 와 겹치지 않는 4개만. `grill-me`(질문을 집요하게 던져 설계의 빈틈을 드러냄), `handoff`(세션을 다음 세션/사람에게 넘길 요약 작성), `to-spec`(대화를 스펙 문서로 정리), `writing-for-agents`(스킬·AGENTS.md·CLAUDE.md 를 에이전트가 잘 읽게 쓰는 법).
+- **왜**: 방법론은 superpowers, 체크리스트는 addyosmani 가 이미 담당. 이쪽은 "대화 → 스펙", "세션 간 인계" 의 빈 곳을 채운다.
+- **제외한 것**: `tdd`, `diagnosing-bugs`, `code-review` 등은 기존 스킬과 중복. `git-guardrails-claude-code` 는 확인 시점에 저장소에 없었다.
+
+### cathrynlavery/diagram-design — 편집 디자인 다이어그램
+- **무엇**: 아키텍처·플로우차트·시퀀스·ER·타임라인·간트·Sankey·Wardley map·org chart 등 42종을 HTML/SVG/PNG 로 생성. 웹사이트를 분석해 브랜드 색상·폰트를 반영하고, draw.io·Mermaid·Excalidraw 파일을 가져와 다시 그린다.
+- **archify 와의 차이**: archify 는 "스키마 검증되는 구조도 + 경로 추적 애니메이션", 이쪽은 "발표·문서에 넣을 보기 좋은 그림". 용도가 달라 둘 다 둔다.
+
+### Leonxlnx/taste-skill — 반(反) AI 슬롭 프론트엔드 (1개만)
+- **무엇**: 13개 스킬 중 기본 `design-taste-frontend` 만. 브리프를 읽고 디자인 방향을 추론한 뒤, 템플릿 같지 않은 UI 를 만들고 사전 점검(pre-flight)을 거친다. 리디자인 시에는 먼저 감사한다.
+- **왜 1개**: ui-ux-pro-max, frontend-design 과 취향이 겹쳐서 하나만 얹는다. `redesign-existing-projects`, `minimalist-ui`, `brandkit` 등은 필요할 때 skills.list 에 이름 추가.
+
 ### vercel-labs/agent-skills — React / 웹 가이드라인
 - **무엇**: Vercel 이 만든 프론트엔드 스킬. `react-best-practices`(성능·구조 규칙), `web-design-guidelines`(접근성·UX 점검), `composition-patterns`(컴포넌트 합성), `writing-guidelines`(기술 문서 작문).
 - **왜**: React/Next.js 프로젝트에서 에이전트가 생성하는 코드 품질을 끌어올린다.
@@ -123,3 +136,39 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **무엇**: 에이전트가 실제 브라우저(Chromium 등) 를 열고 접근성 트리 기반으로 클릭·입력·탐색·스크린샷을 수행하는 MCP 서버. 스크린샷 대신 구조화된 스냅샷을 쓰므로 비전 모델 없이도 동작.
 - **왜**: 웹앱 E2E 검증, 폼 테스트, 스크래핑을 에이전트가 직접 수행. CLI 인 `agent-browser` 와 역할이 겹치며, MCP 를 쓰는 에이전트는 이쪽, 셸 중심이면 agent-browser.
 - **설치**: `claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest` (claude CLI 없으면 건너뜀).
+
+### graphify — 코드·문서 지식 그래프
+- **저장소**: https://github.com/Graphify-Labs/graphify
+- **무엇**: tree-sitter 로 코드를 로컬 파싱해 import·호출·상속 관계를 **지식 그래프**로 만든다. 벡터 DB 가 필요 없다. 결과물은 `graph.html`(인터랙티브), `GRAPH_REPORT.md`(핵심 요약), `graph.json`(질의용).
+- **LEANN·archify 와의 차이**: LEANN 은 의미 기반 검색, archify 는 사람이 설명한 구조의 시각화, graphify 는 **실제 코드에서 관계를 추출해 질의**한다. "인증은 DB 와 어떻게 연결되나" 같은 질문에 강하다.
+- **설치**: `uv tool install graphifyy` (PyPI 이름은 y 가 두 개) 후 `graphify install` 로 `/graphify` 스킬 등록 (tools.list 가 둘 다 수행).
+- **사용 예**: `/graphify .`, `/graphify query "what connects auth to the database?"`, `/graphify path "UserService" "DatabasePool"`.
+
+### llmfit — 내 하드웨어에 맞는 로컬 LLM 추천
+- **저장소**: https://github.com/AlexsJones/llmfit
+- **무엇**: CPU·RAM·GPU/VRAM 을 감지해 돌릴 수 있는 오픈 LLM 을 양자화별 성능 추정과 함께 순위로 보여준다. TUI, `--json` 출력, HTTP API 지원.
+- **사용 예**: `llmfit`, `llmfit recommend --json`. huggingface-local-models 스킬과 함께 쓰면 "모델 고르기 → GGUF 실행" 이 이어진다.
+
+### kordoc — 한국 문서(HWP/HWPX) 변환
+- **저장소**: https://github.com/chrisryugj/kordoc
+- **무엇**: HWP 3.x/5.x, HWPX, HWPML, PDF, XLS/XLSX, DOCX, PPTX, 이미지(OCR 자동) 를 Markdown·구조화 데이터·RAG 청크로 변환. 양식 채우기와 MCP 서버도 지원.
+- **왜**: markitdown 은 HWP 를 못 읽는다. 한국 공공·기업 문서에는 필수.
+- **설치 범위**: CLI 만 (`npm install -g kordoc`). MCP 연결은 `npx -y kordoc setup` 또는 플러그인(`/plugin marketplace add chrisryugj/kordoc`)으로 필요할 때 따로.
+- **사용 예**: `kordoc 문서.hwpx -o 문서.md`, `kordoc *.pdf --jobs 4 -d ./결과`.
+
+### officecli — Office 파일 읽기·편집 CLI
+- **저장소**: https://github.com/iOfficeAI/OfficeCLI
+- **무엇**: Word·Excel·PowerPoint 를 에이전트가 CLI 로 읽고 고치고 만든다. 렌더링 엔진, 수식 평가, 템플릿 병합 내장. `officecli mcp <agent>` 로 MCP 서버로도 쓸 수 있다.
+- **왜**: 내장 docx/xlsx/pptx 스킬을 보완. **기존 파일 편집 품질은 실제 비교가 필요**하다. 중복이라 판단되면 tools.list 에서 제거.
+
+---
+
+## 검토 후 보류한 후보
+
+| 프로젝트 | 보류 이유 |
+|---|---|
+| firecrawl/anydoc | markitdown 과 같은 용도. 속도·품질 비교 후 하나만 쓸 것. `npx @firecrawl/anydoc 파일` 로 즉시 시험 가능 |
+| alibaba/open-code-review | 내장 `/code-review` 와 중복. 별도 LLM provider 설정(`ocr config provider`)이 필요 |
+| StarTrail-org/PixelRAG | 스크린샷 기반 RAG. 저장소는 production-ready 라고 설명하지만 LEANN 과 역할이 겹쳐 필요할 때 추가. Claude Code 플러그인 `pixelbrowse` 제공 |
+| MakazhanAlpamys/Soup | 이 PC 에 GPU 가 없어 검증 불가. 저장소는 RTX 3050 4GB 에서 8B 측정치와 논문을 제시하지만, 같은 문서의 최소 요구사양은 7B QLoRA 에 8GB VRAM 이라 서로 어긋난다 |
+| jordan-gibbs/hyperresearch | 16단계 파이프라인과 인용 검증이 강점이지만 여러 외부 API 키가 필요하고 내장 deep-research 와 비교가 필요. 키 준비 후 `pip install hyperresearch && hyperresearch install` |
