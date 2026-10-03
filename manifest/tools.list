@@ -18,9 +18,9 @@ skills-cli    | npx -y skills --version >/dev/null 2>&1 | npm install -g skills 
 agent-browser | command -v agent-browser >/dev/null 2>&1 | npm install -g agent-browser     | browser   | AI 에이전트용 브라우저 자동화 CLI (Vercel Labs)
 
 # --- Python / RAG ---------------------------------------------------------------
-uv            | command -v uv >/dev/null 2>&1 || [ -x "$HOME/.local/bin/uv" ] | curl -LsSf https://astral.sh/uv/install.sh \| sh | python,core | 빠른 Python 패키지/도구 관리자 (Astral). leann 등 Python CLI 설치에 사용
+uv            | command -v uv >/dev/null 2>&1 || [ -x "$HOME/.local/bin/uv" ] | set -o pipefail; curl -LsSf https://astral.sh/uv/install.sh \| sh \|\| python3 -m pip install --user --break-system-packages uv | python,core | 빠른 Python 패키지/도구 관리자 (Astral). 공식 설치 스크립트가 막히면 pip 로 폴백. leann·markitdown 설치에 사용
 leann         | command -v leann >/dev/null 2>&1 || [ -x "$HOME/.local/bin/leann" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install leann-core --with leann | rag,search,python | 저장공간 97% 절감 로컬 벡터 DB. 코드/문서/메일을 시맨틱 검색·RAG (StarTrail-org/LEANN)
-leann-mcp     | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q leann-server | if command -v claude >/dev/null 2>&1; then export PATH="$HOME/.local/bin:$PATH"; claude mcp add --scope user leann-server -- leann_mcp; else echo "skip: claude CLI not installed"; fi | rag,search,mcp | LEANN 을 Claude Code MCP 서버(leann-server)로 등록. 코드베이스 시맨틱 검색을 에이전트가 직접 사용
+leann-mcp     | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q leann-server | export PATH="$HOME/.local/bin:$PATH"; if ! command -v claude >/dev/null 2>&1; then echo "skip: claude CLI not installed"; elif ! command -v leann_mcp >/dev/null 2>&1; then echo "error: leann_mcp not found (leann install failed?)" >&2; exit 1; else claude mcp add --scope user leann-server -- leann_mcp; fi | rag,search,mcp | LEANN 을 Claude Code MCP 서버(leann-server)로 등록. leann 이 설치된 경우에만 등록. 코드베이스 시맨틱 검색을 에이전트가 직접 사용
 
 # --- 문서 변환 -------------------------------------------------------------------
 markitdown    | command -v markitdown >/dev/null 2>&1 || [ -x "$HOME/.local/bin/markitdown" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install 'markitdown[all]' | docs,python | PDF/Word/PPT/Excel/HTML 등을 Markdown 으로 변환하는 CLI (Microsoft)
