@@ -37,3 +37,8 @@ huggingface/skills                  | hf-cli,huggingface-llm-trainer,huggingface
 mattpocock/skills                   | grill-me,handoff,to-spec,writing-for-agents | methodology,productivity | Matt Pocock 스킬 중 superpowers 와 안 겹치는 것만: 집요한 질문으로 설계 검증(grill-me), 세션 인수인계(handoff), 스펙 작성(to-spec), 에이전트용 문서 작성법(writing-for-agents)
 cathrynlavery/diagram-design        | * | diagram,visual           | 편집 디자인 품질의 다이어그램 42종 (HTML/SVG/PNG). draw.io/Mermaid/Excalidraw 가져오기, 브랜드 색상 반영
 Leonxlnx/taste-skill                | design-taste-frontend | design,frontend      | 뻔한 AI식 UI 를 피하는 프론트엔드 디자인 스킬. 13개 중 기본 1개만 (ui-ux-pro-max 와 겹치지 않게)
+
+# --- 보안 / 컨텍스트 엔지니어링 / LLM 평가 ----------------------------------------
+trailofbits/skills                  | differential-review,sharp-edges,property-based-testing,semgrep-rule-creator | security,review,testing | Trail of Bits 보안 스킬 중 범용 4개: 변경분 보안 리뷰, 위험한 API/설정 탐지, 속성 기반 테스트, Semgrep 룰 작성 (블록체인·퍼징 전용은 제외)
+muratcankoylan/Agent-Skills-for-Context-Engineering | context-fundamentals,context-degradation,context-compression,context-optimization,multi-agent-patterns,memory-systems,tool-design,filesystem-context,evaluation | context,agents,methodology,full-depth | 컨텍스트 엔지니어링 선별 9개: 컨텍스트 윈도우 원리·열화 진단·압축·최적화, 멀티 에이전트 패턴, 메모리, 도구 설계, 파일 기반 컨텍스트, 에이전트 평가
+hamelsmu/evals-skills               | * | ml,evals                 | Hamel Husain 의 LLM 평가 스킬 7개: 오류 분석, 합성 데이터, 심판 프롬프트 작성·검증, RAG 평가, 리뷰 UI, 평가 감사

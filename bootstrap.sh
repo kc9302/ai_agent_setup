@@ -110,6 +110,8 @@ if [ "$DO_SKILLS" = 1 ]; then
     cmd=(npx -y skills add "$src" -y)
     [ -n "$SCOPE_FLAG" ] && cmd+=("$SCOPE_FLAG")
     for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do cmd+=(-a "$(trim "$a")"); done
+    # 저장소 루트에 SKILL.md 가 있으면 CLI 가 하위 스킬을 못 찾는다. 태그 full-depth 로 하위 디렉터리까지 탐색.
+    has_tag "$tags" full-depth && cmd+=(--full-depth)
     if [ "$skills" = "*" ]; then
       cmd+=(--skill '*')
     else

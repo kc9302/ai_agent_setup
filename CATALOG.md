@@ -78,6 +78,26 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **왜**: ML 작업을 에이전트에게 맡길 때 Hub 생태계 전반을 정확한 명령으로 다루게 한다.
 - **미포함**: SageMaker 계열(`hf-cloud-*`), `huggingface-vision-trainer`, `transformers-js`, `trl-training` 등. 필요 시 `manifest/skills.list` 에 추가.
 
+### trailofbits/skills — 보안 리뷰·테스트 (선별 4개)
+- **무엇**: 보안 감사 회사 Trail of Bits 의 스킬 85개 중 범용 4개. `differential-review`(변경분 보안 리뷰: 코드 규모에 맞춰 분석 깊이를 조절하고 git blame 으로 맥락을 보며 영향 범위를 계산), `sharp-edges`(오용하기 쉬운 API·위험한 설정·footgun 설계 탐지), `property-based-testing`(Hypothesis·fast-check·proptest 등으로 속성 기반 테스트 작성·점검), `semgrep-rule-creator`(Semgrep 커스텀 룰 작성).
+- **왜**: 내장 `/security-review` 와 `security-and-hardening` 이 일반 점검이라면, 이쪽은 "변경분 중심 리뷰"와 "API 설계 단계의 오용 방지"를 따로 다룬다. 4개 모두 마크다운 문서와 템플릿뿐이고 스크립트는 없다.
+- **미포함**: 블록체인 감사(`building-secure-contracts`), 퍼징(`testing-handbook-skills`), C/Rust 전용 리뷰 등 특수 목적 다수. `modern-python` 은 세션 시작 시 pip/python 명령을 가로채는 hook 을 함께 제공해서 제외. `second-opinion`, `code-improver` 는 외부 CLI 를 호출하므로 제외.
+- **라이선스**: CC BY-SA 4.0. 설치해서 쓰는 것은 자유롭지만, 내용을 이 저장소에 복사해 넣지는 않는다.
+- **사용 예**: "이 PR 을 differential-review 로 봐줘", "이 설정 스키마에서 sharp-edges 찾아줘".
+
+### muratcankoylan/Agent-Skills-for-Context-Engineering — 컨텍스트 엔지니어링 (선별 9개)
+- **무엇**: 컨텍스트 윈도우를 다루는 이론과 실무를 스킬로 묶은 저장소(MIT)에서 9개. `context-fundamentals`(컨텍스트 구조·어텐션), `context-degradation`(lost-in-middle·오염·충돌 진단), `context-compression`(요약·압축·인수인계), `context-optimization`(예산·KV 캐시·토큰 절감), `multi-agent-patterns`(컨텍스트 격리·감독자/스웜·핸드오프), `memory-systems`(세션 간 기억·엔티티 추적), `tool-design`(에이전트가 고르기 쉬운 도구 설명·스키마), `filesystem-context`(파일 기반 스크래치패드·도구 출력 오프로딩), `evaluation`(에이전트 평가·회귀 스위트·품질 게이트).
+- **왜**: 긴 세션에서 품질이 떨어지는 원인을 진단하고, 서브에이전트·MCP 도구를 설계할 때 근거로 삼을 수 있다. addyosmani 의 `context-engineering` 이 "프로젝트에 규칙 파일 세팅하기"라면 이쪽은 "컨텍스트가 왜 열화되고 어떻게 줄이는가"에 가깝다.
+- **설치 주의**: 저장소 루트에 `SKILL.md` 가 있어 CLI 가 기본으로는 하위 스킬을 찾지 못한다. 그래서 `skills.list` 태그에 `full-depth` 를 두었고, `bootstrap.sh` 가 이 태그가 있는 항목에만 `--full-depth` 를 붙인다.
+- **스크립트**: 스킬마다 파이썬 데모 스크립트가 있다. 점검 결과 표준 라이브러리 위주(일부 `tiktoken`, `numpy`)이고 네트워크·프로세스 실행·환경 변수 접근은 없다. `filesystem_context.py` 의 `rmtree` 는 데모 실행 시 현재 폴더의 `demo_scratch` 만 지운다. 에이전트가 자동 실행하지는 않는다.
+- **미포함**: `advanced-evaluation`, `bdi-mental-states`, `harness-engineering`, `hosted-agents`, `latent-briefing`, `long-horizon-prompting`, `project-development`, `self-improvement-loops`, `self-managed-context` 와 `examples/`. 필요 시 추가.
+- **사용 예**: "이 세션 컨텍스트가 왜 흐려졌는지 context-degradation 으로 진단해줘".
+
+### hamelsmu/evals-skills — LLM 평가 (7개 전체)
+- **무엇**: Hamel Husain(MIT) 의 LLM 파이프라인 평가 스킬. `error-analysis`(트레이스를 읽고 실패 유형 분류), `generate-synthetic-data`(차원 조합으로 다양한 테스트 입력 생성), `write-judge-prompt`(LLM-as-Judge 설계), `validate-evaluator`(사람 라벨로 심판의 TPR/TNR 보정), `evaluate-rag`(검색·생성 품질 평가), `build-review-interface`(트레이스 주석용 브라우저 UI), `eval-audit`(기존 평가 체계의 허점 점검).
+- **왜**: `huggingface-community-evals` 가 모델 벤치마크 실행이라면 이쪽은 "내 LLM 앱을 어떻게 평가할까"의 방법론이다. 마크다운만 있고 스크립트는 없다.
+- **사용 예**: "우리 RAG 챗봇 평가 체계를 eval-audit 으로 점검해줘".
+
 ---
 
 ## 도구 (오픈소스 CLI / MCP 서버)
@@ -179,3 +199,6 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | alibaba/open-code-review | 내장 `/code-review` 와 중복. 별도 LLM provider 설정(`ocr config provider`)이 필요 |
 | StarTrail-org/PixelRAG | 스크린샷 기반 RAG. 저장소는 production-ready 라고 설명하지만 LEANN 과 역할이 겹쳐 필요할 때 추가. Claude Code 플러그인 `pixelbrowse` 제공 |
 | MakazhanAlpamys/Soup | 이 PC 에 GPU 가 없어 검증 불가. 저장소는 RTX 3050 4GB 에서 8B 측정치와 논문을 제시하지만, 같은 문서의 최소 요구사양은 7B QLoRA 에 8GB VRAM 이라 서로 어긋난다 |
+| mvanhorn/last30days-skill | 스킬 1개에 스크립트가 359개이고 Reddit·X 등 외부 서비스를 직접 수집한다. API 키와 수집 범위를 검토한 뒤 필요할 때 추가 |
+| OthmanAdi/planning-with-files | 같은 스킬이 에이전트별 폴더와 번역본까지 18벌 들어 있는 구조라 `--skill` 이름이 모호하다. 내장 계획 기능과 `writing-plans` 와도 겹침 |
+| Lum1104/Understand-Anything | 코드베이스 지식 그래프라 `graphify` 와 역할이 같다. 하나만 쓸 것 |
