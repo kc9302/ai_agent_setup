@@ -98,6 +98,23 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **왜**: `huggingface-community-evals` 가 모델 벤치마크 실행이라면 이쪽은 "내 LLM 앱을 어떻게 평가할까"의 방법론이다. 마크다운만 있고 스크립트는 없다.
 - **사용 예**: "우리 RAG 챗봇 평가 체계를 eval-audit 으로 점검해줘".
 
+### addyosmani/web-quality-skills — 웹 품질 (6개 전체)
+- **무엇**: Lighthouse 관점의 웹 품질 스킬(MIT). `accessibility`(WCAG 2.2 점검·개선), `core-web-vitals`(LCP·INP·CLS 를 필드/랩 증거로 개선), `performance`(로딩 속도), `seo`(메타 태그·구조화 데이터·사이트맵), `best-practices`(보안·호환성·코드 품질), `web-quality-audit`(위 다섯 가지와 에이전트 브라우징까지 묶은 증거 기반 통합 감사). 통합 감사에는 HTML 소스를 `grep` 으로 훑는 읽기 전용 `analyze.sh` 가 딸려 있다.
+- **왜**: 같은 저자의 `performance-optimization` 이 백엔드·DB 까지 다루는 범용 스킬이라면, 이쪽은 웹 페이지의 접근성·SEO·Core Web Vitals 를 직접 다룬다. 접근성과 SEO 는 기존 목록에 없던 영역.
+- **사용 예**: "이 사이트 web-quality-audit 으로 감사해줘", "LCP 가 느린 원인 찾아줘".
+
+### cloudflare/security-audit-skill — 코드베이스 보안 감사
+- **무엇**: Cloudflare 가 공개한 보안 감사 스킬 1개(MIT). 정찰 → 공격 유형별 탐색(웹·인증, 프로토콜·RPC, 클라이언트, 클라우드·배포, 공급망, 메모리 안전, 데이터 격리, 자원 고갈, AI·LLM 등 영역별 체크리스트) → 검증 → `findings.json` 보고서 순으로 진행한다. 보고서를 스키마로 검사하는 `validate-findings.cjs`, 점검 범위를 기록하는 `validate-coverage-ledger.cjs` 가 함께 설치된다.
+- **왜**: `security-review`(변경분 점검), Trail of Bits 스킬(변경분 리뷰·API 오용 탐지) 과 달리 **저장소 전체**를 체계적으로 훑고 확정/검증 필요/기각을 구분해 보고하는 절차를 제공한다.
+- **스크립트**: 두 검증 스크립트는 Node 내장 모듈(`fs`, `path`, `util`)만 쓰고 네트워크·프로세스 실행·환경 변수 접근이 없다. 인자로 받은 파일이 일반 파일이 아니면 거부한다. 에이전트가 자동 실행하는 것은 아니고, 스킬 지침에 따라 보고서를 검증할 때 쓴다.
+- **사용 예**: "이 저장소 security-audit 으로 감사하고 findings.json 으로 정리해줘".
+
+### emilkowalski/skills — UI 마감·모션 (선별 5개)
+- **무엇**: Emil Kowalski(MIT) 의 스킬 14개 중 웹 프론트엔드용 5개. `emil-design-eng`(UI 마감·컴포넌트·애니메이션 판단의 철학), `animate`(애니메이션 필요성·목적·도구 순서로 설계), `review-animations`(모션 코드를 높은 기준으로 리뷰), `break-ui`(긴 이름·빈 데이터·거대한 숫자 등 최악의 데이터로 UI 를 깨보기), `animation-vocabulary`("팝오버 열릴 때 통통 튀는 그거" → 정확한 용어).
+- **왜**: `ui-ux-pro-max`, `taste-skill` 이 방향과 시스템을 잡는 쪽이라면 이쪽은 모션과 디테일 마감을 다룬다. 스크립트는 없고 외부 명령 실행 지시도 없다.
+- **미포함**: `write-swift`, `animate-expo`, `mobile-native`(모바일 전용), `ask-sonner`, `pick-ui-library`(특정 라이브러리), `prototype`, `apple-design`, `find-animation-opportunities`, `improve-animations`. 필요 시 추가.
+- **사용 예**: "이 모달 애니메이션 review-animations 로 봐줘", "이 카드 목록 break-ui 로 깨봐줘".
+
 ---
 
 ## 도구 (오픈소스 CLI / MCP 서버)
@@ -202,3 +219,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | mvanhorn/last30days-skill | 스킬 1개에 스크립트가 359개이고 Reddit·X 등 외부 서비스를 직접 수집한다. API 키와 수집 범위를 검토한 뒤 필요할 때 추가 |
 | OthmanAdi/planning-with-files | 같은 스킬이 에이전트별 폴더와 번역본까지 18벌 들어 있는 구조라 `--skill` 이름이 모호하다. 내장 계획 기능과 `writing-plans` 와도 겹침 |
 | Lum1104/Understand-Anything | 코드베이스 지식 그래프라 `graphify` 와 역할이 같다. 하나만 쓸 것 |
+| JuliusBrussee/caveman | 에이전트 응답을 극단적으로 줄이는 스킬. 28개 스킬에 코드 파일 500여 개와 hook 이 있어 검토 범위가 크다. 쓰고 싶은 스킬만 골라 점검한 뒤 추가 |
+| zarazhangrui/codebase-to-course | 코드베이스를 HTML 강의로 바꿔 주지만 LICENSE 파일이 없다. 라이선스 확인 후 추가 |
+| sanyuan0704/code-review-expert | 내장 `/code-review`, `code-review-and-quality` 와 겹친다. SOLID 체크리스트가 필요할 때만 `code-review-expert` 1개 추가 |
+| Orchestra-Research/AI-research-SKILLs | ML 연구 스킬 98개(RAG, 분산 학습, 멀티모달 등)로 범위가 너무 넓다. 필요한 분야(예: `11-evaluation`, `15-rag`)만 골라 추가 |
