@@ -72,6 +72,7 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 | [llmfit](https://github.com/AlexsJones/llmfit) | `uv tool install llmfit` | 내 하드웨어에 맞는 로컬 LLM 추천 |
 | [kordoc](https://github.com/chrisryugj/kordoc) | `npm i -g kordoc` | HWP/HWPX/PDF/Office → Markdown |
 | [officecli](https://github.com/iOfficeAI/OfficeCLI) | `npm i -g @officecli/officecli` | Word/Excel/PPT 읽기·편집 CLI |
+| [hyperresearch](https://github.com/jordan-gibbs/hyperresearch) | `uv tool install hyperresearch` + `hyperresearch install --global` | 딥 리서치 에이전트 (인용 검증, 지식 볼트). API 키는 선택 |
 | [context7-mcp](https://github.com/upstash/context7) | `claude mcp add … @upstash/context7-mcp` | 라이브러리 최신 공식 문서 MCP |
 | [playwright-mcp](https://github.com/microsoft/playwright-mcp) | `claude mcp add … @playwright/mcp` | 브라우저 조작 MCP |
 
