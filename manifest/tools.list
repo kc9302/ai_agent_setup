@@ -14,7 +14,7 @@
 # 셸 파이프(|)를 쓰려면 '\|' 로 이스케이프. '||' 는 구분자로 취급하지 않으므로 그대로 사용.
 # ─────────────────────────────────────────────────────────────────────────────
 
-skills-cli    | npx -y skills --version >/dev/null 2>&1 | npm install -g skills            | core      | Agent Skills 설치 CLI (skills.sh). bootstrap 이 스킬 설치에 사용
+skills-cli    | command -v skills >/dev/null 2>&1 | npm install -g skills            | core      | Agent Skills 설치 CLI (skills.sh). bootstrap 이 스킬 설치에 사용
 agent-browser | command -v agent-browser >/dev/null 2>&1 | npm install -g agent-browser     | browser   | AI 에이전트용 브라우저 자동화 CLI (Vercel Labs)
 
 # --- Python / RAG ---------------------------------------------------------------
@@ -26,8 +26,8 @@ leann-mcp     | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null
 markitdown    | command -v markitdown >/dev/null 2>&1 || [ -x "$HOME/.local/bin/markitdown" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install 'markitdown[all]' | docs,python | PDF/Word/PPT/Excel/HTML 등을 Markdown 으로 변환하는 CLI (Microsoft)
 
 # --- MCP 서버 (Claude Code) ---------------------------------------------------------
-context7-mcp  | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^context7' | if command -v claude >/dev/null 2>&1; then claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp; else echo "skip: claude CLI not installed"; fi | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7)
-playwright-mcp | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^playwright' | if command -v claude >/dev/null 2>&1; then claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest; else echo "skip: claude CLI not installed"; fi | mcp,browser | 에이전트가 실제 브라우저를 조작·검증하는 MCP (Microsoft Playwright)
+context7-mcp  | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^context7' | if command -v claude >/dev/null 2>&1; then timeout 180 npx -y @upstash/context7-mcp </dev/null >/dev/null 2>&1 \|\| true; claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp; else echo "skip: claude CLI not installed"; fi | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7)
+playwright-mcp | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^playwright' | if command -v claude >/dev/null 2>&1; then timeout 180 npx -y @playwright/mcp@latest --version </dev/null >/dev/null 2>&1 \|\| true; claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest; else echo "skip: claude CLI not installed"; fi | mcp,browser | 에이전트가 실제 브라우저를 조작·검증하는 MCP (Microsoft Playwright)
 
 # --- 코드 이해 / 문서 / ML --------------------------------------------------------
 graphify      | command -v graphify >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/graphify" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install graphifyy && graphify install | code,graph,python | 코드·문서를 질의 가능한 지식 그래프로 변환 (tree-sitter, 벡터 DB 불필요). graphify install 로 /graphify 스킬 등록 (PyPI 패키지명은 graphifyy)
