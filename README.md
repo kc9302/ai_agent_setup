@@ -51,6 +51,9 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 전체 (7) | design | UI/UX 디자인 DB, design-system, ui-styling, banner-design, slides(HTML 발표) |
 | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | react-best-practices, web-design-guidelines, composition-patterns, writing-guidelines | frontend | React·웹 디자인·작문 가이드라인 |
 | [blader/humanizer](https://github.com/blader/humanizer) | 전체 | writing | AI 말투 26개 패턴 제거 (영어) |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | grill-me, handoff, to-spec, writing-for-agents | methodology | 설계 검증·세션 인수인계·스펙 작성 (겹치지 않는 4개만) |
+| [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | 전체 | diagram | 편집 디자인 다이어그램 42종 |
+| [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | design-taste-frontend | design | 반(反) AI 슬롭 프론트엔드 |
 | [huggingface/skills](https://github.com/huggingface/skills) | hf-cli, llm-trainer, datasets, papers, gradio, trackio, local-models, community-evals, spaces | ml | Hugging Face 공식 ML 스킬 |
 
 현재 별 수 보기: `bash scripts/stars.sh` · 각 스킬 상세 설명: [`CATALOG.md`](CATALOG.md)
@@ -65,6 +68,10 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 | [LEANN](https://github.com/StarTrail-org/LEANN) | `uv tool install leann-core --with leann` | 저장공간 97% 절감 로컬 벡터 DB. 코드·문서 시맨틱 검색/RAG |
 | leann-mcp | `claude mcp add … leann_mcp` | LEANN 을 Claude Code MCP 서버로 등록 (claude CLI 없으면 건너뜀) |
 | [markitdown](https://github.com/microsoft/markitdown) | `uv tool install 'markitdown[all]'` | PDF/Word/PPT/Excel → Markdown 변환 CLI |
+| [graphify](https://github.com/Graphify-Labs/graphify) | `uv tool install graphifyy` | 코드·문서 → 지식 그래프, `/graphify` 스킬 |
+| [llmfit](https://github.com/AlexsJones/llmfit) | `uv tool install llmfit` | 내 하드웨어에 맞는 로컬 LLM 추천 |
+| [kordoc](https://github.com/chrisryugj/kordoc) | `npm i -g kordoc` | HWP/HWPX/PDF/Office → Markdown |
+| [officecli](https://github.com/iOfficeAI/OfficeCLI) | `npm i -g @officecli/officecli` | Word/Excel/PPT 읽기·편집 CLI |
 | [context7-mcp](https://github.com/upstash/context7) | `claude mcp add … @upstash/context7-mcp` | 라이브러리 최신 공식 문서 MCP |
 | [playwright-mcp](https://github.com/microsoft/playwright-mcp) | `claude mcp add … @playwright/mcp` | 브라우저 조작 MCP |
 

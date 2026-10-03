@@ -32,3 +32,8 @@ blader/humanizer                    | * | writing              | AI 특유의 �
 
 # --- ML / Hugging Face ------------------------------------------------------------
 huggingface/skills                  | hf-cli,huggingface-llm-trainer,huggingface-datasets,huggingface-papers,huggingface-gradio,huggingface-trackio,huggingface-local-models,huggingface-community-evals,huggingface-spaces | ml | Hugging Face 공식 스킬. Hub CLI, TRL 학습, 데이터셋, 논문, Gradio, 실험 추적, 로컬 모델, 평가, Spaces 배포
+
+# --- 워크플로우 / 디자인 추가분 ---------------------------------------------------
+mattpocock/skills                   | grill-me,handoff,to-spec,writing-for-agents | methodology,productivity | Matt Pocock 스킬 중 superpowers 와 안 겹치는 것만: 집요한 질문으로 설계 검증(grill-me), 세션 인수인계(handoff), 스펙 작성(to-spec), 에이전트용 문서 작성법(writing-for-agents)
+cathrynlavery/diagram-design        | * | diagram,visual           | 편집 디자인 품질의 다이어그램 42종 (HTML/SVG/PNG). draw.io/Mermaid/Excalidraw 가져오기, 브랜드 색상 반영
+Leonxlnx/taste-skill                | design-taste-frontend | design,frontend      | 뻔한 AI식 UI 를 피하는 프론트엔드 디자인 스킬. 13개 중 기본 1개만 (ui-ux-pro-max 와 겹치지 않게)

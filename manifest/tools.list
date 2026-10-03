@@ -28,3 +28,9 @@ markitdown    | command -v markitdown >/dev/null 2>&1 || [ -x "$HOME/.local/bin/
 # --- MCP 서버 (Claude Code) ---------------------------------------------------------
 context7-mcp  | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^context7' | if command -v claude >/dev/null 2>&1; then claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp; else echo "skip: claude CLI not installed"; fi | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7)
 playwright-mcp | command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null \| grep -q '^playwright' | if command -v claude >/dev/null 2>&1; then claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest; else echo "skip: claude CLI not installed"; fi | mcp,browser | 에이전트가 실제 브라우저를 조작·검증하는 MCP (Microsoft Playwright)
+
+# --- 코드 이해 / 문서 / ML --------------------------------------------------------
+graphify      | command -v graphify >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/graphify" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install graphifyy && graphify install | code,graph,python | 코드·문서를 질의 가능한 지식 그래프로 변환 (tree-sitter, 벡터 DB 불필요). graphify install 로 /graphify 스킬 등록 (PyPI 패키지명은 graphifyy)
+llmfit        | command -v llmfit >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/llmfit" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install -U llmfit | ml,local-llm,python | 내 하드웨어(CPU/RAM/GPU)에서 돌아가는 오픈 LLM 을 양자화별로 추천
+kordoc        | command -v kordoc >/dev/null 2>&1 | npm install -g kordoc | docs,korean | 한국 문서 HWP·HWPX·PDF·Office·이미지(OCR) 를 Markdown/JSON 으로 변환
+officecli     | command -v officecli >/dev/null 2>&1 | npm install -g @officecli/officecli | docs,office | AI 에이전트용 Word/Excel/PowerPoint 읽기·편집·자동화 CLI (내장 렌더링, 수식 계산)
