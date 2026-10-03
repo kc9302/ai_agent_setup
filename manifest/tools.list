@@ -34,3 +34,7 @@ graphify      | command -v graphify >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/
 llmfit        | command -v llmfit >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/llmfit" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install -U llmfit | ml,local-llm,python | 내 하드웨어(CPU/RAM/GPU)에서 돌아가는 오픈 LLM 을 양자화별로 추천
 kordoc        | command -v kordoc >/dev/null 2>&1 | npm install -g kordoc | docs,korean | 한국 문서 HWP·HWPX·PDF·Office·이미지(OCR) 를 Markdown/JSON 으로 변환
 officecli     | command -v officecli >/dev/null 2>&1 | npm install -g @officecli/officecli | docs,office | AI 에이전트용 Word/Excel/PowerPoint 읽기·편집·자동화 CLI (내장 렌더링, 수식 계산)
+
+# --- 리서치 -----------------------------------------------------------------------
+hyperresearch | [ -f "$HOME/.claude/skills/hyperresearch/SKILL.md" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install hyperresearch && hyperresearch install --global | research,python | Claude Code 를 딥 리서치 에이전트로 전환 (16단계 파이프라인, 인용 검증). --global 로 ~/.claude 에 /hyperresearch 스킬과 에이전트만 설치, 프로젝트는 건드리지 않음
+

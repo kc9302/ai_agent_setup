@@ -161,6 +161,14 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **무엇**: Word·Excel·PowerPoint 를 에이전트가 CLI 로 읽고 고치고 만든다. 렌더링 엔진, 수식 평가, 템플릿 병합 내장. `officecli mcp <agent>` 로 MCP 서버로도 쓸 수 있다.
 - **왜**: 내장 docx/xlsx/pptx 스킬을 보완. **기존 파일 편집 품질은 실제 비교가 필요**하다. 중복이라 판단되면 tools.list 에서 제거.
 
+### hyperresearch — 딥 리서치 에이전트
+- **저장소**: https://github.com/jordan-gibbs/hyperresearch
+- **무엇**: Claude Code 를 16단계 파이프라인의 리서치 에이전트로 바꾼다. 출처를 모으고 교차 검증해 **인용이 달린 보고서**를 쓰고, 결과를 SQLite 로 색인되는 지식 볼트에 쌓아 세션을 넘어 재사용한다. 인용문 무결성 검증(환각 인용 차단), 철회 논문 확인, 파생 출처 독립성 감사, 적대적 리뷰, 중단 후 재개를 지원한다.
+- **내장 deep-research 와의 차이**: 내장 스킬은 가볍게 여러 출처를 훑어 요약한다. 이쪽은 검증 단계와 누적 지식 볼트가 핵심이라 **시간과 토큰을 훨씬 많이 쓴다**. 가벼운 조사는 내장, 보고서급 조사는 hyperresearch 로 나눠 쓴다.
+- **설치**: `uv tool install hyperresearch` 후 `hyperresearch install --global` (tools.list 가 수행). `--global` 은 `~/.claude/` 에 `/hyperresearch` 스킬 1개와 에이전트 16개만 둔다. 프로젝트 파일, 훅, settings.json 은 건드리지 않는다. 볼트와 16개 단계 스킬은 프로젝트에서 처음 `/hyperresearch` 를 실행할 때 그 프로젝트에 만들어진다.
+- **API 키 (모두 선택)**: OpenAlex, Crossref, DOAB, ClinicalTrials.gov, Europe PMC 는 무료로 키가 필요 없다. `CORE_API_KEY`, `FRED_API_KEY`, `HYPERRESEARCH_CONTACT_EMAIL`(SEC EDGAR, Unpaywall 용) 은 해당 소스를 쓸 때만 필요하다. Exa, Tavily 등 웹 검색 제공자도 선택이다.
+- **사용 예**: `/hyperresearch 2026년 로컬 LLM 양자화 기법 비교`
+
 ---
 
 ## 검토 후 보류한 후보
@@ -171,4 +179,3 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | alibaba/open-code-review | 내장 `/code-review` 와 중복. 별도 LLM provider 설정(`ocr config provider`)이 필요 |
 | StarTrail-org/PixelRAG | 스크린샷 기반 RAG. 저장소는 production-ready 라고 설명하지만 LEANN 과 역할이 겹쳐 필요할 때 추가. Claude Code 플러그인 `pixelbrowse` 제공 |
 | MakazhanAlpamys/Soup | 이 PC 에 GPU 가 없어 검증 불가. 저장소는 RTX 3050 4GB 에서 8B 측정치와 논문을 제시하지만, 같은 문서의 최소 요구사양은 7B QLoRA 에 8GB VRAM 이라 서로 어긋난다 |
-| jordan-gibbs/hyperresearch | 16단계 파이프라인과 인용 검증이 강점이지만 여러 외부 API 키가 필요하고 내장 deep-research 와 비교가 필요. 키 준비 후 `pip install hyperresearch && hyperresearch install` |
