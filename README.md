@@ -110,6 +110,7 @@ git commit -am "add owner/repo: 이유"
 
 오픈소스 도구는 `manifest/tools.list` 에 `name | check | install | tags | 설명` 으로 추가합니다.
 `check` 가 종료코드 0 을 반환하면 이미 설치된 것으로 보고 건너뜁니다.
+`install` 이 종료코드 **75** 로 끝나면 "선행 조건 미충족으로 건너뜀"으로 보고하며 실패로 세지 않습니다(예: Node 버전이 낮은 환경의 `paperclipai`).
 
 ## 스크립트
 
