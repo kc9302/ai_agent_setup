@@ -215,6 +215,23 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **API 키 (모두 선택)**: OpenAlex, Crossref, DOAB, ClinicalTrials.gov, Europe PMC 는 무료로 키가 필요 없다. `CORE_API_KEY`, `FRED_API_KEY`, `HYPERRESEARCH_CONTACT_EMAIL`(SEC EDGAR, Unpaywall 용) 은 해당 소스를 쓸 때만 필요하다. Exa, Tavily 등 웹 검색 제공자도 선택이다.
 - **사용 예**: `/hyperresearch 2026년 로컬 LLM 양자화 기법 비교`
 
+### paperclipai — AI 에이전트 팀 관리 서버의 CLI
+- **무엇**: Paperclip 은 여러 AI 에이전트를 조직도·예산·목표·승인 흐름으로 관리하는 Node.js 서버 + React UI 다(MIT, `paperclipai/paperclip`). 이 항목은 npm 패키지 `paperclipai` 의 **CLI 만** 전역 설치한다. 서버 시작은 직접 한다: `paperclipai onboard` (README 의 빠른 시작은 `npx paperclipai@latest onboard --yes`). 로컬에서는 설정 파일과 내장 Postgres, 로컬 파일 저장소를 만든다.
+- **왜**: 에이전트 여러 개를 태스크·비용 단위로 관리하는 대시보드가 필요할 때. 일상 개발 도구가 아니라 선택 도구라서 기본 설치는 CLI 까지만 하고 `onboard` 는 자동 실행하지 않는다.
+- **요구 사항**: **Node 24.11 이상**. 그보다 낮으면 설치 명령이 "Node 24.11 이상이 필요합니다"를 출력하고 실패로 보고한다(나머지 설치는 계속된다).
+- **점검 결과**: npm 패키지의 저장소 주소가 `paperclipai/paperclip` 과 같고 MIT 이며, 설치 스크립트가 없다(npm 메타데이터 기준). 의존성에 `@anthropic-ai/sdk`, `postgres`, `ws` 와 ACP 어댑터가 있다. Node 24 에서 설치·`--version`·재실행 건너뛰기를 확인했고 HOME 에 파일을 만들지 않는다. Node 22 에서는 위 메시지로 거부됨을 확인했다.
+- **같이 오지 않는 것**: 저장소 최상위 `skills/` 의 7개는 대부분 Paperclip 서버가 있어야 쓸 수 있다(`paperclip`, `paperclip-board`, `agentmail`, `slack` 등). 서버 없이 쓸 만한 것은 `para-memory-files`(파일 기반 PARA 메모리) 정도이며 이 항목은 설치하지 않는다.
+- **사용 예**: `paperclipai --help`, 서버 시작은 `paperclipai onboard`
+
+### graft — 코드베이스 컨텍스트 레이어 CLI
+- **무엇**: 코드를 그래프로 만들어 Claude Code·Codex·Cursor 등에 연결하는 CLI(MIT). npm 패키지 `@nanonets/graft`(Node 20 이상). 전역 설치만으로는 설정이 바뀌지 않는다. 프로젝트에서 `graft init` 을 실행하면 `.claude/` 에 상태 표시줄과 훅을 병합해 넣고 MCP 서버를 등록한다(`graft init --dry-run` 으로 건드릴 파일을 먼저 볼 수 있고, `--agents claude`, `--no-hooks` 옵션이 있다). 이 저장소의 `bootstrap.sh` 는 `graft init` 을 실행하지 않는다.
+- **왜**: `graphify`, LEANN 과 같은 "코드를 에이전트에게 먼저 이해시키는" 용도다. 셋을 다 쓰면 겹치므로 실제로 쓰면서 하나로 줄이는 것을 권한다. README 의 토큰·시간 절감 수치는 제작사 자체 측정이라 검증하지 못했다.
+- **⚠ 텔레메트리**: npm `postinstall` 이 설치 이벤트를 기록하고 백그라운드로 전송한다. 이 항목은 설치할 때만 `DO_NOT_TRACK=1` 로 이를 막는다(설치 후 `~/.graft/` 에는 하루 한 번 버전 확인용 `update-check.json` 만 생긴 것을 확인). **실행 중 텔레메트리는 도구 기본값(켜짐, 익명 집계)** 이고, 끄려면 `graft telemetry disable` 또는 환경 변수 `DO_NOT_TRACK` 을 쓴다. 내용은 `TELEMETRY.md` 에 허용 목록으로 공개돼 있고 `graft telemetry debug` 로 보낼 내용을 볼 수 있다. 패키지 안에 `events.nanonets.com`, PostHog(`eu.i.posthog.com`), `app.trailhq.com` 주소가 있다.
+- **출처 주의**: GitHub 저장소는 `trailhq/Graft`, README 배지는 `NanoNets/Graft`, npm 패키지의 저장소 주소는 `NanoNets/context-graph-engine` 로 서로 다르다. npm 패키지가 이 저장소의 코드로 빌드됐는지는 확인하지 못했다. 설치되는 것은 npm 타르볼이고, 그 안의 `postinstall` 은 텔레메트리 기록과 분리 프로세스 실행만 하는 것을 읽어 확인했다.
+- **Trail 연동 주의**: `graft trail push/pull` 은 클라우드 서비스(Trail)에 가입해 연결하고 `CLAUDE.md`/`AGENTS.md` 를 갱신한다. 의도하지 않았다면 쓰지 않는다.
+- **점검 결과**: Node 22 에서 설치와 `graft --version`(0.21.1) 확인. `tree-sitter` 네이티브 모듈 등 18개 의존성이 있다.
+- **사용 예**: `graft init --dry-run`, `graft init --agents claude`
+
 ---
 
 ## 검토 후 보류한 후보
@@ -232,3 +249,6 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | zarazhangrui/codebase-to-course | 코드베이스를 HTML 강의로 바꿔 주지만 LICENSE 파일이 없다. 라이선스 확인 후 추가 |
 | sanyuan0704/code-review-expert | 내장 `/code-review`, `code-review-and-quality` 와 겹친다. SOLID 체크리스트가 필요할 때만 `code-review-expert` 1개 추가 |
 | Orchestra-Research/AI-research-SKILLs | ML 연구 스킬 98개(RAG, 분산 학습, 멀티모달 등)로 범위가 너무 넓다. 필요한 분야(예: `11-evaluation`, `15-rag`)만 골라 추가 |
+| dream-num/univer | 앱에 임베드하는 Office SDK(Apache-2.0) 모노레포라 에이전트 환경에 설치할 항목이 없다. 에이전트용은 별도 저장소다: `univer-cli`(Node 24 필요, 설치 경로가 `dream-num/skills` 를 거치고 `officecli` 와 역할이 겹침), `univer-sdk-skills`(스킬 4개, Univer 로 앱을 만들 때만 유용). 필요하면 후자만 추가 |
+| ronald-koh/mattpock-skills-copilot | `mattpocock/skills` 를 GitHub Copilot 용으로 개작한 포크(14개). 컨텍스트·ADR 경로를 `.github/` 기준으로 바꿔 놓았고 LICENSE 파일이 없다. 겹치는 스킬은 이미 superpowers·addyosmani 에 있고 필요한 4개는 원본에서 직접 선별해 둠 |
+| multica-ai/andrej-karpathy-skills | 이미 설치 중인 `forrestchang/andrej-karpathy-skills` 와 같은 커밋(`2c60614`)·같은 파일 구성이고 `SKILL.md` 내용이 동일하다. 둘 다 넣으면 `karpathy-guidelines` 가 중복되므로 하나만 쓴다 |
