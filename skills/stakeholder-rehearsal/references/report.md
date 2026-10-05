@@ -48,7 +48,7 @@ One baseline and one run are two samples, not a test. Say that too.
 ## Verify before delivering
 
 ```
-python3 <skill>/scripts/verify_quotes.py forecast/<slug>
+python3 <skill>/scripts/verify_quotes.py rehearsal/<slug>
 ```
 
 It checks that the notice is present, that every blockquote appears in the log entry it cites, and that every cited id exists. Fix the report, not the log, until it passes. Mention in the final message that the quotes were verified (and that this does not verify the interpretation).

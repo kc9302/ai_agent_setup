@@ -1,9 +1,9 @@
 ---
-name: swarm-forecast
+name: stakeholder-rehearsal
 description: Rehearse how a situation may unfold by simulating its stakeholders. Seed material (news, a policy draft, a launch plan, a crisis, a story) becomes a stakeholder map, a cast of personas, a round-by-round social simulation run by sub-agents, and an evidence-cited scenario report. Use when asked to "simulate the reaction", "predict how people will respond", "rehearse a PR crisis / policy / launch", "what-if with stakeholders", "swarm prediction", or in Korean "여론 시뮬레이션", "반응 예측", "이해관계자 시뮬레이션", "시나리오 리허설". Not a statistical forecast; read "Limits" before presenting results.
 ---
 
-# swarm-forecast
+# stakeholder-rehearsal
 
 Method: take real seed material, build a small world of stakeholders from it, let persona-driven agents act in rounds, then write a report that only cites what happened in the run. It reimplements the idea behind MiroFish (a swarm-intelligence prediction engine) as a Claude Code workflow. No server, no API key, no graph database. See `SOURCE.md`.
 
@@ -14,7 +14,7 @@ Do not use it to produce probabilities, market forecasts, or anything presented 
 
 ## Workflow
 
-Work in a run folder `forecast/<slug>/` in the current project. Read the reference file for a step before doing it.
+Work in a run folder `rehearsal/<slug>/` in the current project. Read the reference file for a step before doing it.
 
 0. **Brief.** Write `brief.md`: the question to rehearse (one sentence), time horizon, platform style (`broadcast` = X-like short posts, `forum` = Reddit-like threads), size (`lite` = 6-10 agents x 6-12 rounds, default; `full` = 12-20 agents x 24+ rounds), and the seed files. Ask the user only if the question or the seed is missing. Then run `estimate_cost.py` (below) once the cast and config exist and tell the user the number of sub-agent calls.
 1. **Facts and stakeholders** -> `facts.md`, `ontology.md`. Read `references/world-building.md`.
@@ -25,7 +25,7 @@ Work in a run folder `forecast/<slug>/` in the current project. Read the referen
 6. **Baseline** (recommended): one plain call on the same seed with no simulation, to see what the run added. **Report** -> `report.md` opening with the standard notice, then verify quotes. Read `references/report.md`.
 7. **Branch** (optional): copy the run, change one variable via an injection, rerun, and compare in the report.
 
-Scripts (Python 3, standard library only; `<skill>` is this skill's installed folder, for example `~/.claude/skills/swarm-forecast`, and `<run>` is `forecast/<slug>`):
+Scripts (Python 3, standard library only; `<skill>` is this skill's installed folder, for example `~/.claude/skills/stakeholder-rehearsal`, and `<run>` is `rehearsal/<slug>`):
 
 ```
 python3 <skill>/scripts/make_packets.py <run> R --seed 7   # pick active agents, write their turn prompts

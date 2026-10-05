@@ -30,8 +30,8 @@ bash scripts/status.sh       # 설치 결과 확인
 | `scripts/pin.sh`       | 스킬 소스를 커밋에 고정(`--fill`)하고 올린다(`--update`). 인자 없이 실행하면 비교표만 출력 |
 | `scripts/verify.sh`    | 정의한 스킬이 이 환경에 **실제로 전부** 설치됐는지 확인 (설치는 하지 않음) |
 | `scripts/status.sh`    | 현재 환경의 설치 상태 |
-| `scripts/export-swarm-forecast.sh` | `swarm-forecast` 를 독립 저장소 형태(README·LICENSE·테스트·CI 포함)로 내보낸다. 원본은 `skills/swarm-forecast/`, 테스트·README 원본은 `packaging/swarm-forecast/` |
-| `skills/`              | 이 저장소 자체가 정의한 로컬 스킬. `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다 (`ai-setup-sync`, 고정 사본 `web-design-guidelines`, 시뮬레이션 방법론 `swarm-forecast`) |
+| `scripts/export-stakeholder-rehearsal.sh` | `stakeholder-rehearsal` 를 독립 저장소 형태(README·LICENSE·테스트·CI 포함)로 내보낸다. 원본은 `skills/stakeholder-rehearsal/`, 테스트·README 원본은 `packaging/stakeholder-rehearsal/` |
+| `skills/`              | 이 저장소 자체가 정의한 로컬 스킬. `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다 (`ai-setup-sync`, 고정 사본 `web-design-guidelines`, 시뮬레이션 방법론 `stakeholder-rehearsal`) |
 | `CATALOG.md`           | 등록된 각 스킬·도구가 무엇이고 왜 넣었는지, 사용법 상세 설명 |
 
 ## 새 스킬/도구를 추가할 때

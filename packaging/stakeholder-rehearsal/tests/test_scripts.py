@@ -1,7 +1,7 @@
-"""Tests for the swarm-forecast scripts. Run: python3 -m unittest discover -s tests -v
+"""Tests for the stakeholder-rehearsal scripts. Run: python3 -m unittest discover -s tests -v
 
 Standard library only. Each test works on a throw-away copy of the worked
-example (skills/swarm-forecast/examples/scooter), so nothing in the repo changes.
+example (skills/stakeholder-rehearsal/examples/scooter), so nothing in the repo changes.
 """
 import json
 import shutil
@@ -11,8 +11,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = next(p for p in Path(__file__).resolve().parents if (p / "skills" / "swarm-forecast").is_dir())
-SKILL = ROOT / "skills" / "swarm-forecast"
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "skills" / "stakeholder-rehearsal").is_dir())
+SKILL = ROOT / "skills" / "stakeholder-rehearsal"
 SCRIPTS = SKILL / "scripts"
 EXAMPLE = SKILL / "examples" / "scooter"
 
