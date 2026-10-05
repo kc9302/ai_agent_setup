@@ -1,0 +1,5 @@
+{"platform":"broadcast","start_hour":9,"minutes_per_round":120,"total_rounds":4,"agents_per_hour":[2,4],"peak_hours":[19,20,21,22],"off_peak_hours":[0,1,2,3,4,5],
+ "opening_posts":[
+  {"agent":"a01","content":"From 1 June, motorised delivery e-scooters are banned from sidewalks and shared paths. 212 pedestrians were injured last year. Riders will use road lanes; 40 km of protected lanes will follow. Fines start at $150.","fact":"F1"},
+  {"agent":"a04","content":"We asked for this after too many of our members were hurt. Thank you. Now enforce it quickly.","fact":"F6"}],
+ "injections":[{"round":3,"kind":"news","agent":"a05","content":"Two councillors privately question whether the promised 40 km of protected lanes is funded, the Courier has learned.","why":"tests whether the unfunded-lanes framing takes over (F7)"}]}

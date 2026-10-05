@@ -146,6 +146,19 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 ---
 
 
+### mikehasa/golive-skill — 프로덕션 배포 (알파, ⚠ 계정에 쓰기)
+- **무엇**: 에이전트가 만든 앱을 사용자 **본인 계정**의 호스팅·DB·인증·결제·이메일·DNS(Vercel, Netlify, Supabase, Neon, Stripe, Resend, Cloudflare, Porkbun, GoDaddy, Sentry, PostHog)에서 실서비스로 올리는 절차다. 로컬 CLI(`golive`, 번들 `scripts/golive.mjs`)가 지원되는 연결 작업을 하고 검증 결과를 기록한다. `golive` 1개(MIT, `0.1.0-alpha.8`), 커밋 `7a55f26`에 고정.
+- **안전장치(SKILL.md 의 "Hard rules")**: 비밀 값을 출력·채팅으로 받지 않는다. **사람이 계획을 승인하기 전에는 제공업체 계정에 쓰지 않는다.** 첫 프로덕션 배포는 `--confirm-live`, 삭제는 `--confirm-destroy` 로 따로 승인받는다. 설치만으로는 아무 계정에도 접속하지 않는다(`--help` 는 `golive.yaml` 이 없으면 사용법 오류만 내고 `~/.config` 에 아무것도 만들지 않음을 확인).
+- **번들 검증**: 배포된 `scripts/golive.mjs`(1.2MB, 최소화 안 함)를 `src/` 에서 같은 `build.mjs` 설정으로 다시 빌드해 비교했다. 차이는 내장된 의존성 메타데이터의 `typescript` 버전 표기 한 줄뿐이다(`yaml` 경로 표기는 정규화). 즉 번들은 소스와 같은 코드다. 번들 안의 외부 접속처는 위 제공업체 API 와 업데이트 확인(`raw.githubusercontent.com/mikehasa/golive-skill/.../release.json`) 뿐이고 텔레메트리 호스트는 없다. `skills` CLI 로 설치한 사본은 "external manager" 라 스스로 업데이트하지 않는다(소스: `install-lib.mjs`). 코드 전체를 읽은 것은 아니다.
+- **주의**: ① **알파**라 동작이 바뀔 수 있다 — 커밋 고정으로 막고, 올릴 때는 `bash scripts/pin.sh` 로 변경을 읽는다. ② 수동 API 키 입력이 필요하면 macOS 는 네이티브 대화상자, 그 밖의 OS 는 `~/.config/golive/credentials` **평문 파일**(권한 0600)에 저장한다. ③ "배포해줘" 류 요청에 반응하므로 실제로 쓸 때는 어느 계정에 무엇을 쓰는지 승인 단계에서 직접 읽을 것.
+- **사용 예**: "이 앱을 Vercel + Supabase 로 올려줘".
+
+### QingYunA/answer-me-with-html — 시각적 답변 (HTML 설명서)
+- **무엇**: 구조가 있는 답(개념 3개 이상의 관계, 분기 있는 흐름·아키텍처, 3축 이상 비교, 계층, 단계)을 Markdown 초안으로 쓰면 번들 CLI(`scripts/am.mjs`, 단일 파일 324KB, 의존성 없음)가 한 페이지 HTML(템플릿, SVG 자동 배치, 문체 점검)로 만든다. `am video` 로 해설 영상 페이지도 만든다. `answer-me-with-html` 1개(MIT, `0.4.9`), 커밋 `6ab7221`에 고정. 상시 모드 플러그인(`answer-me-with-html-always`)은 매 턴 HTML 첨부를 강요하므로 **포함하지 않았다**.
+- **점검 결과**: 설치된 사본으로 렌더링을 시험했다(`STE ✓ 0 warnings`, 외부 URL 로드 없음 — 스크립트 1개, 외부 주소 없음). 외부 접속은 ① 업데이트 확인(7일에 한 번, `raw.githubusercontent.com/.../package.json` 읽기 한 번, `CI` 나 `AM_NO_UPDATE_CHECK=1` 이면 안 함), ② `am video --voice elevenlabs` 를 **쓸 때만** ElevenLabs API 뿐이다. 업데이트 안내가 떠도 스킬은 스스로 업데이트하지 않고 사용자에게 묻도록 되어 있다.
+- **주의**: 설명이 "묻지 않아도 적극적으로 사용"이라 복잡한 답에서 스스로 발동한다. 브라우저 자동 열기가 기본 설정이므로 끄려면 `am config set open false`. `diagram-design`, `archify` 와 일부 겹친다(그쪽은 다이어그램 전용).
+- **사용 예**: "이 아키텍처를 한 페이지로 설명해줘".
+
 ### 이 저장소의 로컬 스킬 (`skills/`)
 
 #### web-design-guidelines — Web Interface Guidelines 리뷰 (고정 사본)
@@ -157,6 +170,14 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 
 #### ai-setup-sync — 이 저장소의 매니페스트로 환경 동기화
 - **무엇**: 에이전트에게 `kc9302/ai_agent_setup` 로 스킬·도구를 설치·동기화하는 절차(클론 → `bootstrap.sh` → `status.sh`)를 알려 준다. 이전에는 `npx skills add kc9302/ai_agent_setup` 로만 설치할 수 있었고 `bootstrap.sh` 는 설치하지 않았다.
+
+#### swarm-forecast — 이해관계자 시뮬레이션으로 반응 예측 리허설
+- **무엇**: 시드 자료(뉴스, 정책안, 출시 계획, 위기 상황, 이야기)로 사실표·이해관계자 유형·페르소나를 만들고, 서브에이전트가 라운드별로 SNS 에서 행동하는 시뮬레이션을 돌려 근거가 있는 시나리오 리포트를 쓴다. 서버·API 키·그래프 DB 없이 Claude Code 안에서 돈다. `lite`(6~10명 × 6~12라운드)가 기본.
+- **출처**: `666ghj/MiroFish`(AGPL-3.0, 커밋 `7657031`)의 워크플로를 분석해 **방법론만** 새로 구현했다. 코드·프롬프트 문구는 복사하지 않았다(`skills/swarm-forecast/SOURCE.md`). MiroFish 자체는 앱이라 설치 대상에서 보류 목록에 있다.
+- **원본과 다른 점**: 활성화 규칙(시간대 × 활동 확률)은 `pick_agents.py` 로 재현. 원본이 생성만 하고 쓰지 않던 값(입장 수치, 영향력 가중, 예약 이벤트)은 빼고 **예약 주입을 실제로 적용**한다. 원본에서 프롬프트로만 요구하던 인용 조작 금지를 `verify_quotes.py` 가 **인용문이 인용 표기된 로그 id 안에 실제로 있는지** 검사한다. 시나리오 분기 비교를 추가했다.
+- **시험**: 가상 시나리오(도시의 보도 전동킥보드 금지령)로 6명 × 4라운드 + 인터뷰 2건을 실제로 돌려 리포트를 만들고 인용 9건을 검증했다(`examples/scooter/`). 이 시험에서 고친 것: 서브에이전트의 답장은 요약문이라 행동 내용이 빠지므로 **파일에 쓰게** 함, 에이전트가 시드에 없는 연도(2028)를 지어내 3명이 따라 쓴 현상을 막는 지시와 리포트 규칙 추가, 인터뷰 답이 로그와 모순될 수 있다는 경고. 깨끗한 HOME 에서 `skills add` 로 설치해 스크립트 6개와 예제가 들어가고 설치된 위치에서 검증이 통과함을 확인했다.
+- **한계**: 한 모델이 여러 역할을 연기하는 것이라 실제 군중보다 말이 조리 있고 일관된다. 작은 캐스트로는 군중 효과를 볼 수 없고 같은 입력도 결과가 갈린다. 실제 결과와 대조한 보정이 없으므로 **확률이 아니라 시나리오와 그 메커니즘**으로만 읽을 것. 시험은 소형 모델·6명·1시드 한 번뿐이다.
+- **사용 예**: "이 정책 발표에 이해관계자들이 어떻게 반응할지 시뮬레이션해줘".
 
 ## 도구 (오픈소스 CLI / MCP 서버)
 
@@ -356,3 +377,5 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | MadsLorentzen/ai-job-search | 스킬 모음이 아니라 **프로젝트로 복제해서 프로필을 채워 쓰는 구직 워크플로 템플릿**(MIT)이다. 슬래시 명령 12개(`/setup`, `/apply`, `/interview`, `/rank` 등), 프로젝트 안의 프로필·문서·CV 템플릿, LaTeX(`lualatex`·`xelatex`)와 `bun` 이 전제라 스킬만 전역 설치해서는 동작하지 않는다. 포털 검색 스킬 6개 중 4개(`jobindex`, `jobnet`, `jobbank`, `jobdanmark`)는 덴마크 전용이고 `linkedin-search`·`freehire-search` 만 전 지역 대상이며, LinkedIn 을 긁는 방식이라 약관 위험이 있다. **⚠ 개인정보**: README 는 포크가 항상 공개이고 `/setup` 이 이름·연락처·경력·희망 연봉을 **git 이 추적하는 파일**에 쓰므로, 본인 구직용이면 포크하지 말고 **비공개 저장소에 이 저장소를 `upstream` 으로 연결**하라고 안내한다(SETUP.md 8절). 실제 구직에 쓸 때 별도 프로젝트로 그렇게 쓰는 것이 맞고, 이 저장소의 기본 설치에는 맞지 않는다. 설치·실행은 하지 않았다 |
 | firecrawl/firecrawl | 크롤링·스크래핑 플랫폼 본체(AGPL-3.0)이고 에이전트용 CLI(`firecrawl-cli`)·MCP(`firecrawl-mcp`)는 별도 저장소다. 호스팅 서비스는 API 키가 필요해 `bootstrap.sh` 가 자동 설정할 수 없고, URL·페이지 내용이 `api.firecrawl.dev` 로 전송된다. 단일 페이지 읽기는 Playwright MCP·`agent-browser`·`markitdown`·내장 WebFetch 로 충분하다. 사이트 전체 크롤링·구조화 추출이 필요할 때 추가: 스킬은 `firecrawl/skills`(`npx skills add firecrawl/skills`), MCP 는 `FIRECRAWL_API_KEY` 환경 변수가 있을 때만 등록. 이 저장소 안의 `skills/firecrawl-build*` 5개는 자기 앱 코드에 Firecrawl API 를 통합할 때용. 요금제·`firecrawl/skills` 내용·CLI 텔레메트리는 확인하지 못했다 |
 | multica-ai/andrej-karpathy-skills | 이미 설치 중인 `forrestchang/andrej-karpathy-skills` 와 같은 커밋(`2c60614`)·같은 파일 구성이고 `SKILL.md` 내용이 동일하다. 둘 다 넣으면 `karpathy-guidelines` 가 중복되므로 하나만 쓴다 |
+| 666ghj/MiroFish | 스킬·CLI 저장소가 아니라 **멀티 에이전트 예측 시뮬레이션 웹 앱**(AGPL-3.0)이다. `SKILL.md` 가 없고, Flask 백엔드(5001)와 Vue 프런트엔드(3000)를 `npm run dev` 또는 Docker 로 띄워 쓰며 Node 18+·Python 3.11~3.12·uv 가 필요하다. LLM API 키(`LLM_API_KEY`)와 Zep Cloud 키(`ZEP_API_KEY`)가 있어야 동작하고 시뮬레이션 비용도 크다(저장소가 40라운드 미만 시험을 권장). 키·서버가 필요한 앱은 "클론하면 어디서나 같은 스킬" 이라는 이 저장소의 목적과 맞지 않는다. 필요하면 해당 저장소를 따로 클론해 실행할 것 (검토 커밋 `7657031`) |
+| debpalash/VoiceStudio | 스킬 저장소가 아니라 **음성 복제·더빙·받아쓰기 데스크톱 앱**(Electron + Python, AGPL-3.0, 클론 44MB 와 서브모듈 1개)이다. 스킬 2개 중 `voicestudio`(87줄)는 **로컬에서 실행 중인 VoiceStudio 백엔드(`localhost:3900`) REST/MCP 를 부르는 클라이언트용**이라 앱과 모델이 없으면 쓸 수 없고, `voicestudio-maintainer` 는 이 앱의 이슈·PR·릴리스 관리자용이다. 스킬 하나를 위해 모든 환경이 44MB 를 클론하게 하지 않는다. 앱을 쓰는 사람만 `npx skills add debpalash/VoiceStudio --skill voicestudio` 로 따로 추가할 것 (검토 커밋 `28801c8`) |
