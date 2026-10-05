@@ -14,4 +14,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python3 -m unittest discover -s tests -v
-      - run: python3 skills/swarm-forecast/scripts/verify_quotes.py skills/swarm-forecast/examples/scooter
+      - run: python3 skills/stakeholder-rehearsal/scripts/verify_quotes.py skills/stakeholder-rehearsal/examples/scooter

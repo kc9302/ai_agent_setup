@@ -1,8 +1,12 @@
-# swarm-forecast
+# stakeholder-rehearsal
 
 **Rehearse how a situation may unfold by simulating the people involved. An agent skill for Claude Code. No server, no API key, no database.**
 
 Give it seed material (a news item, a policy draft, a launch plan, a crisis, a story). It builds a sourced fact table and a stakeholder map, writes personas, lets sub-agents act round by round on a simulated social feed, interviews a few of them, and writes a scenario report in which **every quote is machine-checked against the simulation log**.
+
+![Demo: seed → facts → cast and cost → rounds → report → quote check](docs/demo.gif)
+
+*Replay of the bundled example run. Every command output in the GIF is real script output; `docs/demo/` regenerates it.*
 
 > It produces scenarios and the mechanisms behind them, not probabilities. Read [Limits](#limits) before showing a result to anyone.
 
@@ -10,7 +14,7 @@ Give it seed material (a news item, a policy draft, a launch plan, a crisis, a s
 
 Heavy swarm-simulation engines need servers, API keys for several services, and thousands of agent calls. Most of what a decision-maker wants from a rehearsal is smaller: *who speaks first, which framing sticks, where a statement backfires, what changes if I add one variable.* This skill does that with a handful of agents, a plain-file run folder you can read and diff, and a report you can audit.
 
-| | swarm-forecast | server-based simulation engines |
+| | stakeholder-rehearsal | server-based simulation engines |
 |---|---|---|
 | Setup | copy one folder | servers, several API keys, graph database |
 | Cost of a run | 20-100 sub-agent calls (`lite`), counted before you start | hundreds to thousands |
@@ -23,10 +27,10 @@ If you need crowd-scale emergent behaviour, use an engine built for it. If you n
 ## Install
 
 ```bash
-npx skills add <owner>/swarm-forecast --skill swarm-forecast
+npx skills add <owner>/stakeholder-rehearsal --skill stakeholder-rehearsal
 ```
 
-or copy `skills/swarm-forecast/` into `~/.claude/skills/` (or a project's `.claude/skills/`). Requires Python 3 for the helper scripts (standard library only). Developed and tested with Claude Code; other agent runtimes that load `SKILL.md` skills and can launch sub-agents should work but are untested.
+or copy `skills/stakeholder-rehearsal/` into `~/.claude/skills/` (or a project's `.claude/skills/`). Requires Python 3 for the helper scripts (standard library only). Developed and tested with Claude Code; other agent runtimes that load `SKILL.md` skills and can launch sub-agents should work but are untested.
 
 ## Use
 
@@ -34,7 +38,7 @@ Ask in plain words, with your seed files in the working directory:
 
 > Simulate how the stakeholders react to `policy.md` over the first three days. Lite run.
 
-The agent follows `SKILL.md`: it writes a brief, tells you how many sub-agent calls the run needs and waits for a go-ahead above 60, then works in `forecast/<slug>/`:
+The agent follows `SKILL.md`: it writes a brief, tells you how many sub-agent calls the run needs and waits for a go-ahead above 60, then works in `rehearsal/<slug>/`:
 
 ```
 facts.md  ontology.md  cast.json  cast/a01.md …   what the world is made of
@@ -63,7 +67,7 @@ seed files ─► facts.md (sourced) ─► actor types ─► personas ─► c
 - **A control.** `make_baseline.py` prepares a single plain call on the same seed with no simulation, and the report says what the run added over it. In the example, the baseline confidently predicted the opposite of what the run showed.
 - **Cost before you start.** `estimate_cost.py` counts the sub-agent calls for a seed; above 60 the skill asks for a go-ahead.
 
-A complete run is in [`skills/swarm-forecast/examples/scooter/`](skills/swarm-forecast/examples/scooter) (fictional city, 6 agents, 4 rounds, 2 interviews). Excerpt from its report:
+A complete run is in [`skills/stakeholder-rehearsal/examples/scooter/`](skills/stakeholder-rehearsal/examples/scooter) (fictional city, 6 agents, 4 rounds, 2 interviews). Excerpt from its report:
 
 > The injected post that two councillors question whether the 40 km of lanes is funded drew no reply, quote, like or repost from anyone in the log. [simulated] … This suggests the "date versus missing lanes" framing is stickier than a "who pays" framing for the audience in this cast. It does not show that a funding story would fail with a different cast. [inferred]
 
@@ -86,11 +90,14 @@ Running the method end to end on the example surfaced problems that are now fixe
 
 ```bash
 python3 -m unittest discover -s tests -v     # 34 tests, standard library only
-python3 skills/swarm-forecast/scripts/verify_quotes.py skills/swarm-forecast/examples/scooter
+# regenerate the demo GIF (needs ffmpeg and Playwright):
+python3 docs/demo/build_scenes.py . /tmp/scenes.json && NODE_PATH=<dir with playwright> node docs/demo/render.mjs /tmp/scenes.json /tmp/frames
+# then: ffmpeg -f concat -safe 0 -i /tmp/frames/list.txt -vf "fps=10,split[a][b];[a]palettegen=max_colors=24:stats_mode=diff[p];[b][p]paletteuse=dither=none" -loop 0 docs/demo.gif
+python3 skills/stakeholder-rehearsal/scripts/verify_quotes.py skills/stakeholder-rehearsal/examples/scooter
 ```
 
 Contributions that add scenarios with verified reports, or compare results across models, are the most useful.
 
 ## Credits and license
 
-MIT, see [LICENSE](LICENSE). The workflow idea follows [MiroFish](https://github.com/666ghj/MiroFish) (AGPL-3.0); this project is an independent reimplementation and contains none of its code or prompt text. Details in [`skills/swarm-forecast/SOURCE.md`](skills/swarm-forecast/SOURCE.md).
+MIT, see [LICENSE](LICENSE). The workflow idea follows [MiroFish](https://github.com/666ghj/MiroFish) (AGPL-3.0); this project is an independent reimplementation and contains none of its code or prompt text. Details in [`skills/stakeholder-rehearsal/SOURCE.md`](skills/stakeholder-rehearsal/SOURCE.md).
