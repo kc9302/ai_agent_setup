@@ -26,7 +26,7 @@ while [ $# -gt 0 ]; do
 done
 
 # 이미 매니페스트에 있는 source 목록
-known="$(manifest_lines "$SKILLS_LIST" | while IFS= read -r l; do split_fields "$l"; printf '%s\n' "${FIELDS[0],,}"; done)"
+known="$(manifest_lines "$SKILLS_LIST" | while IFS= read -r l; do split_fields "$l"; _r="$(src_repo "${FIELDS[0]}")"; printf '%s\n' "${_r,,}"; done)"
 
 urlencode() { jq -rn --arg s "$1" '$s|@uri'; }
 

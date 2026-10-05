@@ -29,3 +29,6 @@ for d in ~/.claude/skills ~/.codex/skills ~/.cursor/skills ~/.gemini/skills ~/.c
   cnt="$(find "$d" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
   printf '  %-32s %s skill(s)\n' "$d" "$cnt"
 done
+
+echo
+info "정의한 스킬이 전부 설치됐는지 확인: bash scripts/verify.sh"

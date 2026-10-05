@@ -12,9 +12,9 @@ failed=0
 while IFS= read -r -u 3 line; do
   split_fields "$line"
   src="${FIELDS[0]}"; desc="${FIELDS[3]:-}"
-  stars="$(gh_api "/repos/$src" 2>/dev/null | json_num stargazers_count || true)"
+  stars="$(gh_api "/repos/$(src_repo "$src")" 2>/dev/null | json_num stargazers_count || true)"
   [ -z "$stars" ] && { stars="?"; failed=1; }
-  rows+=("$stars|$src|$desc")
+  rows+=("$stars|$(src_repo "$src")|$desc")
 done 3< <(manifest_lines "$SKILLS_LIST")
 
 printf '%s%8s  %-40s %s%s\n' "$C_BOLD" "stars" "source" "description" "$C_RESET"

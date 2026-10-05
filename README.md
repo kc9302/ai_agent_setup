@@ -92,14 +92,19 @@ owner/repo | * | tags | 한 줄 설명
 owner/repo | skill-a,skill-b | tags | 일부 스킬만 설치할 때
 ```
 
-그리고:
+스킬 이름은 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값입니다(틀리면 CLI 가 오류 없이 건너뜁니다).
+그리고 **소스를 커밋에 고정**합니다. 그래야 클론한 시점과 상관없이 모든 환경에 같은 내용이 설치됩니다:
 
 ```bash
-bash scripts/validate.sh      # 형식 검사
+bash scripts/pin.sh --fill    # owner/repo → owner/repo#<커밋> 으로 고정
+bash scripts/validate.sh      # 형식 검사 (고정 안 된 소스는 오류)
 bash bootstrap.sh --dry-run   # 실행될 명령 확인
-bash bootstrap.sh             # 실제 설치
+bash bootstrap.sh             # 실제 설치 + 설치 후 검증
 git commit -am "add owner/repo: 이유"
 ```
+
+`bootstrap.sh` 는 설치가 끝나면 정의한 스킬이 **실제로 전부 설치됐는지** 스스로 확인하고, 빠진 것이 있으면 실패로 보고합니다.
+설치 없이 다시 확인하려면 `bash scripts/verify.sh` 입니다. 스킬을 올릴 때는 `bash scripts/pin.sh` 로 비교하고 변경 내용을 읽은 뒤 `--update owner/repo` 합니다.
 
 추가한 항목은 `CATALOG.md` 에도 "무엇 / 왜 / 사용 예" 를 한 절 적어 둡니다.
 
@@ -112,6 +117,8 @@ git commit -am "add owner/repo: 이유"
 |---|---|
 | `bootstrap.sh` | 매니페스트대로 전부 설치 |
 | `scripts/status.sh` | 설치 상태 확인 |
+| `scripts/verify.sh` | 정의한 스킬이 이 환경에 전부 설치됐는지 확인 (설치 안 함) |
+| `scripts/pin.sh` | 스킬 소스를 커밋에 고정(`--fill`)·갱신(`--update`) |
 | `scripts/stars.sh` | 등록된 저장소 별 수 실시간 조회 |
 | `scripts/discover.sh` | 새 후보 탐색 (GitHub 토픽 `agent-skills`, `claude-skills`, `skill-md`, `agentic-skills`) |
 | `scripts/validate.sh` | 매니페스트·스크립트 검사 (CI 에서도 실행) |

@@ -9,6 +9,9 @@
 #   bash bootstrap.sh --skills-only | --tools-only
 #   bash bootstrap.sh --dry-run       # 실행할 명령만 출력
 #
+# 스킬은 skills.list 에 적힌 커밋에 고정해 설치하고(모든 환경에서 같은 내용), 설치가 끝나면
+# 정의한 스킬이 실제로 설치됐는지 확인한다(빠진 게 있으면 실패로 보고).
+#
 # 클론 없이 바로 실행:
 #   curl -fsSL https://raw.githubusercontent.com/kc9302/ai_agent_setup/main/bootstrap.sh | bash
 # ─────────────────────────────────────────────────────────────────────────────
@@ -105,8 +108,9 @@ if [ "$DO_SKILLS" = 1 ]; then
     split_fields "$line"
     src="${FIELDS[0]}"; skills="${FIELDS[1]:-*}"; tags="${FIELDS[2]:-}"; desc="${FIELDS[3]:-}"
     has_tag "$tags" "$TAG" || continue
-    printf '  %s→%s %-40s %s\n' "$C_BOLD" "$C_RESET" "$src" "$desc"
+    printf '  %s→%s %-40s %s\n' "$C_BOLD" "$C_RESET" "$(src_repo "$src")" "$desc"
 
+    # $src 는 'owner/repo#<커밋>' 형식 그대로 넘긴다. CLI 가 그 커밋의 내용을 받는다.
     cmd=(npx -y skills add "$src" -y)
     [ -n "$SCOPE_FLAG" ] && cmd+=("$SCOPE_FLAG")
     for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do cmd+=(-a "$(trim "$a")"); done
@@ -120,8 +124,44 @@ if [ "$DO_SKILLS" = 1 ]; then
     fi
     if ! run "${cmd[@]}"; then
       warn "failed: $src"; FAILED+=("skill:$src")
+    elif [ "$skills" = "*" ]; then
+      EXPECT_SOURCES+=("$(src_repo "$src")")
+    else
+      for s in "${arr[@]}"; do EXPECT_NAMES+=("$(src_repo "$src"):$(trim "$s")"); done
     fi
   done 3< <(manifest_lines "$SKILLS_LIST")
+
+  # 이 저장소가 직접 정의한 스킬(skills/). 클론한 저장소에서 바로 설치하므로 항상 이 체크아웃과 같다.
+  # (로컬 경로 설치는 파일을 복사하므로 임시 클론이 지워져도 남는다.)
+  if has_tag "local" "$TAG"; then
+    local_names=()
+    for f in "$REPO_ROOT"/skills/*/SKILL.md; do
+      [ -f "$f" ] || continue
+      n="$(sed -n 's/^name:[[:space:]]*//p' "$f" | head -1 | tr -d '\r"'"'")"
+      [ -n "$n" ] && local_names+=("$n")
+    done
+    if [ ${#local_names[@]} -gt 0 ]; then
+      info "installing this repository's own skills (skills/)"
+      printf '  %s→%s %-40s %s\n' "$C_BOLD" "$C_RESET" "(local) $REPO_SLUG" "${local_names[*]}"
+      cmd=(npx -y skills add "$REPO_ROOT" -y)
+      [ -n "$SCOPE_FLAG" ] && cmd+=("$SCOPE_FLAG")
+      for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do cmd+=(-a "$(trim "$a")"); done
+      for n in "${local_names[@]}"; do cmd+=(--skill "$n"); done
+      if ! run "${cmd[@]}"; then
+        warn "failed: local skills"; FAILED+=("skill:local")
+      else
+        for n in "${local_names[@]}"; do EXPECT_NAMES+=("local:$n"); done
+      fi
+    fi
+  fi
+
+  # 설치 명령이 성공해도 일부 스킬이 조용히 빠질 수 있으므로, 정의한 스킬이 실제로 있는지 확인한다.
+  if [ "$DRY_RUN" != 1 ] && { [ ${#EXPECT_NAMES[@]} -gt 0 ] || [ ${#EXPECT_SOURCES[@]} -gt 0 ]; }; then
+    info "verifying installed skills"
+    if ! verify_installed_skills "$SCOPE_FLAG" "${AGENTS[@]+"${AGENTS[@]}"}"; then
+      for m in "${VERIFY_MISSING[@]}"; do FAILED+=("skill-missing: $m"); done
+    fi
+  fi
 fi
 
 # ---- 결과 -------------------------------------------------------------------
