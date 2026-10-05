@@ -277,6 +277,18 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **Python 라이브러리로 쓰려면**: `pip install pdf-inspector`(PyPI 패키지의 저장소 주소가 이 저장소와 일치). `pdf_inspector.process_pdf("문서.pdf")` 로 분류와 Markdown 을 얻는다. `bootstrap.sh` 는 설치하지 않는다.
 - **사용 예**: `pdf-inspector detect 보고서.pdf --json` 으로 스캔본인지 먼저 확인한 뒤, 텍스트 PDF 만 `pdf-inspector 보고서.pdf -o 보고서.md`
 
+### humanize-korean — 한글 AI 글투 제거 (im-not-ai)
+- **무엇**: `epoko77-ai/im-not-ai`(MIT, v2.3.2). AI 가 쓴 한글에서 번역투, 영어 인용 과다, 기계적 병렬("첫째·둘째·셋째"), "결론적으로" 류 관용구, 피동 남용 같은 티를 **문체·리듬만** 고쳐 사람이 쓴 글로 되돌린다. 스킬 4개: `humanize-korean`(오케스트레이터), `humanize`(진입 명령, 분량에 따라 light 1콜·standard 2콜·heavy 3+콜 경로 선택), `humanize-scan`(AI 티가 얼마나 있는지 재고 표본으로 보여줌), `humanize-redo`(직전 결과를 2차로 다듬음). 서브에이전트 4개(`humanize-monolith`, `humanize-diagnostician`, `humanize-finalizer`, `korean-ai-tell-taxonomist`)를 호출한다.
+- **왜**: 위의 `blader/humanizer` 는 영어 전용이고, 한글 AI 글의 티는 대부분 영어 번역투에서 나온다. 한국어 쪽 짝으로 쓴다.
+- **설치 방식이 다른 이유**: 스킬 폴더만 복사하는 `npx skills add` 로는 서브에이전트와 검증 스크립트 경로가 빠져 동작하지 않는다. 그래서 저장소 자체 설치기를 쓴다: `~/.local/share/im-not-ai` 에 클론(**검토한 커밋 `2f3d943` 에 고정**)하고 `install.sh --claude-only` 로 `~/.claude/skills/` 의 스킬 4개와 `~/.claude/agents/` 의 에이전트 4개를 **심볼릭 링크**로 연결한다. **클론을 지우면 링크가 끊긴다.** 저장소가 `--copy` 모드는 검증 게이트가 깨진다고 밝히므로 링크 방식만 쓴다. 기존 같은 이름의 파일이 있으면 덮어쓰지 않고 거부하며(`--force` 는 쓰지 않음), `settings.json` 은 건드리지 않는다.
+- **Claude Code 필요**: `claude` 명령이나 `~/.claude` 가 없으면 설치기가 아무것도 하지 않고 **성공으로 끝나므로**, 이 항목은 앞단에서 확인해 명확한 메시지와 함께 **실패로 보고**한다. Claude Code 를 설치한 뒤 `bootstrap.sh --tools-only` 를 다시 실행한다. Codex·Gemini·Copilot 설치와 부속 스킬(`commit-ko`, `--extras`)은 하지 않는다.
+- **갱신**: 링크가 클론을 가리키므로 `git -C ~/.local/share/im-not-ai checkout <새 커밋>` 으로 옮기면 반영된다(에이전트 목록이 바뀐 버전이면 `install.sh --claude-only` 재실행). 저장소의 `update.sh` 는 `git pull` 이라 고정과 맞지 않아 쓰지 않는다. `tools.list` 의 해시만 바꿔서는 이미 설치된 환경에 적용되지 않는다(링크가 있으면 건너뜀).
+- **전역 에이전트 4개**: `humanize-*` 에이전트는 설명 매칭으로 자동 호출될 수 있어, 저장소는 윤문과 무관한 개발용 에이전트 5종을 일부러 설치에서 뺐다(`--all-agents` 로만 설치). 이 항목도 그 기본값을 따른다.
+- **비용**: 한 번 윤문에 서브에이전트가 1~3+회 호출된다(light 1콜 · standard 2콜 · heavy 3+콜). `arena` 같은 대규모 호출은 아니다.
+- **점검 결과**: 설치기(278줄)와 스킬이 쓰는 스크립트에 **네트워크 호출이 없고**, 서브프로세스는 개발용 `eval_baseline.py` 에만 있으며 설치되지 않는다. 훅이 없다(`.githooks/commit-msg` 는 저장소 개발용). 격리 환경에서 실제 매니페스트 항목으로 확인: `~/.claude` 가 없으면 명확한 메시지로 실패, 있으면 스킬 4개·에이전트 4개 설치, 재실행 건너뛰기. 설치된 클론에서 결정적 게이트 `verify_change_rate.py`·`verify_gates.py` 가 한국어 전후 예시 쌍(변경률 17%)에 대해 동작하고 통과를 보고했다.
+- **미확인**: 스킬을 실제로 실행해 윤문 품질을 비교하지는 못했다. README 의 "내용은 한 글자도 건드리지 않는다"는 제작자의 설명이고, 게이트가 변경률 등은 검사하지만 의미 보존을 직접 검증하지는 못했다. 별 수도 확인하지 못했다.
+- **사용 예**: Claude Code 에서 `/humanize-korean` 또는 "이 글 AI 티 없애줘", 먼저 재어 보려면 `/humanize-scan`
+
 ---
 
 ## 검토 후 보류한 후보
