@@ -232,6 +232,28 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **점검 결과**: Node 22 에서 설치와 `graft --version`(0.21.1) 확인. `tree-sitter` 네이티브 모듈 등 18개 의존성이 있다.
 - **사용 예**: `graft init --dry-run`, `graft init --agents claude`
 
+### specify — GitHub Spec Kit (스펙 주도 개발)
+- **무엇**: GitHub 공식 Spec Kit 의 CLI `specify-cli`(MIT, Python 3.11+). 프로젝트에 `specify init <이름> --integration claude` 를 실행하면 스펙 주도 개발 골격을 만든다: `.specify/`(프로젝트 원칙 `constitution.md`, 스펙·계획·작업 템플릿, 스크립트, 워크플로)와 `.claude/skills/speckit-*` 10개(`constitution`, `specify`, `clarify`, `plan`, `tasks`, `analyze`, `checklist`, `implement`, `converge`, `taskstoissues`). 흐름은 원칙 → 스펙 → (질문) → 계획 → 작업 → (분석) → 구현. Claude 외에 Copilot, Codex 등 여러 에이전트 통합을 지원한다.
+- **설치**: `uv tool install specify-cli`(PyPI 최신판). 버전을 고정하려면 `uv tool install specify-cli==1.0.13` 또는 `uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v1.0.13`. 이 저장소의 `bootstrap.sh` 는 CLI 만 설치하고 `specify init` 은 실행하지 않는다. 스킬은 **프로젝트마다** 만들어지며 전역 설치가 아니다.
+- **출처 확인**: 공식 문서가 GitHub 태그와 PyPI `specify-cli` 두 채널을 공식 배포처로 밝힌다. 다만 PyPI 페이지의 프로젝트 URL·저자·라이선스 메타데이터가 비어 있어 PyPI 만 봐서는 출처가 드러나지 않는다. 그래서 1.0.13 휠을 받아 저장소 태그 `v1.0.13` 과 대조했다: 파이썬 소스가 동일하고, 휠에 들어 있는 `core_pack`(템플릿·스크립트·워크플로 등)도 저장소 파일과 내용이 같다(저장소에만 있는 파일이 빠진 부분집합). 텔레메트리 코드는 없다.
+- **네트워크**: `init` 은 휠에 번들된 템플릿을 쓰며 실행 중 접속한 주소를 출력하지 않았다. 확장·번들 카탈로그 기능을 쓸 때만 `raw.githubusercontent.com` 의 카탈로그를 읽는다.
+- **겹침**: addyosmani 의 `spec-driven-development`, mattpocock 의 `to-spec`, superpowers 의 `brainstorming`·`writing-plans` 와 역할이 겹친다. 한 프로젝트에서는 한 방식만 쓰는 것을 권한다. 이쪽은 스펙·계획·작업을 `.specify/` 에 파일로 남기고 명령이 단계별로 나뉘어 있다.
+- **점검 결과**: Python 3.11 에서 uv(pip 폴백으로 설치)로 `bootstrap.sh --tag spec` 설치, `specify version`(1.0.13), 재실행 건너뛰기 확인. 임시 폴더에서 `specify init demo --integration claude` 를 실행해 위 파일들이 프로젝트 안에만 만들어지고 HOME 에는 아무것도 쓰지 않는 것을 확인했다. Claude 외 통합과 워크플로 실행은 확인하지 않았다.
+- **사용 예**: `specify init my-app --integration claude` 후 Claude Code 에서 `/speckit-constitution`, `/speckit-specify 사용자가 오프라인에서도 일하고 재접속하면 동기화한다`
+
+### agent-reach — 플랫폼별 인터넷 읽기 CLI (⚠ 영향 범위 큼)
+- **무엇**: Twitter/X, Reddit, YouTube, Bilibili, 샤오홍슈, V2EX, LinkedIn, BOSS直聘(Boss Zhipin), 웹, RSS 등 16개 플랫폼의 **읽기**(검색·조회) 백엔드를 골라 연결해 주는 Python CLI(`Panniantong/Agent-Reach`, MIT, Python 3.10+). `agent-reach doctor` 로 어떤 채널이 지금 동작하는지 본다. 글쓰기(게시·댓글·좋아요)는 범위 밖이라고 스킬에 명시돼 있다.
+- **⚠ 이름 충돌**: **PyPI 의 `agent-reach` 는 이 프로젝트가 아니다**(`jgalea/agent-reach`, v0.1.0, 별개 프로젝트). `pip install agent-reach`, `uv tool install agent-reach` 는 엉뚱한 패키지를 설치한다. README 는 GitHub 아카이브 URL 로 설치하라고 안내한다.
+- **설치 방식**: 이 항목은 PyPI 가 아니라 **검토한 커밋에 고정**해 설치한다: `uv tool install --from git+https://github.com/Panniantong/Agent-Reach.git@a19a171fa980a0785849596492e0af4db800c82f agent-reach` (v1.5.0 표기, 릴리스 태그 `v1.5.0` 보다 이후 커밋이며 BOSS直聘(Boss Zhipin) 채널이 추가됨). 최신으로 올리려면 커밋 해시를 갱신한다. 설치는 CLI 만 하며 `~/.agent-reach/`, 스킬, 외부 도구는 만들지 않는다(확인함).
+- **기본 동작은 읽기 전용**: `agent-reach install` 은 기본이 "SAFE MODE"(시스템 변경 없음)이고 `agent-reach doctor` 는 설정을 만들지 않는다(둘 다 실행해 확인). 다만 `doctor` 는 V2EX 등 외부 서비스에 접속을 시도한다.
+- **`--system` 은 영향이 크다**: `agent-reach install --system` 은 apt/brew 로 시스템 패키지를, npm 으로 OpenCLI 를, pipx/uv 로 `twitter-cli`·`boss-agent-cli`·`rdt-cli`(커밋 고정) 같은 서드파티 도구를 설치한다. 명시적으로 승인할 때만 실행한다. 이 저장소의 `bootstrap.sh` 는 실행하지 않는다.
+- **쿠키**: `agent-reach configure twitter-cookies` 등으로 로그인 쿠키를 `~/.agent-reach/config.yaml`(권한 600)에 저장한다. 브라우저 쿠키 추출(`--from-browser`)은 플랫폼 하나씩 명시한 경우에만 하도록 설계돼 있다(소스에서 확인, 실행은 하지 않음). 로그인 계정으로 플랫폼을 긁는 방식이라 **해당 서비스의 약관·계정 제한 위험**이 있다.
+- **외부 서비스로 전송**: 웹 읽기는 `r.jina.ai`(Jina Reader), 웹 검색은 Exa MCP(`mcporter`)를 거친다. 즉 읽을 URL 과 검색어가 제3자 서비스로 전송된다. 사내·비공개 URL 에는 쓰지 않는다. 텔레메트리 코드는 찾지 못했다.
+- **스킬은 설치하지 않았다**: 저장소의 스킬(`agent-reach`)은 설명이 "사용자가 **어떤 URL 이나 플랫폼 이름을 언급하거나 검색을 요청하기만 해도 반드시 사용**"하도록 되어 있어, 설치하면 모든 URL·검색 요청이 이쪽(Jina·Exa 경유)으로 라우팅된다. 기존 Playwright MCP, `agent-browser`, `markitdown`, 내장 WebFetch 와 충돌한다. 쓰고 싶으면 `agent-reach skill --install`(CLI 버전에 맞는 스킬을 `~/.claude/skills/` 등에 설치) 후 필요 없으면 `agent-reach uninstall --keep-config` 로 스킬만 제거한다.
+- **스킬이 가리키는 원격 문서**: 스킬과 README 는 `raw.githubusercontent.com/.../main/docs/install.md`·`update.md` 를 에이전트가 읽고 따르게 한다. `main` 의 문서는 언제든 바뀔 수 있어, 에이전트가 읽는 즉시 지침이 되는 구조라는 점을 알고 쓴다.
+- **점검 결과**: Python 3.11 에서 uv 로 `bootstrap.sh --tag research` 설치, `agent-reach --version`(v1.5.0), 재실행 건너뛰기 확인. `install`·`doctor` 실행으로 읽기 전용 확인. 로그인이 필요한 채널(Twitter, 샤오홍슈, BOSS直聘(Boss Zhipin) 등)과 `--system`, 쿠키 추출은 실행하지 않았다. 샌드박스에서 `doctor` 는 16개 중 2개 채널만 사용 가능으로 나왔다(외부 접속 제한 포함).
+- **사용 예**: `agent-reach doctor`, `agent-reach check-update`
+
 ---
 
 ## 검토 후 보류한 후보
