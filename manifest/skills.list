@@ -50,3 +50,6 @@ emilkowalski/skills                 | emil-design-eng,animate,review-animations,
 
 # --- 에이전트 토너먼트 (비용 큼: 호출 시 서브에이전트 수백 회) ----------------------
 Jakeschincariol/arena-skill         | arena | agents,methodology,heavy | 같은 작업을 서브에이전트 N개(기본 100, --quick 16)에게 맡겨 서로 공격·방어시키는 토너먼트로 해법 하나를 남김. 기본 100개는 서브에이전트 595회 호출이라 비용이 크다 — 일상에는 --quick(91회) 권장
+
+# --- PDF 추출 -------------------------------------------------------------------------
+opendataloader-project/opendataloader-pdf | odl-pdf | pdf,docs | opendataloader-pdf(ODL)로 PDF 를 Markdown/JSON/HTML 로 추출하는 절차: 설치된 --help 를 먼저 읽고, 최소 명령을 만들고, 종료 코드 0 이 곧 성공이 아님을 전제로 추출 결과를 검증한다. 런타임(Java 11+ 와 pip/npm 패키지)은 따로 설치해야 한다

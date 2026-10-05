@@ -115,6 +115,15 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **미포함**: `write-swift`, `animate-expo`, `mobile-native`(모바일 전용), `ask-sonner`, `pick-ui-library`(특정 라이브러리), `prototype`, `apple-design`, `find-animation-opportunities`, `improve-animations`. 필요 시 추가.
 - **사용 예**: "이 모달 애니메이션 review-animations 로 봐줘", "이 카드 목록 break-ui 로 깨봐줘".
 
+### opendataloader-project/opendataloader-pdf — PDF 추출 절차 (스킬 1개, 런타임은 별도)
+- **무엇**: `opendataloader-pdf`(ODL, Apache-2.0)가 PDF 를 Markdown·JSON(요소별 bbox)·HTML 로 추출하는 도구이고, 이 항목은 그 저장소의 스킬 `odl-pdf` **1개만** 설치한다. 스킬은 옵션 목록이 아니라 **절차**다: 설치된 도구의 `--help` 를 먼저 읽고, 목표에 맞는 최소 명령을 만들고, **종료 코드 0 이 곧 추출 성공이 아니라는 전제**로 결과를 검증하며, 도구가 보고하지 않는 조용한 실패(표·OCR 누락 등)를 진단한다. 옵션 이름을 스킬이 고정하지 않고 런타임에 발견하게 해 버전이 바뀌어도 낡지 않는다. 포함 스크립트 4개: `detect-env.sh`(환경 감지), `hybrid-health.sh`(로컬 하이브리드 서버 상태 확인, 기본 `localhost:5002`), `verify-json.py`, `quick-eval.py`(추출 결과 점검).
+- **⚠ 런타임은 설치하지 않는다**: 스킬은 `opendataloader-pdf` 가 설치돼 있다고 전제한다(`compatibility` 에 명시). 런타임은 `pip install -U opendataloader-pdf`(PyPI 2.5.12) 또는 `npm install @opendataloader/pdf`(Node 22.13 이상)이며 **Java 11 이상이 필요**하다. Java 가 환경마다 달라 이 저장소의 기본 설치(`tools.list`)에는 넣지 않았다. 런타임 없이 스킬만 있으면 에이전트가 설치 절차를 안내하는 정도로 동작한다.
+- **왜**: `markitdown`·`pdf-inspector` 가 "변환 도구"라면 이 스킬은 ODL 을 쓸 때 조용한 실패를 막는 "사용 절차"다. 표·스캔본·수식은 ODL 의 하이브리드 모드(별도 서버를 띄워 AI 백엔드로 보냄)를 쓰는데, 이 서버가 데이터를 외부로 보내는지는 확인하지 못했다.
+- **출처 확인**: PyPI·npm(`@opendataloader/pdf`, Apache-2.0)의 저장소 주소가 이 저장소와 일치한다. PyPI 의 라이선스 메타데이터는 비어 있다. 스킬의 `name:` 과 폴더 이름이 같아 `--skill odl-pdf` 로 정확히 선택된다. 같은 저장소의 `skills/odl-pdf-maintenance` 는 `SKILL.md` 가 없는 유지보수자용 자료라 제외했다.
+- **벤치마크**: README 는 하이브리드 모드가 종합 0.907 로 1위라고 주장하지만 제작사 자체 측정이다. `pdf-inspector` README 의 다른 비교표에서는 ODL(로컬)이 0.831 로 나와 측정 조건에 따라 달라진다. 검증하지 못했다.
+- **점검 결과**: 격리 환경에서 실제 매니페스트 항목으로 `bootstrap.sh --skills-only --tag pdf` 설치(`Selected 1 skill: odl-pdf`), 스킬 폴더에 `SKILL.md`·`references/`·`scripts/` 4개가 모두 들어옴을 확인했다. 스크립트에는 설치·삭제·외부 전송이 없다. ODL 런타임 설치와 PDF 추출은 실행하지 않았다.
+- **사용 예**: "이 PDF 를 ODL 로 표까지 살려서 Markdown 으로 뽑아줘"
+
 ### Jakeschincariol/arena-skill — 에이전트 토너먼트 (⚠ 비용 큼)
 - **무엇**: 같은 작업을 서브에이전트 N개에게 똑같이 맡기고, 각자 다른 전략 카드(추론 방식·작업 순서·전략)로 풀게 한 뒤 단판 토너먼트로 서로의 해법을 공격·방어시키고 심판이 루브릭으로 채점해 하나만 남긴다. 스킬 1개(`arena`, MIT)에 `bracket.py`(대진표·상태 관리), `rubric.md`, `strategies.json` 이 딸려 있다. 서브에이전트는 현재 폴더의 `.arena/` 안에만 쓰고, 결과를 프로젝트에 적용할지는 사용자가 정한다.
 - **왜**: 답이 마음에 안 들 때 "다시 해줘"를 반복하는 대신 서로 다른 접근을 한꺼번에 시도해 보는 용도. 같은 모델이 전략만 바꿔 경쟁하는 방식이라 실제로 결과가 더 좋아지는지는 검증하지 못했다.
