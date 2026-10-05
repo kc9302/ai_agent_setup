@@ -25,7 +25,7 @@ tt-a1i/archify                      | * | diagram,visual       | 설명·코드�
 
 # --- 디자인 / 프론트엔드 / 웹 --------------------------------------------------
 nextlevelbuilder/ui-ux-pro-max-skill | * | design,frontend     | UI/UX 디자인 인텔리전스 (ui-ux-pro-max) + design-system, ui-styling, banner-design, slides(HTML 발표자료), brand, design
-vercel-labs/agent-skills            | react-best-practices,web-design-guidelines,composition-patterns,writing-guidelines | frontend,web | Vercel 의 React/웹 디자인/작문 가이드라인 스킬
+vercel-labs/agent-skills            | vercel-react-best-practices,web-design-guidelines,vercel-composition-patterns,writing-guidelines | frontend,web | Vercel 의 React/웹 디자인/작문 가이드라인 스킬
 
 # --- 글쓰기 ---------------------------------------------------------------------
 blader/humanizer                    | * | writing              | AI 특유의 말투(not X but Y, 강조 마무리, 억지 3단 나열 등 26개 패턴)를 제거해 사람이 쓴 글처럼 고침 (영어)

@@ -64,7 +64,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **왜 1개**: ui-ux-pro-max, frontend-design 과 취향이 겹쳐서 하나만 얹는다. `redesign-existing-projects`, `minimalist-ui`, `brandkit` 등은 필요할 때 skills.list 에 이름 추가.
 
 ### vercel-labs/agent-skills — React / 웹 가이드라인
-- **무엇**: Vercel 이 만든 프론트엔드 스킬. `react-best-practices`(성능·구조 규칙), `web-design-guidelines`(접근성·UX 점검), `composition-patterns`(컴포넌트 합성), `writing-guidelines`(기술 문서 작문).
+- **무엇**: Vercel 이 만든 프론트엔드 스킬. `vercel-react-best-practices`(성능·구조 규칙), `web-design-guidelines`(접근성·UX 점검), `vercel-composition-patterns`(컴포넌트 합성), `writing-guidelines`(기술 문서 작문). (주의: skills CLI 는 `--skill` 을 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값으로 찾는다. 이름이 어긋나면 오류 없이 일부만 설치된다.)
 - **왜**: React/Next.js 프로젝트에서 에이전트가 생성하는 코드 품질을 끌어올린다.
 - **설치 범위**: 위 4개만. `vercel-deploy-claimable`, `react-native-guidelines` 등은 제외 (필요하면 추가).
 
