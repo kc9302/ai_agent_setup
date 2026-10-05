@@ -19,7 +19,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **소스를 커밋에 고정한다.** `skills.list` 의 소스는 `owner/repo#<40자리 커밋>` 형식이다. 고정하지 않으면 클론한 시점의 최신 `main` 이 설치돼 환경과 시간에 따라 달라진다. 고정은 `bash scripts/pin.sh --fill`, 올릴 때는 `bash scripts/pin.sh --update owner/repo` 이고 비교 링크가 출력된다. 고정한 커밋은 **고정한 날(2026-10-05)의 upstream 최신**이며, 각 스킬을 처음 검토한 시점의 커밋과 다를 수 있다. 올릴 때마다 바뀐 내용을 읽는다(스킬은 에이전트가 따르는 지시문이다). `validate.sh` 는 고정되지 않은 소스를 오류로 처리한다.
 - **설치 후 실제로 설치됐는지 검증한다.** skills CLI 는 `--skill` 을 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값으로 찾고, 맞지 않는 이름은 **오류 없이 건너뛴 채 종료 코드 0** 으로 끝난다(예: `vercel-labs/agent-skills` 에서 4개 중 2개가 조용히 빠졌다). `bootstrap.sh` 는 설치 뒤 `skills ls --json` 과 대조해 이름으로 지정한 스킬이 하나라도 없으면 실패로 보고한다. 와일드카드(`*`) 소스는 스킬이 1개 이상 있는지 본다. 설치 없이 현재 환경만 점검하려면 `bash scripts/verify.sh [--project] [--agent …] [--tag …]`. 도구(`tools.list`)가 설치하는 스킬은 각 도구의 check 로 확인한다.
 - **이 저장소의 스킬도 함께 설치한다.** `skills/` 의 스킬(`ai-setup-sync`, `web-design-guidelines`)은 `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다(로컬 경로 설치는 파일을 복사하므로 임시 클론이 지워져도 남는다). 클론이 곧 고정이다.
-- **알려진 한계**: 도구(`tools.list`)가 설치하는 스킬은 이 고정 방식이 아니라 각 도구의 방식을 따른다. `officecli` 는 바이너리 버전에, `humanize-korean` 은 커밋에 묶여 있다. 고정하지 않은 도구는 실행 때마다 버전이 달라질 수 있다.
+- **알려진 한계**: 도구(`tools.list`)가 설치하는 스킬은 이 고정 방식이 아니라 각 도구의 방식을 따른다. `officecli` 는 바이너리 버전에, `im-not-ai`(스킬 `humanize-korean`)는 커밋에 묶여 있다. 고정하지 않은 도구는 실행 때마다 버전이 달라질 수 있다.
 
 ### anthropics/skills — Anthropic 공식 스킬
 - **무엇**: Anthropic 이 직접 관리하는 공식 스킬 모음. 문서 생성(`docx`, `pdf`, `pptx`, `xlsx`), 스킬 제작 도우미(`skill-creator`), Playwright 기반 웹앱 테스트(`webapp-testing`) 등.
@@ -80,7 +80,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 
 ### blader/humanizer — AI 말투 제거 (영어)
 - **무엇**: Wikipedia 의 "Signs of AI writing" 을 바탕으로, AI 생성 글의 26가지 패턴("not X but Y" 대조, 한 줄 극적 마무리, "Here's the thing" 류 도입부, 억지 3단 나열, 과도한 대시, 부풀린 어휘, 세일즈 톤, 굵은 라벨 등) 을 찾아 **내용은 바꾸지 않고** 사람이 쓴 글처럼 고친다.
-- **왜**: 문서·README·블로그 초안을 에이전트가 쓰면 티가 난다. 블라인드 테스트에서 원문보다 선호됨. 한국어는 별도 스킬(`humanize-korean`) 과 함께 사용.
+- **왜**: 문서·README·블로그 초안을 에이전트가 쓰면 티가 난다. 블라인드 테스트에서 원문보다 선호됨. 한국어는 별도 항목 `im-not-ai`(스킬 `humanize-korean`, 아래 도구 절)와 함께 사용.
 - **사용 예**: "이 README AI 티 나는 부분 humanizer 로 고쳐줘".
 
 ### huggingface/skills — Hugging Face 공식 ML 스킬
@@ -319,7 +319,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **Python 라이브러리로 쓰려면**: `pip install pdf-inspector`(PyPI 패키지의 저장소 주소가 이 저장소와 일치). `pdf_inspector.process_pdf("문서.pdf")` 로 분류와 Markdown 을 얻는다. `bootstrap.sh` 는 설치하지 않는다.
 - **사용 예**: `pdf-inspector detect 보고서.pdf --json` 으로 스캔본인지 먼저 확인한 뒤, 텍스트 PDF 만 `pdf-inspector 보고서.pdf -o 보고서.md`
 
-### humanize-korean — 한글 AI 글투 제거 (im-not-ai)
+### im-not-ai — 한글 AI 글투 제거 (스킬 `humanize-korean` 외 3개)
 - **무엇**: `epoko77-ai/im-not-ai`(MIT, v2.3.2). AI 가 쓴 한글에서 번역투, 영어 인용 과다, 기계적 병렬("첫째·둘째·셋째"), "결론적으로" 류 관용구, 피동 남용 같은 티를 **문체·리듬만** 고쳐 사람이 쓴 글로 되돌린다. 스킬 4개: `humanize-korean`(오케스트레이터), `humanize`(진입 명령, 분량에 따라 light 1콜·standard 2콜·heavy 3+콜 경로 선택), `humanize-scan`(AI 티가 얼마나 있는지 재고 표본으로 보여줌), `humanize-redo`(직전 결과를 2차로 다듬음). 서브에이전트 4개(`humanize-monolith`, `humanize-diagnostician`, `humanize-finalizer`, `korean-ai-tell-taxonomist`)를 호출한다.
 - **왜**: 위의 `blader/humanizer` 는 영어 전용이고, 한글 AI 글의 티는 대부분 영어 번역투에서 나온다. 한국어 쪽 짝으로 쓴다.
 - **설치 방식이 다른 이유**: 스킬 폴더만 복사하는 `npx skills add` 로는 서브에이전트와 검증 스크립트 경로가 빠져 동작하지 않는다. 그래서 저장소 자체 설치기를 쓴다: `~/.local/share/im-not-ai` 에 클론(**검토한 커밋 `2f3d943` 에 고정**)하고 `install.sh --claude-only` 로 `~/.claude/skills/` 의 스킬 4개와 `~/.claude/agents/` 의 에이전트 4개를 **심볼릭 링크**로 연결한다. **클론을 지우면 링크가 끊긴다.** 저장소가 `--copy` 모드는 검증 게이트가 깨진다고 밝히므로 링크 방식만 쓴다. 기존 같은 이름의 파일이 있으면 덮어쓰지 않고 거부하며(`--force` 는 쓰지 않음), `settings.json` 은 건드리지 않는다.
