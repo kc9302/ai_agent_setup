@@ -232,6 +232,15 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **점검 결과**: Node 22 에서 설치와 `graft --version`(0.21.1) 확인. `tree-sitter` 네이티브 모듈 등 18개 의존성이 있다.
 - **사용 예**: `graft init --dry-run`, `graft init --agents claude`
 
+### specify — GitHub Spec Kit (스펙 주도 개발)
+- **무엇**: GitHub 공식 Spec Kit 의 CLI `specify-cli`(MIT, Python 3.11+). 프로젝트에 `specify init <이름> --integration claude` 를 실행하면 스펙 주도 개발 골격을 만든다: `.specify/`(프로젝트 원칙 `constitution.md`, 스펙·계획·작업 템플릿, 스크립트, 워크플로)와 `.claude/skills/speckit-*` 10개(`constitution`, `specify`, `clarify`, `plan`, `tasks`, `analyze`, `checklist`, `implement`, `converge`, `taskstoissues`). 흐름은 원칙 → 스펙 → (질문) → 계획 → 작업 → (분석) → 구현. Claude 외에 Copilot, Codex 등 여러 에이전트 통합을 지원한다.
+- **설치**: `uv tool install specify-cli`(PyPI 최신판). 버전을 고정하려면 `uv tool install specify-cli==1.0.13` 또는 `uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v1.0.13`. 이 저장소의 `bootstrap.sh` 는 CLI 만 설치하고 `specify init` 은 실행하지 않는다. 스킬은 **프로젝트마다** 만들어지며 전역 설치가 아니다.
+- **출처 확인**: 공식 문서가 GitHub 태그와 PyPI `specify-cli` 두 채널을 공식 배포처로 밝힌다. 다만 PyPI 페이지의 프로젝트 URL·저자·라이선스 메타데이터가 비어 있어 PyPI 만 봐서는 출처가 드러나지 않는다. 그래서 1.0.13 휠을 받아 저장소 태그 `v1.0.13` 과 대조했다: 파이썬 소스가 동일하고, 휠에 들어 있는 `core_pack`(템플릿·스크립트·워크플로 등)도 저장소 파일과 내용이 같다(저장소에만 있는 파일이 빠진 부분집합). 텔레메트리 코드는 없다.
+- **네트워크**: `init` 은 휠에 번들된 템플릿을 쓰며 실행 중 접속한 주소를 출력하지 않았다. 확장·번들 카탈로그 기능을 쓸 때만 `raw.githubusercontent.com` 의 카탈로그를 읽는다.
+- **겹침**: addyosmani 의 `spec-driven-development`, mattpocock 의 `to-spec`, superpowers 의 `brainstorming`·`writing-plans` 와 역할이 겹친다. 한 프로젝트에서는 한 방식만 쓰는 것을 권한다. 이쪽은 스펙·계획·작업을 `.specify/` 에 파일로 남기고 명령이 단계별로 나뉘어 있다.
+- **점검 결과**: Python 3.11 에서 uv(pip 폴백으로 설치)로 `bootstrap.sh --tag spec` 설치, `specify version`(1.0.13), 재실행 건너뛰기 확인. 임시 폴더에서 `specify init demo --integration claude` 를 실행해 위 파일들이 프로젝트 안에만 만들어지고 HOME 에는 아무것도 쓰지 않는 것을 확인했다. Claude 외 통합과 워크플로 실행은 확인하지 않았다.
+- **사용 예**: `specify init my-app --integration claude` 후 Claude Code 에서 `/speckit-constitution`, `/speckit-specify 사용자가 오프라인에서도 일하고 재접속하면 동기화한다`
+
 ---
 
 ## 검토 후 보류한 후보
