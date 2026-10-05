@@ -38,3 +38,7 @@ officecli     | command -v officecli >/dev/null 2>&1 | npm install -g @officecli
 # --- 리서치 -----------------------------------------------------------------------
 hyperresearch | [ -f "$HOME/.claude/skills/hyperresearch/SKILL.md" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install hyperresearch && hyperresearch install --global | research,python | Claude Code 를 딥 리서치 에이전트로 전환 (16단계 파이프라인, 인용 검증). --global 로 ~/.claude 에 /hyperresearch 스킬과 에이전트만 설치, 프로젝트는 건드리지 않음
 
+
+# --- 에이전트 오케스트레이션 / 코드베이스 컨텍스트 ------------------------------------
+paperclipai   | command -v paperclipai >/dev/null 2>&1 | node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>24\|\|(a===24&&b>=11)?0:1)" \|\| { echo 'paperclipai 는 Node 24.11 이상이 필요합니다 (현재 '$(node -v)')' >&2; exit 1; }; npm install -g paperclipai | agents,orchestration | AI 에이전트 팀을 조직도·예산·목표로 관리하는 Node 서버+React UI 의 CLI. 설치는 CLI 만 하고, 서버 시작은 직접 `paperclipai onboard` (내장 Postgres 와 설정 파일을 만든다)
+graft         | command -v graft >/dev/null 2>&1 | DO_NOT_TRACK=1 npm install -g @nanonets/graft | agents,context,code-intel | 코드베이스를 그래프로 만들어 에이전트에 연결하는 컨텍스트 레이어 CLI. 설치 때만 텔레메트리를 끈다(DO_NOT_TRACK). 프로젝트 연결은 직접 `graft init`
