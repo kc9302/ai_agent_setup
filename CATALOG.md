@@ -260,8 +260,8 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 ### paperclipai — AI 에이전트 팀 관리 서버의 CLI
 - **무엇**: Paperclip 은 여러 AI 에이전트를 조직도·예산·목표·승인 흐름으로 관리하는 Node.js 서버 + React UI 다(MIT, `paperclipai/paperclip`). 이 항목은 npm 패키지 `paperclipai` 의 **CLI 만** 전역 설치한다. 서버 시작은 직접 한다: `paperclipai onboard` (README 의 빠른 시작은 `npx paperclipai@latest onboard --yes`). 로컬에서는 설정 파일과 내장 Postgres, 로컬 파일 저장소를 만든다.
 - **왜**: 에이전트 여러 개를 태스크·비용 단위로 관리하는 대시보드가 필요할 때. 일상 개발 도구가 아니라 선택 도구라서 기본 설치는 CLI 까지만 하고 `onboard` 는 자동 실행하지 않는다.
-- **요구 사항**: **Node 24.11 이상**. 그보다 낮으면 설치 명령이 "Node 24.11 이상이 필요합니다"를 출력하고 실패로 보고한다(나머지 설치는 계속된다).
-- **점검 결과**: npm 패키지의 저장소 주소가 `paperclipai/paperclip` 과 같고 MIT 이며, 설치 스크립트가 없다(npm 메타데이터 기준). 의존성에 `@anthropic-ai/sdk`, `postgres`, `ws` 와 ACP 어댑터가 있다. Node 24 에서 설치·`--version`·재실행 건너뛰기를 확인했고 HOME 에 파일을 만들지 않는다. Node 22 에서는 위 메시지로 거부됨을 확인했다.
+- **요구 사항**: **Node 24.11 이상**. 그보다 낮으면 설치 명령이 "Node 24.11 이상이 필요해 건너뜁니다 (현재 …)"를 출력하고 종료 코드 75 로 끝나, 부트스트랩이 **실패가 아니라 "건너뜀"** 으로 보고한다(종료 코드 0, 마지막에 "건너뛴 도구" 목록을 출력). Node 를 올린 뒤 `bash bootstrap.sh --tools-only` 를 다시 실행하면 설치된다. (이전에는 Node 24 미만 머신이 모두 실패 1건과 종료 코드 1 로 끝났다.)
+- **점검 결과**: npm 패키지의 저장소 주소가 `paperclipai/paperclip` 과 같고 MIT 이며, 설치 스크립트가 없다(npm 메타데이터 기준). 의존성에 `@anthropic-ai/sdk`, `postgres`, `ws` 와 ACP 어댑터가 있다. Node 24 에서 설치·`--version`·재실행 건너뛰기를 확인했고 HOME 에 파일을 만들지 않는다. Node 22 에서는 건너뜀(종료 코드 0)으로 처리됨을 확인했다.
 - **같이 오지 않는 것**: 저장소 최상위 `skills/` 의 7개는 대부분 Paperclip 서버가 있어야 쓸 수 있다(`paperclip`, `paperclip-board`, `agentmail`, `slack` 등). 서버 없이 쓸 만한 것은 `para-memory-files`(파일 기반 PARA 메모리) 정도이며 이 항목은 설치하지 않는다.
 - **사용 예**: `paperclipai --help`, 서버 시작은 `paperclipai onboard`
 

@@ -82,6 +82,9 @@ printf '    tag   : %s\n' "${TAG:-(all)}"
 [ "$DRY_RUN" = 1 ] && printf '    mode  : dry-run\n'
 
 FAILED=()
+SKIPPED=()
+# tools.list 의 install 이 이 종료 코드(EX_TEMPFAIL)로 끝나면 '선행 조건 미충족으로 건너뜀'이며 실패가 아니다.
+SKIP_EXIT=75
 
 # ---- 도구 -------------------------------------------------------------------
 if [ "$DO_TOOLS" = 1 ]; then
@@ -95,7 +98,11 @@ if [ "$DO_TOOLS" = 1 ]; then
       continue
     fi
     printf '  %s→%s %-16s %s\n' "$C_BOLD" "$C_RESET" "$name" "$desc"
-    if ! run bash -c "$install"; then
+    rc=0; run bash -c "$install" || rc=$?
+    if [ "$rc" = "$SKIP_EXIT" ]; then
+      # 선행 조건(예: Node 버전)이 맞지 않아 설치할 수 없는 도구. 실패가 아니라 건너뜀으로 보고한다.
+      printf '  %s↷%s %-16s 건너뜀 (위 사유 참고)\n' "$C_YELLOW" "$C_RESET" "$name"; SKIPPED+=("$name")
+    elif [ "$rc" != 0 ]; then
       warn "failed: $name"; FAILED+=("tool:$name")
     fi
   done 3< <(manifest_lines "$TOOLS_LIST")
@@ -166,6 +173,10 @@ fi
 
 # ---- 결과 -------------------------------------------------------------------
 echo
+if [ ${#SKIPPED[@]} -gt 0 ]; then
+  info "건너뛴 도구 ${#SKIPPED[@]}개 (선행 조건 미충족, 실패 아님): ${SKIPPED[*]}"
+  printf '    조건을 갖춘 뒤 bash bootstrap.sh --tools-only 를 다시 실행하면 설치됩니다.\n'
+fi
 if [ ${#FAILED[@]} -gt 0 ]; then
   error "finished with ${#FAILED[@]} failure(s):"
   printf '    - %s\n' "${FAILED[@]}"
