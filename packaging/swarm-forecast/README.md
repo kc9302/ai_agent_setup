@@ -13,7 +13,7 @@ Heavy swarm-simulation engines need servers, API keys for several services, and 
 | | swarm-forecast | server-based simulation engines |
 |---|---|---|
 | Setup | copy one folder | servers, several API keys, graph database |
-| Cost of a run | 20-100 sub-agent calls (`lite`) | hundreds to thousands |
+| Cost of a run | 20-100 sub-agent calls (`lite`), counted before you start | hundreds to thousands |
 | State | plain files (`facts.md`, `rounds/*.jsonl`, `report.md`) | databases |
 | Report evidence | quotes verified against the log by script | by prompt only |
 | Scale | 6-20 agents | thousands of agents |
@@ -59,7 +59,9 @@ seed files ─► facts.md (sourced) ─► actor types ─► personas ─► c
 - **Stance lives in the persona text**, not in numeric sentiment knobs that nothing reads.
 - **Independent turns.** One sub-agent call per active agent per round, each seeing only its persona, its own history and a feed built from earlier rounds.
 - **Reproducible activation.** `pick_agents.py` draws who acts from (seed, round).
-- **Audited report.** Claims are tagged `[seed]`, `[simulated]` or `[inferred]`; `verify_quotes.py` fails if a blockquote is not inside the log entry it cites.
+- **Audited report.** Claims are tagged `[seed]`, `[simulated]` or `[inferred]`; `verify_quotes.py` fails if a blockquote is not inside the log entry it cites, or if the report does not open with the standard notice (one model played everyone; not a forecast; not calibrated).
+- **A control.** `make_baseline.py` prepares a single plain call on the same seed with no simulation, and the report says what the run added over it. In the example, the baseline confidently predicted the opposite of what the run showed.
+- **Cost before you start.** `estimate_cost.py` counts the sub-agent calls for a seed; above 60 the skill asks for a go-ahead.
 
 A complete run is in [`skills/swarm-forecast/examples/scooter/`](skills/swarm-forecast/examples/scooter) (fictional city, 6 agents, 4 rounds, 2 interviews). Excerpt from its report:
 
@@ -83,7 +85,7 @@ Running the method end to end on the example surfaced problems that are now fixe
 ## Development
 
 ```bash
-python3 -m unittest discover -s tests -v     # 28 tests, standard library only
+python3 -m unittest discover -s tests -v     # 34 tests, standard library only
 python3 skills/swarm-forecast/scripts/verify_quotes.py skills/swarm-forecast/examples/scooter
 ```
 

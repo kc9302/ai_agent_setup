@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that a report's quotes and citations exist in the run's evidence.
 
-usage: verify_quotes.py <run_dir> [report.md]
+usage: verify_quotes.py <run_dir> [report.md] [--no-notice]
 
 Evidence: rounds/*.jsonl ("content" fields) and interviews/*.md.
 Every blockquote paragraph in the report (lines starting with ">") is checked:
@@ -10,6 +10,9 @@ Every blockquote paragraph in the report (lines starting with ">") is checked:
     of the cited ids, with the pieces in order (case and whitespace
     insensitive);
   - every id in square brackets ([r03#2], [iv:a05]) must exist.
+The report must also open with the standard notice (references/report-notice.md):
+a line starting with "**Notice.**" within its first 15 non-empty lines. Pass
+--no-notice to skip that check.
 Exit status 1 if anything fails.
 """
 import json
@@ -33,6 +36,9 @@ def in_order(parts, text):
 
 
 def main(argv):
+    argv = list(argv)
+    need_notice = "--no-notice" not in argv
+    argv = [a for a in argv if a != "--no-notice"]
     if not argv:
         sys.exit(__doc__)
     run = Path(argv[0])
@@ -63,6 +69,10 @@ def main(argv):
         blocks.append(cur)
 
     bad = 0
+    head = [l for l in lines if l.strip()][:15]
+    if need_notice and not any(l.startswith("**Notice.**") for l in head):
+        bad += 1
+        print("MISSING NOTICE: the report must open with the standard notice (references/report-notice.md)")
     for b in blocks:
         text = [x for x in b if x.strip()]
         cite = text[-1] if text and re.match(r"^\s*[—–-]{1,2}\s", text[-1]) else None

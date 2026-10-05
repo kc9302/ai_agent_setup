@@ -1,0 +1,1 @@
+**Notice.** This is a scenario written from a simulation in which one language model played every participant. The quotes are checked against the simulation log, which proves they were produced in the run, not that anyone would say or do them in reality. It is not a forecast, carries no probabilities, and has not been calibrated against real outcomes.
