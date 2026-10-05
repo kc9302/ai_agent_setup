@@ -254,6 +254,19 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **점검 결과**: Python 3.11 에서 uv 로 `bootstrap.sh --tag research` 설치, `agent-reach --version`(v1.5.0), 재실행 건너뛰기 확인. `install`·`doctor` 실행으로 읽기 전용 확인. 로그인이 필요한 채널(Twitter, 샤오홍슈, BOSS直聘(Boss Zhipin) 등)과 `--system`, 쿠키 추출은 실행하지 않았다. 샌드박스에서 `doctor` 는 16개 중 2개 채널만 사용 가능으로 나왔다(외부 접속 제한 포함).
 - **사용 예**: `agent-reach doctor`, `agent-reach check-update`
 
+### orx — alphaXiv OpenResearch (자율 연구 워크스페이스 CLI, ⚠ 텔레메트리 기본 켜짐)
+- **무엇**: 연구 에이전트(Claude Code, Codex, OpenCode, Cursor, Antigravity)를 위한 로컬 우선 워크스페이스(`alphaXiv/OpenResearch`, MIT). Rust CLI `orx` 와 데스크톱 앱이 있고, `orx up` 이 `http://127.0.0.1:4791` 에 로컬 대시보드(SQLite)를 연다. 연구 방향마다 독립 에이전트 세션과 git worktree 를 주고, git 기반 실험 트리에 변형을 기록하며 실행마다 커밋 스냅샷을 불변 아카이브로 남긴다. 연산은 로컬, SSH, Slurm, Kubernetes, Ray, Hugging Face Jobs, Modal, Tinker, 관리형 OpenResearch 연산에서 실행할 수 있다. 에이전트가 아이디어 제안 → 코드 수정 → 실험 실행 → 증거 확인을 스스로 돌리는 "autoresearch" 루프도 지원한다.
+- **설치 범위**: `orx` CLI 만, **v0.2.15 릴리스에 고정**해 설치한다(`~/.local/bin/orx`). `orx up`(서버), `orx install-skills`(스킬 설치), 연산 백엔드 연결은 자동 실행하지 않는다.
+- **설치 경로를 README 와 다르게 잡은 이유**: README 는 `curl https://openresearch.sh/install.sh | sh` 를 안내한다. 이 스크립트는 저장소에 없고 벤더 도메인에서 내려받는 구조인데, 이 환경의 외부 접속 정책이 그 도메인을 막아(403) 읽어 볼 수 없었다. 대신 저장소의 릴리스 파이프라인(cargo-dist)이 GitHub 릴리스에 올리는 `openresearch-cli-installer.sh` 를 받아 읽었다: 1660줄, 내려받는 곳은 `releases/download/v0.2.15` 뿐이고 플랫폼별 SHA-256 이 스크립트에 박혀 있어 설치 중 검증하며, 값은 릴리스의 `sha256.sum`·`dist-manifest.json` 과 일치한다.
+- **설치가 하는 일**: `CARGO_HOME=$HOME/.local` 로 지정해 `~/.local/bin/orx` 에 두고(다른 도구와 같은 위치), `OPENRESEARCH_CLI_NO_MODIFY_PATH=1` 로 셸 설정 파일(`.bashrc` 등)을 건드리지 않는다. 만들어지는 파일은 `~/.local/bin/orx` 와 `~/.config/openresearch-cli/openresearch-cli-receipt.json` 둘뿐이다(확인함). 서명되지 않은 바이너리다(README 도 macOS 관리형 기기에서 차단될 수 있다고 안내).
+- **⚠ 텔레메트리(기본 켜짐)**: 공식 릴리스 빌드는 **`orx` 를 처음 실행하는 순간**부터 익명 사용 이벤트를 쌓는다. 설치만으로는 만들어지지 않는다. 첫 실행에서 `~/.config/openresearch/settings.json`(임의 설치 ID 포함), `~/.local/share/openresearch/orx.db`, 전송 대기열 파일이 생긴다. 대기열의 이벤트는 직접 열어 확인했다: 명령 이름, OS, 아키텍처, CLI 버전, 설치 ID 뿐이고 코드·프롬프트·경로는 없었다. 끄려면 **설치 직후 `orx telemetry off`**(끈 뒤 명령을 실행해도 대기열이 생기지 않음을 확인). 명령 하나만 끄려면 `--no-telemetry`. 이 항목은 텔레메트리를 자동으로 끄지 않는다(사용자가 정할 일).
+- **`orx feedback`**: 스킬 `orx-feedback` 는 사용자가 불만을 표현하면 에이전트가 `orx feedback` 으로 제품 피드백을 보내게 한다. 공식 빌드에서만 전송되고, 로그인했다면 계정에 연결되며, `orx telemetry off` 로 꺼진다.
+- **⚠ 비용·보안**: 원격 연산 백엔드와 관리형 연산은 비용이 들 수 있고, 자율 루프는 실험을 계속 실행한다. `orx up --remote user@host` 는 원격 서비스가 루프백에 바인딩되지만 **앱 수준 인증이 없어 그 호스트의 다른 사용자가 접근할 수 있다**고 README 가 경고한다.
+- **같이 오지 않는 것**: 저장소의 `agent-skills/` 13개(`orx-create`, `orx-compute`, `orx-experiment-tree`, `orx-evidence`, `orx-figures`, `orx-paper`, `orx-lit-review` 등)는 `orx` 명령과 앱의 프로젝트·실험 트리를 전제로 하는 앱 전용 스킬이라 `skills.list` 에 넣지 않았다. 필요하면 프로젝트에서 `orx install-skills`(기본은 이미 설치된 에이전트에 핵심 스킬만, `--full` 은 모듈형 `orx` 스킬 전체).
+- **겹침**: `hyperresearch`(딥 리서치), Hugging Face 스킬(모델·데이터셋·학습)과 용도가 다르다. 이쪽은 실험을 git 트리로 기록하고 연산에서 실행하는 쪽이다.
+- **점검 결과**: Linux x86_64 에서 실제 매니페스트 항목으로 `bootstrap.sh --tag autoresearch` 설치, `orx --version`(0.2.15), 재실행 건너뛰기 확인. `orx telemetry status/off` 동작 확인. `orx up`, `orx install-skills`, 연산 백엔드, macOS·Windows·aarch64 설치는 실행하지 않았다. 별 수와 관리형 연산 요금은 확인하지 못했다.
+- **사용 예**: `orx telemetry off`, `orx --help`, 프로젝트에서 `orx up`
+
 ---
 
 ## 검토 후 보류한 후보
