@@ -215,6 +215,16 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **저장소**: https://github.com/iOfficeAI/OfficeCLI
 - **무엇**: Word·Excel·PowerPoint 를 에이전트가 CLI 로 읽고 고치고 만든다. 렌더링 엔진, 수식 평가, 템플릿 병합 내장. `officecli mcp <agent>` 로 MCP 서버로도 쓸 수 있다.
 - **왜**: 내장 docx/xlsx/pptx 스킬을 보완. **기존 파일 편집 품질은 실제 비교가 필요**하다. 중복이라 판단되면 tools.list 에서 제거.
+- **설치와 버전 고정**: `npm install -g @officecli/officecli@1.0.153`. 이 npm 패키지(Apache-2.0, SLSA 출처 증명 있음)는 설치 때 `postinstall` 로 **플랫폼 바이너리를 내려받는다**: 패키지 버전에 맞는 릴리스 태그의 불변 경로에서 `d.officecli.ai` 미러를 먼저, GitHub 릴리스를 대체로 쓴다. `SHA256SUMS` 로 검증하지만 체크섬 파일이 바이너리와 **같은 미러**에서 오고, 체크섬 파일을 받지 못하면 검증을 **조용히 건너뛴다**. 설치 중에는 `~/.claude` 에 아무것도 쓰지 않는다(확인함).
+- **⚠ 자동 업데이트(기본 켜짐)**: 바이너리는 백그라운드에서 스스로 업데이트를 확인하고(`~/.officecli/config.json` 의 `autoUpdate: true`), 설정 파일에 `lastSkillRefreshVersion` 도 있어 업데이트 때 스킬도 갱신하는 것으로 보인다. 그러면 버전을 고정해도 시간이 지나며 환경마다 달라진다. 그래서 설치 직후 `officecli config autoUpdate false` 로 끈다(영구 적용·재실행에도 유지됨을 확인). 일회성으로는 `OFFICECLI_SKIP_UPDATE=1`. 이미 설치돼 있던 환경에는 이 설정이 적용되지 않으므로 직접 `officecli config autoUpdate false` 를 실행한다.
+
+### officecli-skills — officecli 에 내장된 스킬 11개
+- **무엇**: `officecli skills install` 은 바이너리에 **내장된** 스킬을 감지된 에이전트에 설치한다. 기본 `officecli` 1개와 `officecli-pptx`·`officecli-docx`·`officecli-xlsx`(파일 형식별), `officecli-word-form`(채울 수 있는 Word 양식), `officecli-pitch-deck`(투자 유치 덱), `officecli-academic-paper`(논문 형식 docx), `officecli-data-dashboard`(Excel 대시보드), `officecli-financial-model`(재무 모델), `morph-ppt`·`morph-ppt-3d`(Morph 전환 효과 pptx) 10개. 총 2.5MB, 파일 121개.
+- **왜 저장소 스킬이 아니라 내장 설치인가**: 이 저장소는 루트에 `SKILL.md` 가 있고 `skills/officecli` 와 `name:` 이 같아 `npx skills add` 로 쓰면 하위 스킬을 못 찾거나 이름이 겹친다. 내장 설치는 **고정한 바이너리 버전과 항상 같은 스킬**을 주고 인터넷 없이도 동작한다(오프라인 설치 확인). 저장소 `main` 이 바뀌어도 영향이 없다.
+- **조용한 성공 방지**: 에이전트가 하나도 감지되지 않으면 `officecli skills install`(인자 없음)은 "No supported AI tools detected."를 출력하고 **종료 코드 0** 으로 끝난다. 이름을 지정하면 종료 코드 1 이다. 그래서 이 항목은 스킬마다 설치하고 마지막에 `officecli skills list` 로 11개 중 10개 상태가 `[installed]` 인지 확인해, 에이전트가 없는 환경에서는 **명확히 실패로 보고**한다. 에이전트를 설치한 뒤 `bootstrap.sh --tools-only` 를 다시 실행한다.
+- **⚠ 기존 docx/xlsx/pptx 스킬과 겹침**: `anthropics/skills` 의 `docx`·`xlsx`·`pptx` 와 `officecli-docx`·`officecli-xlsx`·`officecli-pptx` 는 설명이 거의 같은 문구("해당 확장자 파일이 관련되면 언제든 사용")라 같은 요청에 둘 다 후보가 된다. 어느 쪽이 더 나은지는 비교하지 못했다. 쓰다가 하나로 줄이려면 `officecli skills` 쪽을 빼거나 `anthropics/skills` 의 해당 항목을 뺀다.
+- **스킬이 에이전트에게 시키는 설치**: 스킬 지침(`officecli`, `officecli-pptx` 등)에는 "officecli 가 없으면 `curl -fsSL https://d.officecli.ai/install.sh | bash` 로 설치하라"는 문장이 있다. 이 저장소가 바이너리를 먼저 고정 설치하므로 발동하지 않지만, 없는 환경에서는 에이전트가 벤더 서버의 스크립트를 실행하려 할 수 있다.
+- **점검 결과**: 설치된 스킬의 `name:` 이 저장소 폴더 이름과 같고, 포함된 스크립트 29개(`morph-ppt` 의 스타일 템플릿 `build.sh` 27개와 헬퍼 2개)에는 `curl`·`sudo`·`eval`·`base64`·외부 접속이 없다. 격리 환경에서 실제 매니페스트 항목으로 확인: Claude 가 있으면 스킬 11개가 설치되고 재실행 시 건너뛴다. 에이전트가 없으면 실패로 보고된다. 에이전트가 Claude 외(Cursor 등)인 환경은 시험하지 못했다.
 
 ### hyperresearch — 딥 리서치 에이전트
 - **저장소**: https://github.com/jordan-gibbs/hyperresearch
