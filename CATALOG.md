@@ -254,6 +254,29 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **점검 결과**: Python 3.11 에서 uv 로 `bootstrap.sh --tag research` 설치, `agent-reach --version`(v1.5.0), 재실행 건너뛰기 확인. `install`·`doctor` 실행으로 읽기 전용 확인. 로그인이 필요한 채널(Twitter, 샤오홍슈, BOSS直聘(Boss Zhipin) 등)과 `--system`, 쿠키 추출은 실행하지 않았다. 샌드박스에서 `doctor` 는 16개 중 2개 채널만 사용 가능으로 나왔다(외부 접속 제한 포함).
 - **사용 예**: `agent-reach doctor`, `agent-reach check-update`
 
+### orx — alphaXiv OpenResearch (자율 연구 워크스페이스 CLI, ⚠ 텔레메트리 기본 켜짐)
+- **무엇**: 연구 에이전트(Claude Code, Codex, OpenCode, Cursor, Antigravity)를 위한 로컬 우선 워크스페이스(`alphaXiv/OpenResearch`, MIT). Rust CLI `orx` 와 데스크톱 앱이 있고, `orx up` 이 `http://127.0.0.1:4791` 에 로컬 대시보드(SQLite)를 연다. 연구 방향마다 독립 에이전트 세션과 git worktree 를 주고, git 기반 실험 트리에 변형을 기록하며 실행마다 커밋 스냅샷을 불변 아카이브로 남긴다. 연산은 로컬, SSH, Slurm, Kubernetes, Ray, Hugging Face Jobs, Modal, Tinker, 관리형 OpenResearch 연산에서 실행할 수 있다. 에이전트가 아이디어 제안 → 코드 수정 → 실험 실행 → 증거 확인을 스스로 돌리는 "autoresearch" 루프도 지원한다.
+- **설치 범위**: `orx` CLI 만, **v0.2.15 릴리스에 고정**해 설치한다(`~/.local/bin/orx`). `orx up`(서버), `orx install-skills`(스킬 설치), 연산 백엔드 연결은 자동 실행하지 않는다.
+- **설치 경로를 README 와 다르게 잡은 이유**: README 는 `curl https://openresearch.sh/install.sh | sh` 를 안내한다. 이 스크립트는 저장소에 없고 벤더 도메인에서 내려받는 구조인데, 이 환경의 외부 접속 정책이 그 도메인을 막아(403) 읽어 볼 수 없었다. 대신 저장소의 릴리스 파이프라인(cargo-dist)이 GitHub 릴리스에 올리는 `openresearch-cli-installer.sh` 를 받아 읽었다: 1660줄, 내려받는 곳은 `releases/download/v0.2.15` 뿐이고 플랫폼별 SHA-256 이 스크립트에 박혀 있어 설치 중 검증하며, 값은 릴리스의 `sha256.sum`·`dist-manifest.json` 과 일치한다.
+- **설치가 하는 일**: `CARGO_HOME=$HOME/.local` 로 지정해 `~/.local/bin/orx` 에 두고(다른 도구와 같은 위치), `OPENRESEARCH_CLI_NO_MODIFY_PATH=1` 로 셸 설정 파일(`.bashrc` 등)을 건드리지 않는다. 만들어지는 파일은 `~/.local/bin/orx` 와 `~/.config/openresearch-cli/openresearch-cli-receipt.json` 둘뿐이다(확인함). 서명되지 않은 바이너리다(README 도 macOS 관리형 기기에서 차단될 수 있다고 안내).
+- **⚠ 텔레메트리(기본 켜짐)**: 공식 릴리스 빌드는 **`orx` 를 처음 실행하는 순간**부터 익명 사용 이벤트를 쌓는다. 설치만으로는 만들어지지 않는다. 첫 실행에서 `~/.config/openresearch/settings.json`(임의 설치 ID 포함), `~/.local/share/openresearch/orx.db`, 전송 대기열 파일이 생긴다. 대기열의 이벤트는 직접 열어 확인했다: 명령 이름, OS, 아키텍처, CLI 버전, 설치 ID 뿐이고 코드·프롬프트·경로는 없었다. 끄려면 **설치 직후 `orx telemetry off`**(끈 뒤 명령을 실행해도 대기열이 생기지 않음을 확인). 명령 하나만 끄려면 `--no-telemetry`. 이 항목은 텔레메트리를 자동으로 끄지 않는다(사용자가 정할 일).
+- **`orx feedback`**: 스킬 `orx-feedback` 는 사용자가 불만을 표현하면 에이전트가 `orx feedback` 으로 제품 피드백을 보내게 한다. 공식 빌드에서만 전송되고, 로그인했다면 계정에 연결되며, `orx telemetry off` 로 꺼진다.
+- **⚠ 비용·보안**: 원격 연산 백엔드와 관리형 연산은 비용이 들 수 있고, 자율 루프는 실험을 계속 실행한다. `orx up --remote user@host` 는 원격 서비스가 루프백에 바인딩되지만 **앱 수준 인증이 없어 그 호스트의 다른 사용자가 접근할 수 있다**고 README 가 경고한다.
+- **같이 오지 않는 것**: 저장소의 `agent-skills/` 13개(`orx-create`, `orx-compute`, `orx-experiment-tree`, `orx-evidence`, `orx-figures`, `orx-paper`, `orx-lit-review` 등)는 `orx` 명령과 앱의 프로젝트·실험 트리를 전제로 하는 앱 전용 스킬이라 `skills.list` 에 넣지 않았다. 필요하면 프로젝트에서 `orx install-skills`(기본은 이미 설치된 에이전트에 핵심 스킬만, `--full` 은 모듈형 `orx` 스킬 전체).
+- **겹침**: `hyperresearch`(딥 리서치), Hugging Face 스킬(모델·데이터셋·학습)과 용도가 다르다. 이쪽은 실험을 git 트리로 기록하고 연산에서 실행하는 쪽이다.
+- **점검 결과**: Linux x86_64 에서 실제 매니페스트 항목으로 `bootstrap.sh --tag autoresearch` 설치, `orx --version`(0.2.15), 재실행 건너뛰기 확인. `orx telemetry status/off` 동작 확인. `orx up`, `orx install-skills`, 연산 백엔드, macOS·Windows·aarch64 설치는 실행하지 않았다. 별 수와 관리형 연산 요금은 확인하지 못했다.
+- **사용 예**: `orx telemetry off`, `orx --help`, 프로젝트에서 `orx up`
+
+### pdf-inspector — PDF 분류·Markdown 변환 CLI
+- **무엇**: Firecrawl 이 만든 Rust 기반 PDF 라이브러리(`firecrawl/pdf-inspector`, MIT)의 npm CLI `pdf-inspector`. PDF 가 텍스트 기반인지 스캔본인지 분류하고(`detect`), 텍스트 PDF 를 OCR 없이 로컬에서 Markdown 으로 바꾼다. 제목(글꼴 크기 비율), 목록, 코드 블록, 표, 다단 읽기 순서를 처리한다. 사용법: `pdf-inspector 문서.pdf`(Markdown), `--json`, `--pages 1,3,5`, `-o 파일`, `pdf-inspector detect 문서.pdf --json`(`TextBased`/`Scanned`/`ImageBased`/`Mixed`, 신뢰도, OCR 이 필요한 쪽 번호).
+- **왜**: `markitdown` 과 같은 용도의 대안이다. 제작사 README 의 벤치마크(opendataloader-bench 200개 PDF, Apple M4 Pro, 2026-07-31 갱신)는 pdf-inspector 종합 0.875 · 200개 처리 0.47초, markitdown(0.1.5) 종합 0.589 · 16초로 보고한다. **제작사가 직접 측정한 값이라 검증하지 못했고**, 이 환경의 markitdown 은 0.1.8 이다. `markitdown` 은 Word·PPT·Excel·HTML 등도 다루고 이쪽은 PDF 만 다룬다.
+- **설치**: `npm install -g @firecrawl/pdf-inspector@1.25.2`(**버전 고정**). 갱신하려면 `tools.list` 의 버전을 올린다.
+- **출처 확인**: npm, PyPI(`pdf-inspector`), crates.io 세 곳 모두 저장소 주소가 `firecrawl/pdf-inspector` 이고 버전이 1.25.2 로 같다. npm 패키지에는 SLSA 출처 증명이 붙어 있고 설치 스크립트가 없다. 플랫폼별 네이티브 바이너리는 `@firecrawl/pdf-inspector-<플랫폼>` 별도 패키지(optionalDependencies)로 받는다. CLI 래퍼 소스(`napi/bin/pdf-inspector.mjs`)에는 네트워크·프로세스 호출이 없다. 네이티브 바이너리 자체는 감사하지 않았다.
+- **점검 결과**: Linux x86_64 에서 실제 매니페스트 항목으로 `bootstrap.sh --tag pdf` 설치, `pdf-inspector --version`(1.25.2), 재실행 건너뛰기 확인. 직접 만든 2쪽짜리 텍스트 PDF 로 `detect`(TextBased)와 변환을 실행해 제목(`#`, `##`)과 목록이 정상 변환되고 홈 디렉터리에 파일을 만들지 않는 것을 확인했다.
+- **알아둘 점**: ① 제목 판정이 추출 범위의 글꼴 크기 분포에 상대적이라, 한 쪽만 뽑으면(`--pages 2`) 본문 한 줄이 제목으로 오인되는 경우를 봤다. ② 짧은 문서에서는 `detect` 신뢰도가 낮게(0.5) 나왔다. ③ 스캔본·표·다단·한국어 PDF·선택적 OCR 은 시험하지 않았다. 선택적 OCR 은 네이티브 Python·Node 패키지에 들어 있고 PDFium·ONNX 런타임·모델이 별도로 필요하다고 README 가 밝힌다.
+- **Python 라이브러리로 쓰려면**: `pip install pdf-inspector`(PyPI 패키지의 저장소 주소가 이 저장소와 일치). `pdf_inspector.process_pdf("문서.pdf")` 로 분류와 Markdown 을 얻는다. `bootstrap.sh` 는 설치하지 않는다.
+- **사용 예**: `pdf-inspector detect 보고서.pdf --json` 으로 스캔본인지 먼저 확인한 뒤, 텍스트 PDF 만 `pdf-inspector 보고서.pdf -o 보고서.md`
+
 ---
 
 ## 검토 후 보류한 후보
@@ -273,5 +296,6 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | Orchestra-Research/AI-research-SKILLs | ML 연구 스킬 98개(RAG, 분산 학습, 멀티모달 등)로 범위가 너무 넓다. 필요한 분야(예: `11-evaluation`, `15-rag`)만 골라 추가 |
 | dream-num/univer | 앱에 임베드하는 Office SDK(Apache-2.0) 모노레포라 에이전트 환경에 설치할 항목이 없다. 에이전트용은 별도 저장소다: `univer-cli`(Node 24 필요, 설치 경로가 `dream-num/skills` 를 거치고 `officecli` 와 역할이 겹침), `univer-sdk-skills`(스킬 4개, Univer 로 앱을 만들 때만 유용). 필요하면 후자만 추가 |
 | ronald-koh/mattpock-skills-copilot | `mattpocock/skills` 를 GitHub Copilot 용으로 개작한 포크(14개). 컨텍스트·ADR 경로를 `.github/` 기준으로 바꿔 놓았고 LICENSE 파일이 없다. 겹치는 스킬은 이미 superpowers·addyosmani 에 있고 필요한 4개는 원본에서 직접 선별해 둠 |
+| MadsLorentzen/ai-job-search | 스킬 모음이 아니라 **프로젝트로 복제해서 프로필을 채워 쓰는 구직 워크플로 템플릿**(MIT)이다. 슬래시 명령 12개(`/setup`, `/apply`, `/interview`, `/rank` 등), 프로젝트 안의 프로필·문서·CV 템플릿, LaTeX(`lualatex`·`xelatex`)와 `bun` 이 전제라 스킬만 전역 설치해서는 동작하지 않는다. 포털 검색 스킬 6개 중 4개(`jobindex`, `jobnet`, `jobbank`, `jobdanmark`)는 덴마크 전용이고 `linkedin-search`·`freehire-search` 만 전 지역 대상이며, LinkedIn 을 긁는 방식이라 약관 위험이 있다. **⚠ 개인정보**: README 는 포크가 항상 공개이고 `/setup` 이 이름·연락처·경력·희망 연봉을 **git 이 추적하는 파일**에 쓰므로, 본인 구직용이면 포크하지 말고 **비공개 저장소에 이 저장소를 `upstream` 으로 연결**하라고 안내한다(SETUP.md 8절). 실제 구직에 쓸 때 별도 프로젝트로 그렇게 쓰는 것이 맞고, 이 저장소의 기본 설치에는 맞지 않는다. 설치·실행은 하지 않았다 |
 | firecrawl/firecrawl | 크롤링·스크래핑 플랫폼 본체(AGPL-3.0)이고 에이전트용 CLI(`firecrawl-cli`)·MCP(`firecrawl-mcp`)는 별도 저장소다. 호스팅 서비스는 API 키가 필요해 `bootstrap.sh` 가 자동 설정할 수 없고, URL·페이지 내용이 `api.firecrawl.dev` 로 전송된다. 단일 페이지 읽기는 Playwright MCP·`agent-browser`·`markitdown`·내장 WebFetch 로 충분하다. 사이트 전체 크롤링·구조화 추출이 필요할 때 추가: 스킬은 `firecrawl/skills`(`npx skills add firecrawl/skills`), MCP 는 `FIRECRAWL_API_KEY` 환경 변수가 있을 때만 등록. 이 저장소 안의 `skills/firecrawl-build*` 5개는 자기 앱 코드에 Firecrawl API 를 통합할 때용. 요금제·`firecrawl/skills` 내용·CLI 텔레메트리는 확인하지 못했다 |
 | multica-ai/andrej-karpathy-skills | 이미 설치 중인 `forrestchang/andrej-karpathy-skills` 와 같은 커밋(`2c60614`)·같은 파일 구성이고 `SKILL.md` 내용이 동일하다. 둘 다 넣으면 `karpathy-guidelines` 가 중복되므로 하나만 쓴다 |
