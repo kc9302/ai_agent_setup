@@ -45,3 +45,6 @@ graft         | command -v graft >/dev/null 2>&1 | DO_NOT_TRACK=1 npm install -g
 
 # --- 스펙 주도 개발 -------------------------------------------------------------------
 specify       | command -v specify >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/specify" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install specify-cli | spec,methodology,python | GitHub 공식 Spec Kit CLI(MIT). 스펙 주도 개발용 프로젝트 골격(.specify/)과 에이전트 슬래시 명령을 만든다. 설치는 CLI 만 하고, 프로젝트 적용은 직접 `specify init <이름> --integration claude`
+
+# --- 인터넷 접근 (플랫폼별 읽기 도구 라우터) -----------------------------------------
+agent-reach   | command -v agent-reach >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/agent-reach" ] | export PATH="$HOME/.local/bin:$PATH"; uv tool install --from 'git+https://github.com/Panniantong/Agent-Reach.git@a19a171fa980a0785849596492e0af4db800c82f' agent-reach | research,web,python | Twitter/X·Reddit·YouTube·Bilibili·샤오홍슈 등 16개 플랫폼을 읽는 CLI(MIT). 검토한 커밋에 고정해 설치(PyPI 의 agent-reach 는 다른 프로젝트). 스킬과 외부 도구 설치(--system)는 자동 실행하지 않음
