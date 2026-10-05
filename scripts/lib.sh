@@ -58,6 +58,68 @@ has_tag() {
   return 1
 }
 
+# ---- 소스 고정 ---------------------------------------------------------------
+# skills.list 의 소스 필드는 'owner/repo#<40자리 커밋>' 형식으로 커밋에 고정한다.
+# 고정하지 않으면 클론한 시점의 최신 코드가 설치돼 환경마다 달라진다.
+src_repo() { printf '%s' "${1%%#*}"; }
+src_ref()  { case "$1" in *'#'*) printf '%s' "${1#*#}" ;; esac; }
+
+# ---- 설치 결과 검증 -----------------------------------------------------------
+# 매니페스트가 이름으로 지정한 스킬이 실제로 설치됐는지 `skills ls --json` 과 대조한다.
+#
+# 왜 필요한가: skills CLI 는 --skill 을 폴더 이름이 아니라 SKILL.md 의 name: 값으로 찾고,
+# 일치하지 않는 이름은 오류 없이 건너뛴 채 종료 코드 0 으로 끝난다. 그래서 설치 명령의
+# 성공 여부만으로는 "정의한 스킬이 전부 설치됐다"를 알 수 없다.
+#
+# 호출 전에 전역 배열을 채운다.
+#   EXPECT_NAMES   : "owner/repo:스킬이름"  이 이름의 스킬이 설치돼 있어야 한다
+#   EXPECT_SOURCES : "owner/repo"           '*' 로 받은 소스. 그 소스의 스킬이 1개 이상 있어야 한다
+# 결과는 VERIFY_MISSING 배열에 담기고, 빠진 게 있으면 1 을 돌려준다.
+# 확인 자체가 불가능하면(CLI 오류 등) 경고만 내고 0 을 돌려준다.
+EXPECT_NAMES=(); EXPECT_SOURCES=(); VERIFY_MISSING=()
+verify_installed_skills() {
+  local scope="$1"; shift
+  local -a agents=("$@") targets=()
+  local a json rows pair repo name n_names=0
+  VERIFY_MISSING=()
+  if [ ${#agents[@]} -gt 0 ]; then targets=("${agents[@]}"); else targets=(""); fi
+  for a in "${targets[@]}"; do
+    local -a args=(ls --json)
+    [ -n "$scope" ] && args+=("$scope")
+    [ -n "$a" ] && args+=(-a "$(trim "$a")")
+    if ! json="$(npx -y skills "${args[@]}" 2>/dev/null)"; then
+      warn "설치 결과를 확인하지 못했습니다 (skills ls 실패)"; return 0
+    fi
+    # JSON 앞에 다른 출력이 섞여도 첫 '[' 부터 해석한다. 결과는 "이름<TAB>소스" 줄들.
+    if ! rows="$(printf '%s' "$json" | node -e '
+      let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+        try { const a=JSON.parse(s.slice(s.indexOf("["))); for (const x of a) console.log(x.name+"\t"+(x.source||"")); }
+        catch (e) { process.exit(3); }
+      });' 2>/dev/null)"; then
+      warn "설치 결과를 확인하지 못했습니다 (skills ls --json 해석 실패)"; return 0
+    fi
+    n_names=0
+    for pair in "${EXPECT_NAMES[@]+"${EXPECT_NAMES[@]}"}"; do
+      repo="${pair%%:*}"; name="${pair#*:}"
+      n_names=$((n_names + 1))
+      printf '%s\n' "$rows" | cut -f1 | grep -qxF -- "$name" \
+        || VERIFY_MISSING+=("$name  ← $repo${a:+  (에이전트: $a)}")
+    done
+    for repo in "${EXPECT_SOURCES[@]+"${EXPECT_SOURCES[@]}"}"; do
+      printf '%s\n' "$rows" | cut -f2 | grep -qixF -- "$repo" \
+        || VERIFY_MISSING+=("(설치된 스킬 없음)  ← $repo${a:+  (에이전트: $a)}")
+    done
+  done
+  if [ ${#VERIFY_MISSING[@]} -gt 0 ]; then
+    error "정의한 스킬 중 설치되지 않은 것이 있습니다 (${#VERIFY_MISSING[@]}건):"
+    printf '    - %s\n' "${VERIFY_MISSING[@]}" >&2
+    return 1
+  fi
+  printf '  %s✓%s 이름으로 지정한 스킬 %d개, 와일드카드 소스 %d개 모두 설치됨\n' \
+    "$C_GREEN" "$C_RESET" "$n_names" "${#EXPECT_SOURCES[@]}"
+  return 0
+}
+
 # ---- GitHub API -------------------------------------------------------------
 gh_api() {
   local path="$1"

@@ -11,6 +11,16 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 에이전트는 skill 의 `description` 을 보고 상황에 맞을 때만 내용을 불러오므로, 많이 설치해도 컨텍스트를 거의 쓰지 않습니다.
 설치 위치: Claude Code `~/.claude/skills/`, Codex `~/.codex/skills/`, Cursor `~/.cursor/skills/`, Gemini CLI `~/.gemini/skills/`, OpenCode `~/.config/opencode/skills/` (프로젝트 범위는 `.claude/skills/`, `.agents/skills/`).
 
+
+### 설치 안정화 — 어느 환경에서나 같은 스킬
+
+이 저장소의 목적은 **클론하면 우리가 정의한 스킬이 모든 환경에 똑같이 설치되는 것**이다. 그래서 세 가지를 지킨다.
+
+- **소스를 커밋에 고정한다.** `skills.list` 의 소스는 `owner/repo#<40자리 커밋>` 형식이다. 고정하지 않으면 클론한 시점의 최신 `main` 이 설치돼 환경과 시간에 따라 달라진다. 고정은 `bash scripts/pin.sh --fill`, 올릴 때는 `bash scripts/pin.sh --update owner/repo` 이고 비교 링크가 출력된다. 고정한 커밋은 **고정한 날(2026-10-05)의 upstream 최신**이며, 각 스킬을 처음 검토한 시점의 커밋과 다를 수 있다. 올릴 때마다 바뀐 내용을 읽는다(스킬은 에이전트가 따르는 지시문이다). `validate.sh` 는 고정되지 않은 소스를 오류로 처리한다.
+- **설치 후 실제로 설치됐는지 검증한다.** skills CLI 는 `--skill` 을 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값으로 찾고, 맞지 않는 이름은 **오류 없이 건너뛴 채 종료 코드 0** 으로 끝난다(예: `vercel-labs/agent-skills` 에서 4개 중 2개가 조용히 빠졌다). `bootstrap.sh` 는 설치 뒤 `skills ls --json` 과 대조해 이름으로 지정한 스킬이 하나라도 없으면 실패로 보고한다. 와일드카드(`*`) 소스는 스킬이 1개 이상 있는지 본다. 설치 없이 현재 환경만 점검하려면 `bash scripts/verify.sh [--project] [--agent …] [--tag …]`. 도구(`tools.list`)가 설치하는 스킬은 각 도구의 check 로 확인한다.
+- **이 저장소의 스킬도 함께 설치한다.** `skills/` 의 스킬(`ai-setup-sync`, `web-design-guidelines`)은 `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다(로컬 경로 설치는 파일을 복사하므로 임시 클론이 지워져도 남는다). 클론이 곧 고정이다.
+- **알려진 한계**: 도구(`tools.list`)가 설치하는 스킬은 이 고정 방식이 아니라 각 도구의 방식을 따른다. `officecli` 는 바이너리 버전에, `humanize-korean` 은 커밋에 묶여 있다. 고정하지 않은 도구는 실행 때마다 버전이 달라질 수 있다.
+
 ### anthropics/skills — Anthropic 공식 스킬
 - **무엇**: Anthropic 이 직접 관리하는 공식 스킬 모음. 문서 생성(`docx`, `pdf`, `pptx`, `xlsx`), 스킬 제작 도우미(`skill-creator`), Playwright 기반 웹앱 테스트(`webapp-testing`) 등.
 - **왜**: 사실상의 표준 레퍼런스. 문서 산출물(워드/PDF/슬라이드/엑셀)이 필요한 작업에 바로 쓰이고, `skill-creator` 는 우리 스킬을 만들 때 기준이 된다.
@@ -64,9 +74,9 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **왜 1개**: ui-ux-pro-max, frontend-design 과 취향이 겹쳐서 하나만 얹는다. `redesign-existing-projects`, `minimalist-ui`, `brandkit` 등은 필요할 때 skills.list 에 이름 추가.
 
 ### vercel-labs/agent-skills — React / 웹 가이드라인
-- **무엇**: Vercel 이 만든 프론트엔드 스킬. `vercel-react-best-practices`(성능·구조 규칙), `web-design-guidelines`(접근성·UX 점검), `vercel-composition-patterns`(컴포넌트 합성), `writing-guidelines`(기술 문서 작문). (주의: skills CLI 는 `--skill` 을 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값으로 찾는다. 이름이 어긋나면 오류 없이 일부만 설치된다.)
+- **무엇**: Vercel 이 만든 프론트엔드 스킬. `vercel-react-best-practices`(성능·구조 규칙), `vercel-composition-patterns`(컴포넌트 합성), `writing-guidelines`(기술 문서 작문). (주의: skills CLI 는 `--skill` 을 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값으로 찾는다. 이름이 어긋나면 오류 없이 일부만 설치된다.)
 - **왜**: React/Next.js 프로젝트에서 에이전트가 생성하는 코드 품질을 끌어올린다.
-- **설치 범위**: 위 4개만. `vercel-deploy-claimable`, `react-native-guidelines` 등은 제외 (필요하면 추가).
+- **설치 범위**: 위 3개만 (`web-design-guidelines` 는 아래 "고정 사본" 참고). `vercel-deploy-claimable`, `react-native-guidelines` 등은 제외 (필요하면 추가).
 
 ### blader/humanizer — AI 말투 제거 (영어)
 - **무엇**: Wikipedia 의 "Signs of AI writing" 을 바탕으로, AI 생성 글의 26가지 패턴("not X but Y" 대조, 한 줄 극적 마무리, "Here's the thing" 류 도입부, 억지 3단 나열, 과도한 대시, 부풀린 어휘, 세일즈 톤, 굵은 라벨 등) 을 찾아 **내용은 바꾸지 않고** 사람이 쓴 글처럼 고친다.
@@ -134,6 +144,19 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **사용 예**: `/arena --quick README 첫 문단을 더 설득력 있게 다시 써줘`
 
 ---
+
+
+### 이 저장소의 로컬 스킬 (`skills/`)
+
+#### web-design-guidelines — Web Interface Guidelines 리뷰 (고정 사본)
+- **무엇**: UI 코드를 Vercel Web Interface Guidelines(접근성, 폼, 포커스, 애니메이션, 타이포그래피, 성능, 다크 모드, i18n)에 맞는지 점검해 `file:line` 형식으로 출력한다. 규칙 파일 `references/command.md` 가 스킬 폴더에 **함께 들어 있다**.
+- **왜 사본인가**: 원래 스킬(`vercel-labs/agent-skills` 의 `web-design-guidelines`)은 **실행할 때마다** `vercel-labs/web-interface-guidelines` 의 `main` 에서 `command.md` 를 내려받아 지시문으로 쓴다. 규칙과 에이전트가 따르는 지시가 upstream 이 바뀔 때마다 달라지고 머신·날짜마다 다르다. 그래서 원래 스킬은 `skills.list` 에서 빼고, 이 저장소에 고정한 사본을 둔다.
+- **출처**: `command.md` 는 `vercel-labs/web-interface-guidelines` 커밋 `e3d624ba…`(2026-08-17)의 **바이트 그대로 복사**(SHA-256 `5a775e64…` 이 upstream 과 일치함을 확인), MIT 라이선스 사본을 함께 둔다. `SKILL.md` 는 이 저장소용으로 새로 썼다(원본 스킬 텍스트를 복사하지 않음. 원본 `agent-skills` 저장소에는 라이선스 파일이 없다). 갱신 방법과 해시는 `skills/web-design-guidelines/SOURCE.md`.
+- **갱신**: upstream diff 를 **읽은 뒤** 새 `command.md` 로 교체하고 `SOURCE.md` 의 커밋·해시를 고친다.
+- **사용 예**: "이 컴포넌트 UI 리뷰해줘", "접근성 점검".
+
+#### ai-setup-sync — 이 저장소의 매니페스트로 환경 동기화
+- **무엇**: 에이전트에게 `kc9302/ai_agent_setup` 로 스킬·도구를 설치·동기화하는 절차(클론 → `bootstrap.sh` → `status.sh`)를 알려 준다. 이전에는 `npx skills add kc9302/ai_agent_setup` 로만 설치할 수 있었고 `bootstrap.sh` 는 설치하지 않았다.
 
 ## 도구 (오픈소스 CLI / MCP 서버)
 

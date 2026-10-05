@@ -15,12 +15,14 @@ while IFS= read -r -u 3 line; do
   split_fields "$line"
   src="${FIELDS[0]:-}"; skills="${FIELDS[1]:-}"; tags="${FIELDS[2]:-}"; desc="${FIELDS[3]:-}"
   [ ${#FIELDS[@]} -eq 4 ] || fail "skills.list: expected 4 fields, got ${#FIELDS[@]}: $line"
-  [[ "$src" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || fail "skills.list: source must be owner/repo: '$src'"
+  [[ "$src" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(#[0-9a-f]{40})?$ ]] || fail "skills.list: source must be owner/repo#<40자리 커밋>: '$src'"
+  [ -n "$(src_ref "$src")" ] || fail "skills.list: $src 가 커밋에 고정되지 않았다 → bash scripts/pin.sh --fill"
   [ -n "$skills" ] || fail "skills.list: skills field empty for $src (use '*')"
   [[ "$skills" =~ ^(\*|[A-Za-z0-9_.-]+([[:space:]]*,[[:space:]]*[A-Za-z0-9_.-]+)*)$ ]] || fail "skills.list: bad skills list for $src: '$skills'"
   [ -n "$desc" ] || fail "skills.list: description empty for $src"
-  [ -z "${seen[${src,,}]:-}" ] || fail "skills.list: duplicate source $src"
-  seen[${src,,}]=1
+  repo_key="$(src_repo "$src")"; repo_key="${repo_key,,}"
+  [ -z "${seen[$repo_key]:-}" ] || fail "skills.list: duplicate source $src"
+  seen[$repo_key]=1
 done 3< <(manifest_lines "$SKILLS_LIST")
 printf '    %d skill source(s)\n' "$n"
 
@@ -49,6 +51,9 @@ for d in "$REPO_ROOT"/skills/*/; do
   if [ ! -f "$d/SKILL.md" ]; then fail "skills/$(basename "$d") has no SKILL.md"; continue; fi
   head -1 "$d/SKILL.md" | grep -q '^---$' || fail "skills/$(basename "$d")/SKILL.md must start with YAML frontmatter"
   grep -q '^name:' "$d/SKILL.md" || fail "skills/$(basename "$d")/SKILL.md missing 'name:'"
+  # skills CLI 는 --skill 을 폴더 이름이 아니라 name: 값으로 찾으므로, 둘이 다르면 혼란스럽다.
+  lname="$(sed -n 's/^name:[[:space:]]*//p' "$d/SKILL.md" | head -1 | tr -d '\r"'"'"'')"
+  [ "$lname" = "$(basename "$d")" ] || fail "skills/$(basename "$d")/SKILL.md: name: '$lname' 이 폴더 이름과 다르다"
   grep -q '^description:' "$d/SKILL.md" || fail "skills/$(basename "$d")/SKILL.md missing 'description:'"
 done
 
