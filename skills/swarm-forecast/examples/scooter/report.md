@@ -1,6 +1,8 @@
 # Harborview sidewalk ban: first-day reaction (lite run, 4 rounds, seed 7)
 
-**Question.** How do stakeholders react in the first hours to the sidewalk ban announcement, and does the "unfunded lanes" framing take over? **Setup.** Fictional seed (`seed.md`), six agents, four rounds of two simulated hours (Day 1, 09:00-15:00), broadcast platform, one injection at round 3 (the Courier's "councillors question the funding" post). 22 logged actions: 15 quotes, 4 posts, 1 like, 2 "nothing". Two agents interviewed afterwards. One run, one seed. **Assumed items:** F8 (riders learn of the ban via social media and the Association).
+**Notice.** This is a scenario written from a simulation in which one language model played every participant. The quotes are checked against the simulation log, which proves they were produced in the run, not that anyone would say or do them in reality. It is not a forecast, carries no probabilities, and has not been calibrated against real outcomes.
+
+**Question.** How do stakeholders react in the first hours to the sidewalk ban announcement, and does the "unfunded lanes" framing take over? **Setup.** Fictional seed (`seed.md`), six agents, four rounds of two simulated hours (Day 1, 09:00-15:00), broadcast platform, one injection at round 3 (the Courier's "councillors question the funding" post). 22 logged actions: 15 quotes, 4 posts, 1 like, 2 "nothing". Two agents interviewed afterwards, plus a single-call baseline for comparison. One run, one seed. **Assumed items:** F8 (riders learn of the ban via social media and the Association).
 
 ## 1. "Fines first, lanes later" framed the whole day in the first round
 
@@ -54,6 +56,10 @@ Given that the regulator's persona is to stay silent unless a claim is factually
 > — Greywalkers [r04#3]
 
 **Reliability of interviews.** In interview the Association said it had broken the councillor story itself; the log shows the Courier posted it. [simulated: r03#1] Interview answers are in-character reconstructions and can contradict the log; use them for stated reasons, not for facts.
+
+## What the simulation added
+
+A single-call baseline on the same seed (`baseline.md`, no simulation) answered the question "yes, the unfunded-lanes framing takes over", and described the councillors' private doubt as becoming public knowledge that reshapes the discourse. [inferred, from the baseline text] The run did not show that: the equivalent post (r03#1) drew no reaction at all. [simulated] The baseline also named no framing that would win instead, whereas the run produced one with a concrete mechanism, "fines start on 1 June but the lanes do not exist yet", used by the Association, the rider and the newspaper account before the funding story appeared (r01#1, r01#4, r02#4), and again afterwards (r03#3, r03#5, r03#6). [simulated] Both texts agree on the Association's grievance about not being consulted and on Quick-Bite's vague support. [seed] The simulation therefore contradicted the baseline on the question asked and added one mechanism and one escalation trigger (the protest threshold in section 3). One run and one baseline are two samples, not a test, and a baseline from a larger model might not have made the same call.
 
 ## Limits
 

@@ -220,11 +220,67 @@ class MakeInterview(Base):
         self.assertIn(str(self.run_dir / "interviews" / "a06.md"), text)
 
 
+class EstimateCost(Base):
+    def test_matches_the_calls_actually_recorded_for_the_example(self):
+        out = run("estimate_cost.py", self.run_dir, "--seed", 7, "--interviews", 2, "--baseline", check=True).stdout
+        actual = sum(len([r for r in jl(EXAMPLE / "rounds" / f"{n:02d}.jsonl")]) for n in range(1, 5))
+        injected = 1  # round 3 injection is logged but is not a sub-agent call
+        self.assertIn(f"turn calls: {actual - injected}", out)
+        self.assertIn("TOTAL sub-agent calls: 22", out)
+
+    def test_warns_above_sixty(self):
+        cfg = json.loads((self.run_dir / "config.json").read_text())
+        cfg["total_rounds"] = 40
+        cfg["agents_per_hour"] = [4, 5]
+        cfg["minutes_per_round"] = 60
+        cfg["peak_hours"] = list(range(24))
+        (self.run_dir / "config.json").write_text(json.dumps(cfg))
+        cast = json.loads((self.run_dir / "cast.json").read_text())
+        for a in cast:
+            a["active_hours"] = list(range(24))
+            a["activity_level"] = 1.0
+        (self.run_dir / "cast.json").write_text(json.dumps(cast))
+        self.assertIn("go-ahead", run("estimate_cost.py", self.run_dir, check=True).stdout)
+
+    def test_seed_value_equal_to_other_args_is_not_swallowed(self):
+        self.assertEqual(run("estimate_cost.py", self.run_dir, "--seed", 1, "--interviews", 1).returncode, 0)
+
+
+class MakeBaseline(Base):
+    def test_prompt_has_question_seed_files_and_output_path(self):
+        (self.run_dir / "brief.md").write_text("Question: what happens?", encoding="utf-8")
+        run("make_baseline.py", self.run_dir, self.run_dir / "seed.md", check=True)
+        text = (self.run_dir / "baseline.prompt.md").read_text()
+        self.assertIn("what happens?", text)
+        self.assertIn(str(self.run_dir / "seed.md"), text)
+        self.assertIn(str(self.run_dir / "baseline.md"), text)
+        self.assertIn("Do not invent", text)
+
+
 class VerifyQuotes(Base):
-    def verify(self, report_text):
+    NOTICE = (SKILL / "references" / "report-notice.md").read_text(encoding="utf-8").strip()
+
+    def verify(self, report_text, notice=True):
         f = self.tmp / "r.md"
-        f.write_text(report_text, encoding="utf-8")
+        f.write_text(("# T\n\n" + self.NOTICE + "\n\n" if notice else "") + report_text, encoding="utf-8")
         return run("verify_quotes.py", self.run_dir, f)
+
+    def test_missing_notice_fails_and_flag_skips_it(self):
+        row = jl(self.run_dir / "rounds" / "01.jsonl")[0]
+        text = f"> {row['content']}\n> — X [{row['id']}]\n"
+        p = self.verify(text, notice=False)
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("MISSING NOTICE", p.stdout)
+        f = self.tmp / "n.md"
+        f.write_text(text, encoding="utf-8")
+        self.assertEqual(run("verify_quotes.py", self.run_dir, f, "--no-notice").returncode, 0)
+
+    def test_notice_buried_late_does_not_count(self):
+        row = jl(self.run_dir / "rounds" / "01.jsonl")[0]
+        filler = "\n".join(f"line {i}" for i in range(20))
+        f = self.tmp / "b.md"
+        f.write_text(f"# T\n\n{filler}\n\n{self.NOTICE}\n\n> {row['content']}\n> — X [{row['id']}]\n", encoding="utf-8")
+        self.assertEqual(run("verify_quotes.py", self.run_dir, f).returncode, 1)
 
     def test_shipped_example_report_passes(self):
         p = run("verify_quotes.py", self.run_dir)

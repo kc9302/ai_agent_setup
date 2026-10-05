@@ -31,8 +31,19 @@ Do not write a claim you have not looked up. If the log has no support for somet
 - Never invent a username, quote, count, or interaction. Counts come from `log_view.py stats`.
 - No headings inside a section; use bold for run-in labels. Do not repeat earlier sections.
 - Write in the user's language. A quote in another language is translated, with the original kept in the log reference.
-- Open the report with the question, the setup (size, rounds, seed, branches), and the assumed items from `facts.md`. Close with **Limits** (use the list in `SKILL.md`), and what to run next to firm up the finding (another seed, a variant, a different cast).
+- Directly under the title, paste the notice from `references/report-notice.md` unchanged. `verify_quotes.py` requires it. Then give the question, the setup (size, rounds, seed, branches, and whether a baseline was run), and the assumed items from `facts.md`. Close with **Limits** (use the list in `SKILL.md`), and what to run next to firm up the finding (another seed, a variant, a different cast).
 - Never write a probability. Describe mechanisms and conditions: "when X was posted before Y, the framing stuck".
+
+## Baseline: what did the simulation add?
+
+A report that sounds insightful may be what one model would have written without any simulation. Check with a control before claiming the run adds anything:
+
+1. `python3 <skill>/scripts/make_baseline.py <run> <seed file>...` writes `baseline.prompt.md`.
+2. One sub-agent call: "Read <abs path>/baseline.prompt.md and follow it exactly." It writes `baseline.md`.
+3. In a short section of the report, **What the simulation added**, compare the two on the same questions: which findings appear only in the run (and which log entries show them), which appear in both (then the run confirmed rather than added), and which baseline claims the run contradicted. Quote the run, not the baseline.
+4. If the run added nothing the baseline lacks, say so. That is a result.
+
+One baseline and one run are two samples, not a test. Say that too.
 
 ## Verify before delivering
 
@@ -40,7 +51,7 @@ Do not write a claim you have not looked up. If the log has no support for somet
 python3 <skill>/scripts/verify_quotes.py forecast/<slug>
 ```
 
-It checks that every blockquote appears in the logs or interviews and that every cited id exists. Fix the report, not the log, until it passes. Mention in the final message that the quotes were verified (and that this does not verify the interpretation).
+It checks that the notice is present, that every blockquote appears in the log entry it cites, and that every cited id exists. Fix the report, not the log, until it passes. Mention in the final message that the quotes were verified (and that this does not verify the interpretation).
 
 ## Branches
 
