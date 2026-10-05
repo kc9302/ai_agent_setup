@@ -267,6 +267,16 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **점검 결과**: Linux x86_64 에서 실제 매니페스트 항목으로 `bootstrap.sh --tag autoresearch` 설치, `orx --version`(0.2.15), 재실행 건너뛰기 확인. `orx telemetry status/off` 동작 확인. `orx up`, `orx install-skills`, 연산 백엔드, macOS·Windows·aarch64 설치는 실행하지 않았다. 별 수와 관리형 연산 요금은 확인하지 못했다.
 - **사용 예**: `orx telemetry off`, `orx --help`, 프로젝트에서 `orx up`
 
+### pdf-inspector — PDF 분류·Markdown 변환 CLI
+- **무엇**: Firecrawl 이 만든 Rust 기반 PDF 라이브러리(`firecrawl/pdf-inspector`, MIT)의 npm CLI `pdf-inspector`. PDF 가 텍스트 기반인지 스캔본인지 분류하고(`detect`), 텍스트 PDF 를 OCR 없이 로컬에서 Markdown 으로 바꾼다. 제목(글꼴 크기 비율), 목록, 코드 블록, 표, 다단 읽기 순서를 처리한다. 사용법: `pdf-inspector 문서.pdf`(Markdown), `--json`, `--pages 1,3,5`, `-o 파일`, `pdf-inspector detect 문서.pdf --json`(`TextBased`/`Scanned`/`ImageBased`/`Mixed`, 신뢰도, OCR 이 필요한 쪽 번호).
+- **왜**: `markitdown` 과 같은 용도의 대안이다. 제작사 README 의 벤치마크(opendataloader-bench 200개 PDF, Apple M4 Pro, 2026-07-31 갱신)는 pdf-inspector 종합 0.875 · 200개 처리 0.47초, markitdown(0.1.5) 종합 0.589 · 16초로 보고한다. **제작사가 직접 측정한 값이라 검증하지 못했고**, 이 환경의 markitdown 은 0.1.8 이다. `markitdown` 은 Word·PPT·Excel·HTML 등도 다루고 이쪽은 PDF 만 다룬다.
+- **설치**: `npm install -g @firecrawl/pdf-inspector@1.25.2`(**버전 고정**). 갱신하려면 `tools.list` 의 버전을 올린다.
+- **출처 확인**: npm, PyPI(`pdf-inspector`), crates.io 세 곳 모두 저장소 주소가 `firecrawl/pdf-inspector` 이고 버전이 1.25.2 로 같다. npm 패키지에는 SLSA 출처 증명이 붙어 있고 설치 스크립트가 없다. 플랫폼별 네이티브 바이너리는 `@firecrawl/pdf-inspector-<플랫폼>` 별도 패키지(optionalDependencies)로 받는다. CLI 래퍼 소스(`napi/bin/pdf-inspector.mjs`)에는 네트워크·프로세스 호출이 없다. 네이티브 바이너리 자체는 감사하지 않았다.
+- **점검 결과**: Linux x86_64 에서 실제 매니페스트 항목으로 `bootstrap.sh --tag pdf` 설치, `pdf-inspector --version`(1.25.2), 재실행 건너뛰기 확인. 직접 만든 2쪽짜리 텍스트 PDF 로 `detect`(TextBased)와 변환을 실행해 제목(`#`, `##`)과 목록이 정상 변환되고 홈 디렉터리에 파일을 만들지 않는 것을 확인했다.
+- **알아둘 점**: ① 제목 판정이 추출 범위의 글꼴 크기 분포에 상대적이라, 한 쪽만 뽑으면(`--pages 2`) 본문 한 줄이 제목으로 오인되는 경우를 봤다. ② 짧은 문서에서는 `detect` 신뢰도가 낮게(0.5) 나왔다. ③ 스캔본·표·다단·한국어 PDF·선택적 OCR 은 시험하지 않았다. 선택적 OCR 은 네이티브 Python·Node 패키지에 들어 있고 PDFium·ONNX 런타임·모델이 별도로 필요하다고 README 가 밝힌다.
+- **Python 라이브러리로 쓰려면**: `pip install pdf-inspector`(PyPI 패키지의 저장소 주소가 이 저장소와 일치). `pdf_inspector.process_pdf("문서.pdf")` 로 분류와 Markdown 을 얻는다. `bootstrap.sh` 는 설치하지 않는다.
+- **사용 예**: `pdf-inspector detect 보고서.pdf --json` 으로 스캔본인지 먼저 확인한 뒤, 텍스트 PDF 만 `pdf-inspector 보고서.pdf -o 보고서.md`
+
 ---
 
 ## 검토 후 보류한 후보

@@ -51,3 +51,4 @@ agent-reach   | command -v agent-reach >/dev/null 2>&1 \|\| [ -x "$HOME/.local/b
 
 # --- 자율 연구 워크스페이스 ------------------------------------------------------------
 orx           | command -v orx >/dev/null 2>&1 \|\| [ -x "$HOME/.local/bin/orx" ] | set -o pipefail; curl -LsSf https://github.com/alphaXiv/OpenResearch/releases/download/v0.2.15/openresearch-cli-installer.sh \| CARGO_HOME="$HOME/.local" OPENRESEARCH_CLI_NO_MODIFY_PATH=1 sh | agents,autoresearch | alphaXiv OpenResearch 의 CLI(orx, MIT): 연구 에이전트용 로컬 워크스페이스·실험 트리·원격 연산 실행. v0.2.15 릴리스에 고정해 체크섬 검증 설치(~/.local/bin/orx, 셸 설정 변경 없음). 첫 실행부터 텔레메트리가 기본 켜짐 — 끄려면 `orx telemetry off`. 서버(orx up)와 스킬(orx install-skills)은 자동 실행하지 않음
+pdf-inspector | command -v pdf-inspector >/dev/null 2>&1 | npm install -g @firecrawl/pdf-inspector@1.25.2 | docs,pdf | Firecrawl 의 PDF 분류·텍스트 추출·Markdown 변환 CLI(Rust 기반, MIT). 텍스트 PDF 를 OCR 없이 로컬에서 빠르게 변환하고 스캔 PDF 는 detect 로 구분한다. markitdown 과 같은 용도의 대안
