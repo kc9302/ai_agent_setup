@@ -47,3 +47,6 @@ hamelsmu/evals-skills               | * | ml,evals                 | Hamel Husai
 addyosmani/web-quality-skills       | * | web,quality,frontend     | Lighthouse 기반 웹 품질 스킬 6개: 접근성(WCAG 2.2), Core Web Vitals, 성능, SEO, 모범 사례, 통합 품질 감사
 cloudflare/security-audit-skill     | security-audit | security,review | Cloudflare 의 코드베이스 보안 감사 스킬: 정찰→공격 유형별 탐색→검증→JSON 보고서(스키마 검증 스크립트 포함). 웹/RPC/클라우드/공급망/AI·LLM 등 영역별 체크리스트
 emilkowalski/skills                 | emil-design-eng,animate,review-animations,break-ui,animation-vocabulary | design,frontend,animation | Emil Kowalski 의 UI 마감·모션 스킬 중 웹용 5개: 디자인 엔지니어링 철학, 애니메이션 설계, 모션 코드 리뷰, 최악 데이터로 UI 깨보기, 모션 용어 사전 (Swift/Expo/모바일 전용은 제외)
+
+# --- 에이전트 토너먼트 (비용 큼: 호출 시 서브에이전트 수백 회) ----------------------
+Jakeschincariol/arena-skill         | arena | agents,methodology,heavy | 같은 작업을 서브에이전트 N개(기본 100, --quick 16)에게 맡겨 서로 공격·방어시키는 토너먼트로 해법 하나를 남김. 기본 100개는 서브에이전트 595회 호출이라 비용이 크다 — 일상에는 --quick(91회) 권장
