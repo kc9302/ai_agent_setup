@@ -1,0 +1,8 @@
+[
+ {"id":"a01","name":"Transport Office","type":"Regulator","activity_level":0.5,"active_hours":[9,10,11,12,13,14,15,16,17]},
+ {"id":"a02","name":"Couriers' Association","type":"RiderRepresentative","activity_level":0.8,"active_hours":[9,10,11,12,13,14,15,16,17,18,19,20]},
+ {"id":"a03","name":"Quick-Bite","type":"Platform","activity_level":0.4,"active_hours":[9,10,11,12,13,14,15,16,17]},
+ {"id":"a04","name":"Greywalkers","type":"SeniorsAdvocate","activity_level":0.6,"active_hours":[9,10,11,12,13,14,15,16,17,18]},
+ {"id":"a05","name":"Harborview Courier","type":"LocalMedia","activity_level":0.8,"active_hours":[9,10,11,12,13,14,15,16,17,18,19,20]},
+ {"id":"a06","name":"Marco (rider)","type":"Rider","activity_level":0.9,"active_hours":[9,10,11,12,13,14,15,16,17,18,19,20,21]}
+]
