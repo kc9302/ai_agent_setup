@@ -251,3 +251,4 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | Orchestra-Research/AI-research-SKILLs | ML 연구 스킬 98개(RAG, 분산 학습, 멀티모달 등)로 범위가 너무 넓다. 필요한 분야(예: `11-evaluation`, `15-rag`)만 골라 추가 |
 | dream-num/univer | 앱에 임베드하는 Office SDK(Apache-2.0) 모노레포라 에이전트 환경에 설치할 항목이 없다. 에이전트용은 별도 저장소다: `univer-cli`(Node 24 필요, 설치 경로가 `dream-num/skills` 를 거치고 `officecli` 와 역할이 겹침), `univer-sdk-skills`(스킬 4개, Univer 로 앱을 만들 때만 유용). 필요하면 후자만 추가 |
 | ronald-koh/mattpock-skills-copilot | `mattpocock/skills` 를 GitHub Copilot 용으로 개작한 포크(14개). 컨텍스트·ADR 경로를 `.github/` 기준으로 바꿔 놓았고 LICENSE 파일이 없다. 겹치는 스킬은 이미 superpowers·addyosmani 에 있고 필요한 4개는 원본에서 직접 선별해 둠 |
+| multica-ai/andrej-karpathy-skills | 이미 설치 중인 `forrestchang/andrej-karpathy-skills` 와 같은 커밋(`2c60614`)·같은 파일 구성이고 `SKILL.md` 내용이 동일하다. 둘 다 넣으면 `karpathy-guidelines` 가 중복되므로 하나만 쓴다 |
