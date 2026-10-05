@@ -64,7 +64,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **왜 1개**: ui-ux-pro-max, frontend-design 과 취향이 겹쳐서 하나만 얹는다. `redesign-existing-projects`, `minimalist-ui`, `brandkit` 등은 필요할 때 skills.list 에 이름 추가.
 
 ### vercel-labs/agent-skills — React / 웹 가이드라인
-- **무엇**: Vercel 이 만든 프론트엔드 스킬. `react-best-practices`(성능·구조 규칙), `web-design-guidelines`(접근성·UX 점검), `composition-patterns`(컴포넌트 합성), `writing-guidelines`(기술 문서 작문).
+- **무엇**: Vercel 이 만든 프론트엔드 스킬. `vercel-react-best-practices`(성능·구조 규칙), `web-design-guidelines`(접근성·UX 점검), `vercel-composition-patterns`(컴포넌트 합성), `writing-guidelines`(기술 문서 작문). (주의: skills CLI 는 `--skill` 을 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값으로 찾는다. 이름이 어긋나면 오류 없이 일부만 설치된다.)
 - **왜**: React/Next.js 프로젝트에서 에이전트가 생성하는 코드 품질을 끌어올린다.
 - **설치 범위**: 위 4개만. `vercel-deploy-claimable`, `react-native-guidelines` 등은 제외 (필요하면 추가).
 
@@ -114,6 +114,15 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **왜**: `ui-ux-pro-max`, `taste-skill` 이 방향과 시스템을 잡는 쪽이라면 이쪽은 모션과 디테일 마감을 다룬다. 스크립트는 없고 외부 명령 실행 지시도 없다.
 - **미포함**: `write-swift`, `animate-expo`, `mobile-native`(모바일 전용), `ask-sonner`, `pick-ui-library`(특정 라이브러리), `prototype`, `apple-design`, `find-animation-opportunities`, `improve-animations`. 필요 시 추가.
 - **사용 예**: "이 모달 애니메이션 review-animations 로 봐줘", "이 카드 목록 break-ui 로 깨봐줘".
+
+### opendataloader-project/opendataloader-pdf — PDF 추출 절차 (스킬 1개, 런타임은 별도)
+- **무엇**: `opendataloader-pdf`(ODL, Apache-2.0)가 PDF 를 Markdown·JSON(요소별 bbox)·HTML 로 추출하는 도구이고, 이 항목은 그 저장소의 스킬 `odl-pdf` **1개만** 설치한다. 스킬은 옵션 목록이 아니라 **절차**다: 설치된 도구의 `--help` 를 먼저 읽고, 목표에 맞는 최소 명령을 만들고, **종료 코드 0 이 곧 추출 성공이 아니라는 전제**로 결과를 검증하며, 도구가 보고하지 않는 조용한 실패(표·OCR 누락 등)를 진단한다. 옵션 이름을 스킬이 고정하지 않고 런타임에 발견하게 해 버전이 바뀌어도 낡지 않는다. 포함 스크립트 4개: `detect-env.sh`(환경 감지), `hybrid-health.sh`(로컬 하이브리드 서버 상태 확인, 기본 `localhost:5002`), `verify-json.py`, `quick-eval.py`(추출 결과 점검).
+- **⚠ 런타임은 설치하지 않는다**: 스킬은 `opendataloader-pdf` 가 설치돼 있다고 전제한다(`compatibility` 에 명시). 런타임은 `pip install -U opendataloader-pdf`(PyPI 2.5.12) 또는 `npm install @opendataloader/pdf`(Node 22.13 이상)이며 **Java 11 이상이 필요**하다. Java 가 환경마다 달라 이 저장소의 기본 설치(`tools.list`)에는 넣지 않았다. 런타임 없이 스킬만 있으면 에이전트가 설치 절차를 안내하는 정도로 동작한다.
+- **왜**: `markitdown`·`pdf-inspector` 가 "변환 도구"라면 이 스킬은 ODL 을 쓸 때 조용한 실패를 막는 "사용 절차"다. 표·스캔본·수식은 ODL 의 하이브리드 모드(별도 서버를 띄워 AI 백엔드로 보냄)를 쓰는데, 이 서버가 데이터를 외부로 보내는지는 확인하지 못했다.
+- **출처 확인**: PyPI·npm(`@opendataloader/pdf`, Apache-2.0)의 저장소 주소가 이 저장소와 일치한다. PyPI 의 라이선스 메타데이터는 비어 있다. 스킬의 `name:` 과 폴더 이름이 같아 `--skill odl-pdf` 로 정확히 선택된다. 같은 저장소의 `skills/odl-pdf-maintenance` 는 `SKILL.md` 가 없는 유지보수자용 자료라 제외했다.
+- **벤치마크**: README 는 하이브리드 모드가 종합 0.907 로 1위라고 주장하지만 제작사 자체 측정이다. `pdf-inspector` README 의 다른 비교표에서는 ODL(로컬)이 0.831 로 나와 측정 조건에 따라 달라진다. 검증하지 못했다.
+- **점검 결과**: 격리 환경에서 실제 매니페스트 항목으로 `bootstrap.sh --skills-only --tag pdf` 설치(`Selected 1 skill: odl-pdf`), 스킬 폴더에 `SKILL.md`·`references/`·`scripts/` 4개가 모두 들어옴을 확인했다. 스크립트에는 설치·삭제·외부 전송이 없다. ODL 런타임 설치와 PDF 추출은 실행하지 않았다.
+- **사용 예**: "이 PDF 를 ODL 로 표까지 살려서 Markdown 으로 뽑아줘"
 
 ### Jakeschincariol/arena-skill — 에이전트 토너먼트 (⚠ 비용 큼)
 - **무엇**: 같은 작업을 서브에이전트 N개에게 똑같이 맡기고, 각자 다른 전략 카드(추론 방식·작업 순서·전략)로 풀게 한 뒤 단판 토너먼트로 서로의 해법을 공격·방어시키고 심판이 루브릭으로 채점해 하나만 남긴다. 스킬 1개(`arena`, MIT)에 `bracket.py`(대진표·상태 관리), `rubric.md`, `strategies.json` 이 딸려 있다. 서브에이전트는 현재 폴더의 `.arena/` 안에만 쓰고, 결과를 프로젝트에 적용할지는 사용자가 정한다.
@@ -206,6 +215,16 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **저장소**: https://github.com/iOfficeAI/OfficeCLI
 - **무엇**: Word·Excel·PowerPoint 를 에이전트가 CLI 로 읽고 고치고 만든다. 렌더링 엔진, 수식 평가, 템플릿 병합 내장. `officecli mcp <agent>` 로 MCP 서버로도 쓸 수 있다.
 - **왜**: 내장 docx/xlsx/pptx 스킬을 보완. **기존 파일 편집 품질은 실제 비교가 필요**하다. 중복이라 판단되면 tools.list 에서 제거.
+- **설치와 버전 고정**: `npm install -g @officecli/officecli@1.0.153`. 이 npm 패키지(Apache-2.0, SLSA 출처 증명 있음)는 설치 때 `postinstall` 로 **플랫폼 바이너리를 내려받는다**: 패키지 버전에 맞는 릴리스 태그의 불변 경로에서 `d.officecli.ai` 미러를 먼저, GitHub 릴리스를 대체로 쓴다. `SHA256SUMS` 로 검증하지만 체크섬 파일이 바이너리와 **같은 미러**에서 오고, 체크섬 파일을 받지 못하면 검증을 **조용히 건너뛴다**. 설치 중에는 `~/.claude` 에 아무것도 쓰지 않는다(확인함).
+- **⚠ 자동 업데이트(기본 켜짐)**: 바이너리는 백그라운드에서 스스로 업데이트를 확인하고(`~/.officecli/config.json` 의 `autoUpdate: true`), 설정 파일에 `lastSkillRefreshVersion` 도 있어 업데이트 때 스킬도 갱신하는 것으로 보인다. 그러면 버전을 고정해도 시간이 지나며 환경마다 달라진다. 그래서 설치 직후 `officecli config autoUpdate false` 로 끈다(영구 적용·재실행에도 유지됨을 확인). 일회성으로는 `OFFICECLI_SKIP_UPDATE=1`. 이미 설치돼 있던 환경에는 이 설정이 적용되지 않으므로 직접 `officecli config autoUpdate false` 를 실행한다.
+
+### officecli-skills — officecli 에 내장된 스킬 11개
+- **무엇**: `officecli skills install` 은 바이너리에 **내장된** 스킬을 감지된 에이전트에 설치한다. 기본 `officecli` 1개와 `officecli-pptx`·`officecli-docx`·`officecli-xlsx`(파일 형식별), `officecli-word-form`(채울 수 있는 Word 양식), `officecli-pitch-deck`(투자 유치 덱), `officecli-academic-paper`(논문 형식 docx), `officecli-data-dashboard`(Excel 대시보드), `officecli-financial-model`(재무 모델), `morph-ppt`·`morph-ppt-3d`(Morph 전환 효과 pptx) 10개. 총 2.5MB, 파일 121개.
+- **왜 저장소 스킬이 아니라 내장 설치인가**: 이 저장소는 루트에 `SKILL.md` 가 있고 `skills/officecli` 와 `name:` 이 같아 `npx skills add` 로 쓰면 하위 스킬을 못 찾거나 이름이 겹친다. 내장 설치는 **고정한 바이너리 버전과 항상 같은 스킬**을 주고 인터넷 없이도 동작한다(오프라인 설치 확인). 저장소 `main` 이 바뀌어도 영향이 없다.
+- **조용한 성공 방지**: 에이전트가 하나도 감지되지 않으면 `officecli skills install`(인자 없음)은 "No supported AI tools detected."를 출력하고 **종료 코드 0** 으로 끝난다. 이름을 지정하면 종료 코드 1 이다. 그래서 이 항목은 스킬마다 설치하고 마지막에 `officecli skills list` 로 11개 중 10개 상태가 `[installed]` 인지 확인해, 에이전트가 없는 환경에서는 **명확히 실패로 보고**한다. 에이전트를 설치한 뒤 `bootstrap.sh --tools-only` 를 다시 실행한다.
+- **⚠ 기존 docx/xlsx/pptx 스킬과 겹침**: `anthropics/skills` 의 `docx`·`xlsx`·`pptx` 와 `officecli-docx`·`officecli-xlsx`·`officecli-pptx` 는 설명이 거의 같은 문구("해당 확장자 파일이 관련되면 언제든 사용")라 같은 요청에 둘 다 후보가 된다. 어느 쪽이 더 나은지는 비교하지 못했다. 쓰다가 하나로 줄이려면 `officecli skills` 쪽을 빼거나 `anthropics/skills` 의 해당 항목을 뺀다.
+- **스킬이 에이전트에게 시키는 설치**: 스킬 지침(`officecli`, `officecli-pptx` 등)에는 "officecli 가 없으면 `curl -fsSL https://d.officecli.ai/install.sh | bash` 로 설치하라"는 문장이 있다. 이 저장소가 바이너리를 먼저 고정 설치하므로 발동하지 않지만, 없는 환경에서는 에이전트가 벤더 서버의 스크립트를 실행하려 할 수 있다.
+- **점검 결과**: 설치된 스킬의 `name:` 이 저장소 폴더 이름과 같고, 포함된 스크립트 29개(`morph-ppt` 의 스타일 템플릿 `build.sh` 27개와 헬퍼 2개)에는 `curl`·`sudo`·`eval`·`base64`·외부 접속이 없다. 격리 환경에서 실제 매니페스트 항목으로 확인: Claude 가 있으면 스킬 11개가 설치되고 재실행 시 건너뛴다. 에이전트가 없으면 실패로 보고된다. 에이전트가 Claude 외(Cursor 등)인 환경은 시험하지 못했다.
 
 ### hyperresearch — 딥 리서치 에이전트
 - **저장소**: https://github.com/jordan-gibbs/hyperresearch
@@ -277,6 +296,18 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **Python 라이브러리로 쓰려면**: `pip install pdf-inspector`(PyPI 패키지의 저장소 주소가 이 저장소와 일치). `pdf_inspector.process_pdf("문서.pdf")` 로 분류와 Markdown 을 얻는다. `bootstrap.sh` 는 설치하지 않는다.
 - **사용 예**: `pdf-inspector detect 보고서.pdf --json` 으로 스캔본인지 먼저 확인한 뒤, 텍스트 PDF 만 `pdf-inspector 보고서.pdf -o 보고서.md`
 
+### humanize-korean — 한글 AI 글투 제거 (im-not-ai)
+- **무엇**: `epoko77-ai/im-not-ai`(MIT, v2.3.2). AI 가 쓴 한글에서 번역투, 영어 인용 과다, 기계적 병렬("첫째·둘째·셋째"), "결론적으로" 류 관용구, 피동 남용 같은 티를 **문체·리듬만** 고쳐 사람이 쓴 글로 되돌린다. 스킬 4개: `humanize-korean`(오케스트레이터), `humanize`(진입 명령, 분량에 따라 light 1콜·standard 2콜·heavy 3+콜 경로 선택), `humanize-scan`(AI 티가 얼마나 있는지 재고 표본으로 보여줌), `humanize-redo`(직전 결과를 2차로 다듬음). 서브에이전트 4개(`humanize-monolith`, `humanize-diagnostician`, `humanize-finalizer`, `korean-ai-tell-taxonomist`)를 호출한다.
+- **왜**: 위의 `blader/humanizer` 는 영어 전용이고, 한글 AI 글의 티는 대부분 영어 번역투에서 나온다. 한국어 쪽 짝으로 쓴다.
+- **설치 방식이 다른 이유**: 스킬 폴더만 복사하는 `npx skills add` 로는 서브에이전트와 검증 스크립트 경로가 빠져 동작하지 않는다. 그래서 저장소 자체 설치기를 쓴다: `~/.local/share/im-not-ai` 에 클론(**검토한 커밋 `2f3d943` 에 고정**)하고 `install.sh --claude-only` 로 `~/.claude/skills/` 의 스킬 4개와 `~/.claude/agents/` 의 에이전트 4개를 **심볼릭 링크**로 연결한다. **클론을 지우면 링크가 끊긴다.** 저장소가 `--copy` 모드는 검증 게이트가 깨진다고 밝히므로 링크 방식만 쓴다. 기존 같은 이름의 파일이 있으면 덮어쓰지 않고 거부하며(`--force` 는 쓰지 않음), `settings.json` 은 건드리지 않는다.
+- **Claude Code 필요**: `claude` 명령이나 `~/.claude` 가 없으면 설치기가 아무것도 하지 않고 **성공으로 끝나므로**, 이 항목은 앞단에서 확인해 명확한 메시지와 함께 **실패로 보고**한다. Claude Code 를 설치한 뒤 `bootstrap.sh --tools-only` 를 다시 실행한다. Codex·Gemini·Copilot 설치와 부속 스킬(`commit-ko`, `--extras`)은 하지 않는다.
+- **갱신**: 링크가 클론을 가리키므로 `git -C ~/.local/share/im-not-ai checkout <새 커밋>` 으로 옮기면 반영된다(에이전트 목록이 바뀐 버전이면 `install.sh --claude-only` 재실행). 저장소의 `update.sh` 는 `git pull` 이라 고정과 맞지 않아 쓰지 않는다. `tools.list` 의 해시만 바꿔서는 이미 설치된 환경에 적용되지 않는다(링크가 있으면 건너뜀).
+- **전역 에이전트 4개**: `humanize-*` 에이전트는 설명 매칭으로 자동 호출될 수 있어, 저장소는 윤문과 무관한 개발용 에이전트 5종을 일부러 설치에서 뺐다(`--all-agents` 로만 설치). 이 항목도 그 기본값을 따른다.
+- **비용**: 한 번 윤문에 서브에이전트가 1~3+회 호출된다(light 1콜 · standard 2콜 · heavy 3+콜). `arena` 같은 대규모 호출은 아니다.
+- **점검 결과**: 설치기(278줄)와 스킬이 쓰는 스크립트에 **네트워크 호출이 없고**, 서브프로세스는 개발용 `eval_baseline.py` 에만 있으며 설치되지 않는다. 훅이 없다(`.githooks/commit-msg` 는 저장소 개발용). 격리 환경에서 실제 매니페스트 항목으로 확인: `~/.claude` 가 없으면 명확한 메시지로 실패, 있으면 스킬 4개·에이전트 4개 설치, 재실행 건너뛰기. 설치된 클론에서 결정적 게이트 `verify_change_rate.py`·`verify_gates.py` 가 한국어 전후 예시 쌍(변경률 17%)에 대해 동작하고 통과를 보고했다.
+- **미확인**: 스킬을 실제로 실행해 윤문 품질을 비교하지는 못했다. README 의 "내용은 한 글자도 건드리지 않는다"는 제작자의 설명이고, 게이트가 변경률 등은 검사하지만 의미 보존을 직접 검증하지는 못했다. 별 수도 확인하지 못했다.
+- **사용 예**: Claude Code 에서 `/humanize-korean` 또는 "이 글 AI 티 없애줘", 먼저 재어 보려면 `/humanize-scan`
+
 ---
 
 ## 검토 후 보류한 후보
@@ -296,6 +327,9 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 | Orchestra-Research/AI-research-SKILLs | ML 연구 스킬 98개(RAG, 분산 학습, 멀티모달 등)로 범위가 너무 넓다. 필요한 분야(예: `11-evaluation`, `15-rag`)만 골라 추가 |
 | dream-num/univer | 앱에 임베드하는 Office SDK(Apache-2.0) 모노레포라 에이전트 환경에 설치할 항목이 없다. 에이전트용은 별도 저장소다: `univer-cli`(Node 24 필요, 설치 경로가 `dream-num/skills` 를 거치고 `officecli` 와 역할이 겹침), `univer-sdk-skills`(스킬 4개, Univer 로 앱을 만들 때만 유용). 필요하면 후자만 추가 |
 | ronald-koh/mattpock-skills-copilot | `mattpocock/skills` 를 GitHub Copilot 용으로 개작한 포크(14개). 컨텍스트·ADR 경로를 `.github/` 기준으로 바꿔 놓았고 LICENSE 파일이 없다. 겹치는 스킬은 이미 superpowers·addyosmani 에 있고 필요한 4개는 원본에서 직접 선별해 둠 |
+| 21st-dev/skill | 스킬 7개(Apache-2.0, 작고 `name:` 이 폴더 이름과 같음)이지만 **전부 `21st` CLI(`@21st-dev/cli`)와 21st.dev 서비스**를 전제로 한다. CLI 와 계정·API 키는 이 저장소가 마련하지 못해 스킬만 있으면 동작하지 않는다. `21st-registry`·`21st-design-sync` 는 **공개 게시**를 한다(테마는 비공개 옵션이 없다고 스킬이 명시하고 게시 전 사용자 확인을 지시). `21st-ui-build`·`21st-ui-explore`·`21st-ui-review` 는 UI 작업 일반에 반응하고 `21st init --design-context`(프로젝트에 `.21st/` 생성)와 21st 검색을 쓰도록 해서 `ui-ux-pro-max`·`frontend-design`·`design-taste-frontend` 와 트리거가 겹친다. npm `@21st-dev/cli`(1.17.1, MIT)에는 저장소 주소 메타데이터가 없고 유지보수자는 개인 계정이다. 쓰고 싶으면 CLI 설치·로그인 뒤 명시적 의도가 필요한 `21st-cli-use`·`21st-ai` 부터 `npx skills add 21st-dev/skill --skill <이름>` 으로 추가한다. 설치·실행은 하지 않았다 |
+| ruvnet/ruflo (구 claude-flow) | 스킬 저장소가 아니라 **에이전트 메타 하네스 시스템 전체**(MIT, 저장소 136MB)다. `SKILL.md` 379개(대부분 `.agents/`·`.claude/`·`plugins/` 등에 복제), 에이전트 381개, 명령 486개. `npx ruflo init` 은 훅 8개 이벤트(`PreToolUse`·`PostToolUse`·`UserPromptSubmit`·`SessionStart`·`SessionEnd`·`Stop`·`PreCompact`·`SubagentStop`)에서 `hook-handler.cjs` 를 실행하게 하고, MCP 서버(README 기준 도구 314개), 데몬·백그라운드 워커, 메모리 DB, 다른 머신과 통신하는 에이전트 연합 기능을 프로젝트에 심는다. 프로젝트 `.claude/skills` 39개 중 24개가 ruflo CLI·MCP 를 참조해 **시스템 없이는 동작하지 않는다**. 이 저장소의 목적(정의한 스킬이 모든 환경에 똑같이 설치됨)과 맞지 않고, 모든 도구 호출과 프롬프트를 가로채는 훅은 다른 스킬과 충돌할 수 있어 제외했다. 쓰고 싶으면 프로젝트별로 검토한 뒤 `npx ruflo init`, 또는 훅 없이 슬래시 명령·일부 스킬·에이전트 정의만 주는 Claude Code 플러그인 방식(README 비교표)을 쓴다. npm 패키지 `ruflo` 의 저장소 주소는 `ruvnet/claude-flow` 이다. 설치·실행은 하지 않았다 |
+| genspark-ai/genoffice | 스킬 저장소가 아니라 **AI 오피스 스위트 데스크톱 앱**(Electron, macOS·Windows·Linux, Apache-2.0)이다. `genoffice` CLI(`@genoffice/cli`)는 `private` 패키지라 npm 에 없고 **앱과 함께 설치**되며, PDF 변환은 앱을 숨긴 창으로 띄워 처리하므로 앱 없이는 쓸 수 없다. 스킬(`npx skills add genspark-ai/genoffice`)만 설치하면 `genoffice` 명령이 없어 동작하지 않는다. 쓰고 싶으면 앱을 GitHub 릴리스(dmg·AppImage·deb·exe)에서 직접 설치한 뒤, 앱 Settings → Integrations 또는 `genoffice skill install claude` 로 스킬을, `genoffice mcp` 로 MCP(README 기준 도구 29개)를 연결한다. **⚠ 텔레메트리**: 공식 빌드는 GA4 익명 사용 통계가 기본 켜짐이고 온보딩 안내가 뜨기 전 첫 실행도 포함하며, Settings → General 에서 끈다(PRIVACY.md). 이미 있는 `officecli`, `docx`·`xlsx`·`pptx` 스킬, `pdf-inspector` 와 용도가 겹친다. 앱을 설치·실행하지 않았다 |
 | MadsLorentzen/ai-job-search | 스킬 모음이 아니라 **프로젝트로 복제해서 프로필을 채워 쓰는 구직 워크플로 템플릿**(MIT)이다. 슬래시 명령 12개(`/setup`, `/apply`, `/interview`, `/rank` 등), 프로젝트 안의 프로필·문서·CV 템플릿, LaTeX(`lualatex`·`xelatex`)와 `bun` 이 전제라 스킬만 전역 설치해서는 동작하지 않는다. 포털 검색 스킬 6개 중 4개(`jobindex`, `jobnet`, `jobbank`, `jobdanmark`)는 덴마크 전용이고 `linkedin-search`·`freehire-search` 만 전 지역 대상이며, LinkedIn 을 긁는 방식이라 약관 위험이 있다. **⚠ 개인정보**: README 는 포크가 항상 공개이고 `/setup` 이 이름·연락처·경력·희망 연봉을 **git 이 추적하는 파일**에 쓰므로, 본인 구직용이면 포크하지 말고 **비공개 저장소에 이 저장소를 `upstream` 으로 연결**하라고 안내한다(SETUP.md 8절). 실제 구직에 쓸 때 별도 프로젝트로 그렇게 쓰는 것이 맞고, 이 저장소의 기본 설치에는 맞지 않는다. 설치·실행은 하지 않았다 |
 | firecrawl/firecrawl | 크롤링·스크래핑 플랫폼 본체(AGPL-3.0)이고 에이전트용 CLI(`firecrawl-cli`)·MCP(`firecrawl-mcp`)는 별도 저장소다. 호스팅 서비스는 API 키가 필요해 `bootstrap.sh` 가 자동 설정할 수 없고, URL·페이지 내용이 `api.firecrawl.dev` 로 전송된다. 단일 페이지 읽기는 Playwright MCP·`agent-browser`·`markitdown`·내장 WebFetch 로 충분하다. 사이트 전체 크롤링·구조화 추출이 필요할 때 추가: 스킬은 `firecrawl/skills`(`npx skills add firecrawl/skills`), MCP 는 `FIRECRAWL_API_KEY` 환경 변수가 있을 때만 등록. 이 저장소 안의 `skills/firecrawl-build*` 5개는 자기 앱 코드에 Firecrawl API 를 통합할 때용. 요금제·`firecrawl/skills` 내용·CLI 텔레메트리는 확인하지 못했다 |
 | multica-ai/andrej-karpathy-skills | 이미 설치 중인 `forrestchang/andrej-karpathy-skills` 와 같은 커밋(`2c60614`)·같은 파일 구성이고 `SKILL.md` 내용이 동일하다. 둘 다 넣으면 `karpathy-guidelines` 가 중복되므로 하나만 쓴다 |

@@ -25,7 +25,7 @@ tt-a1i/archify                      | * | diagram,visual       | 설명·코드�
 
 # --- 디자인 / 프론트엔드 / 웹 --------------------------------------------------
 nextlevelbuilder/ui-ux-pro-max-skill | * | design,frontend     | UI/UX 디자인 인텔리전스 (ui-ux-pro-max) + design-system, ui-styling, banner-design, slides(HTML 발표자료), brand, design
-vercel-labs/agent-skills            | react-best-practices,web-design-guidelines,composition-patterns,writing-guidelines | frontend,web | Vercel 의 React/웹 디자인/작문 가이드라인 스킬
+vercel-labs/agent-skills            | vercel-react-best-practices,web-design-guidelines,vercel-composition-patterns,writing-guidelines | frontend,web | Vercel 의 React/웹 디자인/작문 가이드라인 스킬
 
 # --- 글쓰기 ---------------------------------------------------------------------
 blader/humanizer                    | * | writing              | AI 특유의 말투(not X but Y, 강조 마무리, 억지 3단 나열 등 26개 패턴)를 제거해 사람이 쓴 글처럼 고침 (영어)
@@ -50,3 +50,6 @@ emilkowalski/skills                 | emil-design-eng,animate,review-animations,
 
 # --- 에이전트 토너먼트 (비용 큼: 호출 시 서브에이전트 수백 회) ----------------------
 Jakeschincariol/arena-skill         | arena | agents,methodology,heavy | 같은 작업을 서브에이전트 N개(기본 100, --quick 16)에게 맡겨 서로 공격·방어시키는 토너먼트로 해법 하나를 남김. 기본 100개는 서브에이전트 595회 호출이라 비용이 크다 — 일상에는 --quick(91회) 권장
+
+# --- PDF 추출 -------------------------------------------------------------------------
+opendataloader-project/opendataloader-pdf | odl-pdf | pdf,docs | opendataloader-pdf(ODL)로 PDF 를 Markdown/JSON/HTML 로 추출하는 절차: 설치된 --help 를 먼저 읽고, 최소 명령을 만들고, 종료 코드 0 이 곧 성공이 아님을 전제로 추출 결과를 검증한다. 런타임(Java 11+ 와 pip/npm 패키지)은 따로 설치해야 한다
