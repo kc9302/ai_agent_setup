@@ -57,3 +57,9 @@ Jakeschincariol/arena-skill#df07b8e518e10cdecd8cd7712d9958b6f396250e         | a
 
 # --- PDF 추출 -------------------------------------------------------------------------
 opendataloader-project/opendataloader-pdf#72e475c05b0f1c375af71a5b04a751ed22fcbf25 | odl-pdf | pdf,docs | opendataloader-pdf(ODL)로 PDF 를 Markdown/JSON/HTML 로 추출하는 절차: 설치된 --help 를 먼저 읽고, 최소 명령을 만들고, 종료 코드 0 이 곧 성공이 아님을 전제로 추출 결과를 검증한다. 런타임(Java 11+ 와 pip/npm 패키지)은 따로 설치해야 한다
+
+# --- 프로덕션 배포 (사용자 본인 계정에 연결, 쓰기 작업은 사람 승인 후) ---------------------
+mikehasa/golive-skill#7a55f26adb35d54c8b248e6f95e60092bd9e0707 | golive | deploy,devops | 에이전트가 만든 앱을 사용자 본인의 호스팅·DB·인증·결제·이메일·DNS 계정에서 실서비스로 올리는 절차. 계획을 사람이 승인하기 전에는 계정에 쓰지 않는다 (알파 0.1.0-alpha.8)
+
+# --- 시각적 답변 -------------------------------------------------------------------------
+QingYunA/answer-me-with-html#6ab72219a1bfbfc769b1ef5c65f8da688b73be46 | answer-me-with-html | docs,visual | 복잡한 답을 Markdown 초안으로 쓰면 번들 CLI 가 한 페이지 HTML 설명서(템플릿, SVG 자동 배치, 문체 점검)로 만들어 준다. 상시 모드 플러그인은 포함하지 않는다
