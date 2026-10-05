@@ -44,12 +44,13 @@ def pick(run, rnd, seed=0):
 
 
 def main(argv):
-    args = [a for a in argv if not a.startswith("--")]
+    argv = list(argv)
     seed = 0
     if "--seed" in argv:
         i = argv.index("--seed")
         seed = int(argv[i + 1])
-        args = [a for a in args if a != argv[i + 1]]
+        del argv[i:i + 2]
+    args = [a for a in argv if not a.startswith("--")]
     if len(args) != 2:
         sys.exit(__doc__)
     print(json.dumps(pick(Path(args[0]), int(args[1]), seed)))
