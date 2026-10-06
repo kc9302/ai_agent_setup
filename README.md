@@ -9,8 +9,9 @@ AI 코딩 도구(Claude Code, Codex, Cursor, Gemini CLI, OpenCode …)에 설치
 ## 빠른 시작
 
 ```bash
-# 1) 클론해서 실행
-git clone --depth 1 https://github.com/kc9302/ai_agent_setup.git ~/.ai_agent_setup
+# 1) 클론해서 실행 (이미 클론돼 있으면 clone 이 실패하므로 최신으로 맞춘다. 오래된 사본으로 설치되는 것을 막는다)
+git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git ~/.ai_agent_setup 2>/dev/null \
+  || { git -C ~/.ai_agent_setup fetch --depth 1 origin main && git -C ~/.ai_agent_setup reset --hard FETCH_HEAD; }
 bash ~/.ai_agent_setup/bootstrap.sh
 
 # 2) 또는 클론 없이 한 줄
