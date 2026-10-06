@@ -102,16 +102,17 @@ while IFS= read -r c; do
   commit="$(api "/repos/$repo/commits?per_page=1&sha=$(urlencode "$br")" 2>/dev/null | jq -r '.[0].sha // empty' 2>/dev/null || true)"
   tree="$(api "/repos/$repo/git/trees/$(urlencode "$br")?recursive=1" 2>/dev/null || true)"
   [ -n "$commit" ] && [ -n "$tree" ] || { warn "상세 조회 실패, 건너뜀: $repo"; dropped_detail=$((dropped_detail+1)); continue; }
-  paths="$(printf '%s' "$tree" | jq -c '[.tree[]? | select(.type=="blob" and (.path|test("(^|/)SKILL\\.md$"))) | .path]')"
-  [ "$(printf '%s' "$paths" | jq length)" -gt 0 ] || { dropped_noskill=$((dropped_noskill+1)); continue; }
-  trunc="$(printf '%s' "$tree" | jq '.truncated // false')"
-  enriched="$(jq -c --argjson c "$c" --arg commit "$commit" --argjson paths "$paths" --argjson trunc "$trunc" \
-    '. + [$c + {commit:$commit, skill_paths:$paths, skill_count:($paths|length), tree_truncated:$trunc}]' <<<"$enriched")"
+  # 큰 저장소는 SKILL.md 경로가 수백 개일 수 있어 jq 인자 길이 한도에 걸린다. 개수만 세고 경로는 앞쪽 일부만 남긴다.
+  info_json="$(printf '%s' "$tree" | jq -c '[.tree[]? | select(.type=="blob" and (.path|test("(^|/)SKILL\\.md$"))) | .path] as $p | {count: ($p|length), paths: $p[0:12], truncated: (.truncated // false)}')"
+  [ "$(printf '%s' "$info_json" | jq .count)" -gt 0 ] || { dropped_noskill=$((dropped_noskill+1)); continue; }
+  enriched="$(jq -c --argjson c "$c" --arg commit "$commit" --argjson i "$info_json" \
+    '. + [$c + {commit:$commit, skill_paths:$i.paths, skill_count:$i.count, tree_truncated:$i.truncated}]' <<<"$enriched")"
 done < <(printf '%s' "$ranked" | jq -c '.[]')
 
 info "상세 조회 후: 통과 $(printf '%s' "$enriched" | jq length), SKILL.md 없음 $dropped_noskill, 조회 실패 $dropped_detail"
-jq -n --argjson items "$enriched" --arg now "$NOW" --arg since "$SINCE" --argjson days "$DAYS" --argjson top "$TOP" \
+printf '%s' "$enriched" | jq --arg now "$NOW" --arg since "$SINCE" --argjson days "$DAYS" --argjson top "$TOP" \
   --argjson minstars "$MIN_STARS" --argjson minnew "$MIN_NEW" '
+  . as $items |
   def clean: (. // "") | gsub("[\u0001-\u001f\u007f]"; " ") | gsub("\\s+"; " ") | .[0:200];
   def card: {
     repo: .full_name, url: .html_url, stars: .stargazers_count, created: .created_at[0:10], pushed: .pushed_at[0:10],
