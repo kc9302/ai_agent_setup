@@ -46,6 +46,7 @@ AI 에이전트에게 맡기려면 이렇게만 말하면 됩니다:
 | `ai-setup-sync` | 이 저장소로 스킬·도구를 동기화하는 절차 |
 | `web-design-guidelines` | Web Interface Guidelines 로 UI 리뷰 (규칙을 고정 사본으로 포함) |
 | `stakeholder-rehearsal` | 이해관계자 반응을 라운드별로 시뮬레이션해 시나리오 리포트를 쓴다 |
+| `skill-radar` | 매일 갱신되는 인기·신규 스킬 후보를 카드로 보여주고, 요청할 때만 설치를 돕는다 |
 | `persona-sim-review` | 가상 인물 여러 명에게 출시·공개 가능 여부를 평가받는다 |
 
 **Windows 에서는** 두 가지 중 하나를 쓰세요.
