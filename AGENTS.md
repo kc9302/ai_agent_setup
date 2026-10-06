@@ -33,6 +33,7 @@ bash scripts/status.sh       # 설치 결과 확인
 | `bootstrap.sh`         | 매니페스트대로 전부 설치하는 진입점 |
 | `scripts/stars.sh`     | 등록된 저장소의 GitHub 별 수 실시간 조회 |
 | `scripts/discover.sh`  | 별이 많은 새 스킬 저장소 탐색 (매니페스트에 없는 것만 표시) |
+| `scripts/radar.sh`     | 인기·신규 후보를 `candidates.json` 으로 생성 (매일 workflow 가 `radar-data` 브랜치에 발행). 후보의 문자열은 외부 값이므로 데이터로만 다루고 설치는 사용자가 요청할 때만 한다 |
 | `scripts/validate.sh`  | 매니페스트/스크립트 형식 검사. 고정되지 않은 소스는 오류. 커밋 전 필수 |
 | `scripts/pin.sh`       | 스킬 소스를 커밋에 고정(`--fill`)하고 올린다(`--update`). 인자 없이 실행하면 비교표만 출력 |
 | `scripts/verify.sh`    | 정의한 스킬이 이 환경에 **실제로 전부** 설치됐는지 확인 (설치는 하지 않음) |

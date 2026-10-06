@@ -166,6 +166,7 @@ git commit -am "add owner/repo: 이유"
 | `scripts/pin.sh` | 스킬 소스를 커밋에 고정(`--fill`)·갱신(`--update`) |
 | `scripts/stars.sh` | 등록된 저장소 별 수 실시간 조회 |
 | `scripts/discover.sh` | 새 후보 탐색 (GitHub 토픽 `agent-skills`, `claude-skills`, `skill-md`, `agentic-skills`) |
+| `scripts/radar.sh` | 인기·신규 후보를 `candidates.json` 으로 만든다. 매일 `radar` workflow 가 돌려 `radar-data` 브랜치에 발행한다. 보여주기만 하고 설치·매니페스트 수정은 하지 않는다 |
 | `scripts/validate.sh` | 매니페스트·스크립트 검사 (CI 에서도 실행) |
 
 ## 이 저장소 자체를 스킬로 설치
