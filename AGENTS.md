@@ -5,15 +5,20 @@
 
 ## 이 저장소를 열었다면 가장 먼저 할 일
 
-사용자가 "세팅해줘", "스킬 설치해줘", "환경 맞춰줘" 류의 요청을 했거나,
-새 환경에서 이 저장소를 처음 열었다면 아래를 실행한다:
+사용자가 "세팅해줘", "스킬 설치해줘", "환경 맞춰줘", "보고 적용하자" 류의 요청을 했거나,
+새 환경에서 이 저장소를 처음 열었다면 **먼저 OS 를 확인한다.**
+
+- **Windows 또는 macOS**: `node scripts/install-skills.mjs` (PowerShell 이면 `node scripts\install-skills.mjs`). 아래 `bootstrap.sh` 는 bash 3.2(맥)·WSL 혼동 때문에 첫 선택이 아니다.
+- **Linux 또는 WSL**: 아래를 실행한다.
+
+이미 클론한 폴더가 있으면 새로 받기 전에 최신으로 맞춘다(`git fetch --depth 1 origin main` 후 `git reset --hard FETCH_HEAD`; PowerShell 5.1 은 `&&` 를 못 쓰니 줄을 나눈다). 오래된 사본으로 설치하지 않는다.
 
 ```bash
 bash bootstrap.sh            # 전역 설치 (기본). 스킬 + 도구 모두
 bash scripts/status.sh       # 설치 결과 확인
 ```
 
-- Node.js 18+ 와 git 이 필요하다. 없으면 먼저 설치한다.
+- Node.js **22.20 이상**과 git 이 필요하다. 없으면 먼저 설치한다. Node 가 낮으면(18, 20) `npx -y skills` 가 오류 없이 옛 버전(1.5.18)을 받아 고정 커밋 설치가 전부 `Remote branch ... not found` 로 실패한다. 설치기가 시작할 때 이를 점검한다.
 - 스킬은 `npx skills add` 로 설치되며 Claude Code / Codex / Cursor / Gemini CLI / OpenCode 등을 자동 감지한다.
 - 실패한 항목은 요약에 나온다. 전체를 멈추지 말고 실패한 것만 보고한다.
 - **Windows**: Git Bash 에서 `bash bootstrap.sh` 가 스킬과 도구를 함께 설치한다(사용자 환경에서 스킬 56개 + 도구 19/21 설치 보고). PowerShell 에서는 `bash` 가 WSL 의 bash 일 수 있어 스킬이 Windows 가 아니라 WSL 안에 설치될 수 있으므로, 스킬만이면 `node scripts\install-skills.mjs` 를 쓰고 도구까지 필요하면 `& "$env:ProgramFiles\Git\bin\bash.exe" bootstrap.sh` 처럼 Git Bash 를 지정한다. `bootstrap.sh` 는 WSL 홈에 `.claude` 가 없고 Windows 쪽에만 있으면 멈춘다(WSL 안에 설치하려면 `--wsl`). `graft`(네이티브 빌드 실패 시 명령이 동작하면 경고만), `im-not-ai`(심볼릭 링크 필요, 없으면 건너뜀)는 Windows 에서 조건부다. bash 3.2 인 맥에서도 Node 설치기로 스킬을 설치할 수 있다. **README 의 표나 `manifest/skills.list` 만 보고 손으로 설치하면 로컬 스킬이 빠진다.** 하나만 설치할 때는 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y`.

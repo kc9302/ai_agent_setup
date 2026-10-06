@@ -8,13 +8,26 @@ AI 코딩 도구(Claude Code, Codex, Cursor, Gemini CLI, OpenCode …)에 설치
 
 ## 빠른 시작
 
+### 스킬만, 어디서나 (Windows PowerShell · macOS · Linux 공통, 가장 단순)
+
+```
+git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git
+cd ai_agent_setup
+node scripts/install-skills.mjs
+```
+
+Node.js 22.20+ 와 git 만 있으면 됩니다(`skills` CLI 가 요구하는 버전이며, 더 낮으면 `npx` 가 조용히 옛 버전으로 내려가 고정 커밋 설치가 실패합니다). 시작할 때 환경을 점검하고(Node·git 버전, 오래된 클론, WSL 에 잘못 설치되는 경우), 끝나면 정의한 스킬이 이름으로 실제 설치됐는지 확인합니다. 설치 후 **Claude Code 를 새 세션으로 다시 열어야** 스킬이 보입니다. `--dry-run` 으로 실행할 명령만 볼 수 있습니다.
+이미 클론한 폴더가 있다면 `git fetch --depth 1 origin main` 과 `git reset --hard FETCH_HEAD` 를 **각각** 실행한 뒤 다시 실행하세요(PowerShell 5.1 은 `&&` 를 지원하지 않습니다).
+
+### 스킬 + 도구 (Linux · macOS · WSL · Windows Git Bash)
+
 ```bash
-# 1) 클론해서 실행 (이미 클론돼 있으면 clone 이 실패하므로 최신으로 맞춘다. 오래된 사본으로 설치되는 것을 막는다)
+# 이미 클론돼 있으면 clone 이 실패하므로 최신으로 맞춘다. 오래된 사본으로 설치되는 것을 막는다.
 git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git ~/.ai_agent_setup 2>/dev/null \
   || { git -C ~/.ai_agent_setup fetch --depth 1 origin main && git -C ~/.ai_agent_setup reset --hard FETCH_HEAD; }
 bash ~/.ai_agent_setup/bootstrap.sh
 
-# 2) 또는 클론 없이 한 줄
+# 또는 클론 없이 한 줄
 curl -fsSL https://raw.githubusercontent.com/kc9302/ai_agent_setup/main/bootstrap.sh | bash
 ```
 
@@ -22,7 +35,7 @@ AI 에이전트에게 맡기려면 이렇게만 말하면 됩니다:
 
 > `https://github.com/kc9302/ai_agent_setup` 보고 내 환경 세팅해줘
 
-에이전트는 `AGENTS.md` 를 읽고 `bootstrap.sh` 를 실행합니다.
+에이전트는 `AGENTS.md` 를 읽고, Windows·맥이면 위의 Node 설치기를, Linux·WSL 이면 `bootstrap.sh` 를 실행합니다.
 
 ### 이 저장소가 직접 정의한 스킬 (`skills/`)
 
@@ -54,7 +67,7 @@ npx skills add kc9302/ai_agent_setup --skill persona-sim-review -g -y
 npx skills ls -g                                                  # 설치된 스킬 확인
 ```
 
-요구사항: `git`, Node.js 18+ (`npx`). 선택: `jq` (discover 용), `GITHUB_TOKEN` (API rate limit 완화).
+요구사항: `git`, Node.js 22.20+ (`npx`). 선택: `jq` (discover 용), `GITHUB_TOKEN` (API rate limit 완화).
 
 ## 옵션
 
