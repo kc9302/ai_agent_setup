@@ -74,5 +74,11 @@ if command -v node >/dev/null 2>&1; then
   fi
 fi
 
+# radar.sh 는 후보 데이터(candidates.json)를 만든다. 제외 규칙과 문자열 정리가 깨지지 않았는지 네트워크 없이 확인한다.
+if command -v jq >/dev/null 2>&1; then
+  info "testing radar.sh against offline fixtures"
+  bash "$REPO_ROOT/scripts/test-radar.sh" >/dev/null || { fail "scripts/test-radar.sh 실패 (bash scripts/test-radar.sh 로 상세 확인)"; }
+fi
+
 if [ "$errors" -gt 0 ]; then die "$errors error(s)"; fi
 info "all good"
