@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 // bash 없이 스킬만 설치한다 (Windows PowerShell 등). 도구(manifest/tools.list)는 설치하지 않는다.
-//   node scripts/install-skills.mjs [--dry-run] [--project] [--agent <이름>]... [--tag <태그>]
+//   node scripts/install-skills.mjs [--dry-run] [--project] [--agent <이름>]... [--tag <태그>] [--wsl]
 // bootstrap.sh 의 스킬 단계와 같은 규칙: manifest/skills.list 의 모든 소스(커밋 고정) +
 // 이 저장소의 skills/ 폴더(로컬 스킬)를 설치하고, 끝나면 이름이 실제로 설치됐는지 확인한다.
 // 필요한 것: Node.js 18+ (npx).
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { homedir, platform } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const argv = process.argv.slice(2);
-let dryRun = false, scope = '-g', tag = '';
+let dryRun = false, scope = '-g', tag = '', allowWsl = process.env.AI_SETUP_ALLOW_WSL === '1';
 const agents = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -20,11 +21,58 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--global' || a === '-g') scope = '-g';
   else if (a === '--agent' || a === '-a') agents.push(argv[++i]);
   else if (a === '--tag') tag = argv[++i] || '';
+  else if (a === '--wsl') allowWsl = true;
   else if (a === '-h' || a === '--help') { console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 6).map((l) => l.replace(/^\/\/ ?/, '')).join('\n')); process.exit(0); }
   else { console.error(`알 수 없는 옵션: ${a}`); process.exit(2); }
 }
 
+// ---- 사전 점검: 설치를 시작하기 전에 알려진 함정을 막는다 -----------------------------------------
 const win = process.platform === 'win32';
+const die = (m) => { console.error(`\n[error] ${m}`); process.exit(2); };
+const warn = (m) => console.warn(`[warn] ${m}`);
+const probe = (cmd, args, opts = {}) => spawnSync(cmd, args, { shell: win, encoding: 'utf8', timeout: 15000, ...opts });
+
+// 1) Node 18+, git, npx (skills CLI 가 GitHub 저장소를 받는다)
+if (Number(process.versions.node.split('.')[0]) < 18) die(`Node.js 18 이상이 필요합니다 (현재 ${process.versions.node}). https://nodejs.org`);
+if (probe('git', ['--version']).status !== 0) die('git 이 필요합니다 (skills CLI 가 GitHub 저장소를 받습니다). https://git-scm.com');
+if (probe('npx', ['--version']).status !== 0) die('npx 가 필요합니다 (Node.js 설치에 포함됩니다).');
+
+// 2) WSL: Windows 의 Claude Code 를 의도했는데 WSL 안에 설치되는 것을 막는다 (bootstrap.sh 의 wsl_guard 와 같은 규칙)
+const isWsl = () => platform() === 'linux' && (!!process.env.WSL_DISTRO_NAME || /microsoft/i.test(existsSync('/proc/version') ? readFileSync('/proc/version', 'utf8') : ''));
+function windowsClaudeDirs() {
+  const base = process.env.AI_SETUP_MNT || '/mnt', found = [];
+  try {
+    for (const d of readdirSync(base)) {
+      try {
+        for (const u of readdirSync(join(base, d, 'Users'))) { const c = join(base, d, 'Users', u, '.claude'); if (existsSync(c)) found.push(c); }
+      } catch { /* 이 드라이브엔 Users 가 없다 */ }
+    }
+  } catch { /* /mnt 없음 */ }
+  return found;
+}
+if (isWsl()) {
+  const winDirs = windowsClaudeDirs();
+  console.log(`    wsl   : WSL 에서 실행 중 — 설치 위치는 WSL 의 ${homedir()} 입니다 (Windows 사용자 폴더 아님)`);
+  if (!existsSync(join(homedir(), '.claude')) && winDirs.length && !allowWsl) {
+    console.error(`[error] WSL 의 홈(${homedir()})에는 Claude Code 설정(.claude)이 없고, Windows 쪽에는 있습니다:\n      ${winDirs.join('\n      ')}`);
+    console.error('    Windows 의 Claude Code 에 설치하려던 것이라면 WSL 이 아니라 Windows(PowerShell)에서 실행하세요:  node scripts\\install-skills.mjs');
+    console.error('    WSL 안에 설치하는 것이 맞다면 --wsl 을 붙여 다시 실행하세요.');
+    if (!dryRun) process.exit(2);
+  }
+}
+
+// 3) 오래된 클론: main 을 받은 클론이 origin/main 과 다르면 알린다 (오래된 사본으로 설치하는 것을 막는다)
+if (existsSync(join(root, '.git'))) {
+  const g = (a) => probe('git', a, { cwd: root, timeout: 8000 });
+  const branch = (g(['rev-parse', '--abbrev-ref', 'HEAD']).stdout || '').trim();
+  const head = (g(['rev-parse', 'HEAD']).stdout || '').trim();
+  if (branch === 'main') {
+    const remote = ((g(['ls-remote', 'origin', 'main']).stdout || '').split(/\s/)[0] || '').trim();
+    if (remote && head && remote !== head) warn(`이 클론(${head.slice(0, 7)})이 origin/main(${remote.slice(0, 7)})과 다릅니다. 오래된 사본일 수 있습니다. 아래 두 줄을 각각 실행한 뒤 다시 실행하세요 (PowerShell 5.1 은 && 를 지원하지 않아 줄을 나눴습니다):\n      git fetch --depth 1 origin main\n      git reset --hard FETCH_HEAD`);
+  }
+}
+console.log(`==> 설치 대상: ${scope ? '전역(-g)' : '현재 프로젝트'}  홈: ${homedir()}${existsSync(join(homedir(), '.claude')) ? '' : '  (Claude Code 설정 폴더 ~/.claude 가 아직 없습니다. 에이전트는 자동 감지됩니다)'}`);
+
 const q = (s) => (win && /[^\w@.:/\\#=,-]/.test(s) ? `"${s}"` : s);
 function npx(args, { capture = false } = {}) {
   const full = ['-y', ...args];

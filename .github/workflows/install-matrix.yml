@@ -1,0 +1,69 @@
+name: install-matrix
+# Linux 에서만 돌리면 Windows/macOS 에서만 나는 오류(PowerShell 문법, bash 3.2, 심볼릭 링크, 홈 경로)를 놓친다.
+# 세 OS 에서 설치 경로를 실제로 실행해 미리 잡는다.
+on:
+  push:
+  pull_request:
+
+jobs:
+  node-installer:
+    name: node installer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: dry-run, all sources
+        run: node scripts/install-skills.mjs --dry-run
+      - name: dry-run in Windows PowerShell 5.1
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: node scripts/install-skills.mjs --dry-run
+      - name: real install of this repository's own skills into an isolated home
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-install"
+          mkdir -p "$H/.claude"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          node scripts/install-skills.mjs --tag local
+          for n in persona-sim-review stakeholder-rehearsal ai-setup-sync web-design-guidelines; do
+            test -f "$H/.claude/skills/$n/SKILL.md" || { echo "missing: $n"; ls -la "$H/.claude/skills" || true; exit 1; }
+          done
+          echo "local skills installed under $H/.claude/skills"
+      - name: real install of one wildcard source (checks argument quoting on this OS)
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-wild"
+          mkdir -p "$H/.claude"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          node scripts/install-skills.mjs --tag writing
+          test -d "$H/.claude/skills/humanizer" || { echo "missing: humanizer"; ls -la "$H/.claude/skills" || true; exit 1; }
+
+  bootstrap-dry-run:
+    name: bootstrap.sh dry-run (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: bash dry-run (macOS uses /bin/bash 3.2 on purpose)
+        shell: bash
+        run: |
+          if [ "$(uname -s)" = "Darwin" ]; then /bin/bash --version | head -1; /bin/bash bootstrap.sh --dry-run; else bash bootstrap.sh --dry-run; fi
+      - name: bash syntax check of every script (same bash)
+        shell: bash
+        run: |
+          B=bash; [ "$(uname -s)" = "Darwin" ] && B=/bin/bash
+          for f in bootstrap.sh scripts/*.sh; do $B -n "$f" || { echo "syntax error: $f"; exit 1; }; done

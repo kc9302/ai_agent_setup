@@ -5,8 +5,13 @@
 
 ## 이 저장소를 열었다면 가장 먼저 할 일
 
-사용자가 "세팅해줘", "스킬 설치해줘", "환경 맞춰줘" 류의 요청을 했거나,
-새 환경에서 이 저장소를 처음 열었다면 아래를 실행한다:
+사용자가 "세팅해줘", "스킬 설치해줘", "환경 맞춰줘", "보고 적용하자" 류의 요청을 했거나,
+새 환경에서 이 저장소를 처음 열었다면 **먼저 OS 를 확인한다.**
+
+- **Windows 또는 macOS**: `node scripts/install-skills.mjs` (PowerShell 이면 `node scripts\install-skills.mjs`). 아래 `bootstrap.sh` 는 bash 3.2(맥)·WSL 혼동 때문에 첫 선택이 아니다.
+- **Linux 또는 WSL**: 아래를 실행한다.
+
+이미 클론한 폴더가 있으면 새로 받기 전에 최신으로 맞춘다(`git fetch --depth 1 origin main` 후 `git reset --hard FETCH_HEAD`; PowerShell 5.1 은 `&&` 를 못 쓰니 줄을 나눈다). 오래된 사본으로 설치하지 않는다.
 
 ```bash
 bash bootstrap.sh            # 전역 설치 (기본). 스킬 + 도구 모두

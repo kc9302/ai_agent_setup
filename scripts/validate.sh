@@ -62,5 +62,17 @@ for f in "$REPO_ROOT"/bootstrap.sh "$REPO_ROOT"/scripts/*.sh; do
   bash -n "$f" || fail "syntax error in $f"
 done
 
+# bootstrap.sh(bash)와 install-skills.mjs(Node)는 같은 스킬을 같은 명령으로 설치해야 한다. 한쪽만 고치면 환경마다 달라진다.
+if command -v node >/dev/null 2>&1; then
+  info "checking that install-skills.mjs and bootstrap.sh install the same skills"
+  node --check "$REPO_ROOT/scripts/install-skills.mjs" || fail "syntax error in scripts/install-skills.mjs"
+  a="$(node "$REPO_ROOT/scripts/install-skills.mjs" --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
+  b="$(bash "$REPO_ROOT/bootstrap.sh" --skills-only --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
+  if [ -z "$a" ] || [ "$a" != "$b" ]; then
+    fail "install-skills.mjs 와 bootstrap.sh 가 설치하는 스킬 명령이 다릅니다 (한쪽만 고쳤는지 확인)"
+    diff <(printf '%s\n' "$a") <(printf '%s\n' "$b") | head -6 >&2 || true
+  fi
+fi
+
 if [ "$errors" -gt 0 ]; then die "$errors error(s)"; fi
 info "all good"
