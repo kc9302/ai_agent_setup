@@ -17,10 +17,9 @@ description: Sync this machine's AI agent setup (skills + open-source tools) fro
 
 ### 1. 설치 / 동기화
 ```bash
-# 저장소가 없으면
-git clone --depth 1 https://github.com/kc9302/ai_agent_setup.git ~/.ai_agent_setup
-# 있으면
-git -C ~/.ai_agent_setup pull --ff-only
+# 저장소가 없으면 클론하고, 있으면 main 최신으로 맞춘다 (clone 실패를 무시하고 오래된 사본으로 설치하지 않도록)
+git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git ~/.ai_agent_setup 2>/dev/null \
+  || { git -C ~/.ai_agent_setup fetch --depth 1 origin main && git -C ~/.ai_agent_setup reset --hard FETCH_HEAD; }
 
 bash ~/.ai_agent_setup/bootstrap.sh            # 전역 설치 (기본)
 bash ~/.ai_agent_setup/bootstrap.sh --project  # 현재 프로젝트에만

@@ -304,6 +304,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **Trail 연동 주의**: `graft trail push/pull` 은 클라우드 서비스(Trail)에 가입해 연결하고 `CLAUDE.md`/`AGENTS.md` 를 갱신한다. 의도하지 않았다면 쓰지 않는다.
 - **점검 결과**: Node 22 에서 설치와 `graft --version`(0.21.1) 확인. `tree-sitter` 네이티브 모듈 등 18개 의존성이 있다.
 - **사용 예**: `graft init --dry-run`, `graft init --agents claude`
+- **Windows**: `@nanonets/graft` 가 `tree-sitter-kotlin` 같은 네이티브 모듈을 `node-gyp` 로 빌드하므로 Visual Studio Build Tools 의 "Desktop development with C++" 워크로드가 없으면 `npm install` 이 실패한다(사용자 Windows 실행에서 확인). 이때 `graft` 명령은 남아 있어 설치 항목은 명령이 동작하면 경고만 남기고 통과시킨다. 일부 언어 분석이 빠진 반쪽 설치일 수 있으므로 쓸 계획이면 빌드 도구를 설치하고 다시 설치한다.
 
 ### specify — GitHub Spec Kit (스펙 주도 개발)
 - **무엇**: GitHub 공식 Spec Kit 의 CLI `specify-cli`(MIT, Python 3.11+). 프로젝트에 `specify init <이름> --integration claude` 를 실행하면 스펙 주도 개발 골격을 만든다: `.specify/`(프로젝트 원칙 `constitution.md`, 스펙·계획·작업 템플릿, 스크립트, 워크플로)와 `.claude/skills/speckit-*` 10개(`constitution`, `specify`, `clarify`, `plan`, `tasks`, `analyze`, `checklist`, `implement`, `converge`, `taskstoissues`). 흐름은 원칙 → 스펙 → (질문) → 계획 → 작업 → (분석) → 구현. Claude 외에 Copilot, Codex 등 여러 에이전트 통합을 지원한다.
@@ -361,6 +362,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **점검 결과**: 설치기(278줄)와 스킬이 쓰는 스크립트에 **네트워크 호출이 없고**, 서브프로세스는 개발용 `eval_baseline.py` 에만 있으며 설치되지 않는다. 훅이 없다(`.githooks/commit-msg` 는 저장소 개발용). 격리 환경에서 실제 매니페스트 항목으로 확인: `~/.claude` 가 없으면 명확한 메시지로 실패, 있으면 스킬 4개·에이전트 4개 설치, 재실행 건너뛰기. 설치된 클론에서 결정적 게이트 `verify_change_rate.py`·`verify_gates.py` 가 한국어 전후 예시 쌍(변경률 17%)에 대해 동작하고 통과를 보고했다.
 - **미확인**: 스킬을 실제로 실행해 윤문 품질을 비교하지는 못했다. README 의 "내용은 한 글자도 건드리지 않는다"는 제작자의 설명이고, 게이트가 변경률 등은 검사하지만 의미 보존을 직접 검증하지는 못했다. 별 수도 확인하지 못했다.
 - **사용 예**: Claude Code 에서 `/humanize-korean` 또는 "이 글 AI 티 없애줘", 먼저 재어 보려면 `/humanize-scan`
+- **Windows**: 설치 스크립트가 심볼릭 링크를 요구한다. Git Bash 는 관리자 권한/개발자 모드가 없으면 `ln -s` 가 링크 대신 복사본을 만들고, 스크립트는 이를 감지해 중단하며 `--copy` 는 `scripts/` 게이트가 깨지므로 쓰지 말라고 안내한다(사용자 Windows 실행에서 확인). 그래서 Windows(Git Bash)에서는 `MSYS=winsymlinks:nativestrict` 없이 실행하면 설치를 시도하지 않고 "건너뜀"(종료 코드 75)으로 표시한다. WSL 설치가 권장이다. 이전 실행이 남긴 복사본이 있으면 확인해 정리한다.
 
 ---
 

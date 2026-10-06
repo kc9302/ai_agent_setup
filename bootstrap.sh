@@ -8,6 +8,7 @@
 #   bash bootstrap.sh --tag core      # 태그가 core 인 항목만
 #   bash bootstrap.sh --skills-only | --tools-only
 #   bash bootstrap.sh --dry-run       # 실행할 명령만 출력
+#   bash bootstrap.sh --wsl           # WSL 안에 설치하는 것이 맞을 때 (WSL 홈에 .claude 가 없고 Windows 쪽에만 있으면 기본은 멈춘다)
 #
 # 스킬은 skills.list 에 적힌 커밋에 고정해 설치하고(모든 환경에서 같은 내용), 설치가 끝나면
 # 정의한 스킬이 실제로 설치됐는지 확인한다(빠진 게 있으면 실패로 보고).
@@ -39,6 +40,7 @@ TAG=""
 DO_SKILLS=1
 DO_TOOLS=1
 DRY_RUN=0
+ALLOW_WSL="${AI_SETUP_ALLOW_WSL:-0}"
 
 # 환경변수로도 에이전트 지정 가능: AI_SETUP_AGENTS="claude-code,codex"
 if [ -n "${AI_SETUP_AGENTS:-}" ]; then
@@ -56,6 +58,7 @@ while [ $# -gt 0 ]; do
     --skills-only)  DO_TOOLS=0 ;;
     --tools-only)   DO_SKILLS=0 ;;
     --dry-run|-n)   DRY_RUN=1 ;;
+    --wsl)          ALLOW_WSL=1 ;;
     -h|--help)      usage; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
@@ -80,6 +83,17 @@ printf '    scope : %s\n' "$([ -n "$SCOPE_FLAG" ] && echo global || echo project
 printf '    agents: %s\n' "$([ ${#AGENTS[@]} -gt 0 ] && echo "${AGENTS[*]}" || echo '(auto-detect)')"
 printf '    tag   : %s\n' "${TAG:-(all)}"
 [ "$DRY_RUN" = 1 ] && printf '    mode  : dry-run\n'
+
+# Windows(Git Bash/MSYS/Cygwin)에서도 도구는 시도한다(실제로 대부분 설치됨). 조건이 안 맞는 도구(graft 네이티브 빌드,
+# im-not-ai 심볼릭 링크 등)는 각 항목이 사유를 밝히고 건너뛰거나 경고만 남긴다.
+case "${AI_SETUP_UNAME:-$(uname -s 2>/dev/null)}" in
+  MINGW*|MSYS*|CYGWIN*) info "Windows 환경(Git Bash): 일부 도구는 빌드 도구나 심볼릭 링크가 없으면 건너뜁니다." ;;
+esac
+
+# WSL 이면 어디에 설치되는지 알리고, Windows 를 의도했을 가능성이 높으면 멈춘다 (--dry-run 은 경고만).
+if ! wsl_guard "$ALLOW_WSL"; then
+  [ "$DRY_RUN" = 1 ] || exit 2
+fi
 
 FAILED=()
 SKIPPED=()

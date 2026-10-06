@@ -9,8 +9,9 @@ AI 코딩 도구(Claude Code, Codex, Cursor, Gemini CLI, OpenCode …)에 설치
 ## 빠른 시작
 
 ```bash
-# 1) 클론해서 실행
-git clone --depth 1 https://github.com/kc9302/ai_agent_setup.git ~/.ai_agent_setup
+# 1) 클론해서 실행 (이미 클론돼 있으면 clone 이 실패하므로 최신으로 맞춘다. 오래된 사본으로 설치되는 것을 막는다)
+git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git ~/.ai_agent_setup 2>/dev/null \
+  || { git -C ~/.ai_agent_setup fetch --depth 1 origin main && git -C ~/.ai_agent_setup reset --hard FETCH_HEAD; }
 bash ~/.ai_agent_setup/bootstrap.sh
 
 # 2) 또는 클론 없이 한 줄
@@ -22,6 +23,36 @@ AI 에이전트에게 맡기려면 이렇게만 말하면 됩니다:
 > `https://github.com/kc9302/ai_agent_setup` 보고 내 환경 세팅해줘
 
 에이전트는 `AGENTS.md` 를 읽고 `bootstrap.sh` 를 실행합니다.
+
+### 이 저장소가 직접 정의한 스킬 (`skills/`)
+
+아래 스킬은 다른 저장소가 아니라 **이 저장소의 `skills/` 폴더**에 있습니다. `bootstrap.sh` 가 자동으로 설치하지만, 아래 매니페스트 표만 보고 손으로 설치하면 **빠집니다.**
+
+| 스킬 | 하는 일 |
+|---|---|
+| `ai-setup-sync` | 이 저장소로 스킬·도구를 동기화하는 절차 |
+| `web-design-guidelines` | Web Interface Guidelines 로 UI 리뷰 (규칙을 고정 사본으로 포함) |
+| `stakeholder-rehearsal` | 이해관계자 반응을 라운드별로 시뮬레이션해 시나리오 리포트를 쓴다 |
+| `persona-sim-review` | 가상 인물 여러 명에게 출시·공개 가능 여부를 평가받는다 |
+
+**Windows 에서는** 두 가지 중 하나를 쓰세요.
+- **Git Bash 에서 `bash bootstrap.sh`**: 스킬과 도구를 한 번에 설치합니다. 윈도우 Git Bash 실행에서 스킬 56개(와일드카드 소스 10개 포함)와 도구 21개 중 19개가 설치되는 것이 보고됐습니다. 빌드 도구가 없으면 `graft` 는 네이티브 모듈 빌드가 실패해도 명령이 동작하면 경고만 남기고, 심볼릭 링크가 필요한 `im-not-ai` 는 개발자 모드와 `MSYS=winsymlinks:nativestrict` 가 없으면 "건너뜀"으로 표시됩니다.
+- **PowerShell 에서 Node 설치기**(아래): 스킬만 설치합니다. PowerShell 에서 `bash` 를 치면 Git Bash 가 아니라 WSL 의 bash 가 실행돼 스킬이 Windows 가 아니라 WSL 안에 설치될 수 있습니다. `bootstrap.sh` 는 이를 감지해(WSL 홈에는 `.claude` 가 없고 Windows 쪽에만 있을 때) 멈추고 안내합니다. WSL 안에 설치하려면 `--wsl`. PowerShell 에서 Git Bash 를 쓰려면 `& "$env:ProgramFiles\Git\bin\bash.exe" bootstrap.sh`.
+
+맥의 기본 bash(3.2)가 걱정될 때도 Node 설치기를 쓸 수 있습니다. Node 설치기는 `bootstrap.sh` 의 스킬 단계와 같은 일을 합니다(매니페스트 스킬 전부 + 위 로컬 스킬 + 설치 후 이름 확인). 도구(`manifest/tools.list`)는 설치하지 않으므로 도구가 필요하면 `bootstrap.sh` 를 쓰세요. 설치 후에는 **Claude Code 를 새 세션으로 다시 열어야** 새 스킬이 보입니다.
+
+```bash
+git clone --depth 1 https://github.com/kc9302/ai_agent_setup.git
+cd ai_agent_setup
+node scripts/install-skills.mjs               # 전부 설치하고 확인 (--dry-run 으로 명령만 보기, --project 로 현재 프로젝트에만)
+```
+
+스킬 하나만 필요하면:
+
+```bash
+npx skills add kc9302/ai_agent_setup --skill persona-sim-review -g -y
+npx skills ls -g                                                  # 설치된 스킬 확인
+```
 
 요구사항: `git`, Node.js 18+ (`npx`). 선택: `jq` (discover 용), `GITHUB_TOKEN` (API rate limit 완화).
 
