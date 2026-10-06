@@ -26,7 +26,7 @@ bash ~/.ai_agent_setup/bootstrap.sh --project  # 현재 프로젝트에만
 ```
 클론이 불가능하면 한 줄로: `curl -fsSL https://raw.githubusercontent.com/kc9302/ai_agent_setup/main/bootstrap.sh | bash`
 
-- `node`/`npx` 가 없으면 먼저 Node.js 18+ 를 설치한다.
+- `node`/`npx` 가 없으면 먼저 Node.js 22.20+ 를 설치한다(더 낮으면 skills CLI 가 옛 버전으로 내려가 고정 커밋 설치가 실패한다).
 - 특정 에이전트만: `--agent claude-code` (여러 번 가능). 자동 감지에 맡기는 것이 기본.
 - 실패한 항목은 마지막에 목록으로 출력된다. 하나가 실패해도 나머지는 계속 진행된다.
 

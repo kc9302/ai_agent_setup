@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: dry-run, all sources
         run: node scripts/install-skills.mjs --dry-run
       - name: dry-run in Windows PowerShell 5.1
@@ -36,21 +36,6 @@ jobs:
             test -f "$H/.claude/skills/$n/SKILL.md" || { echo "missing: $n"; ls -la "$H/.claude/skills" || true; exit 1; }
           done
           echo "local skills installed under $H/.claude/skills"
-      - name: diagnose pinned-commit clone (temporary)
-        shell: bash
-        continue-on-error: true
-        run: |
-          export HOME="$RUNNER_TEMP/h-dbg0"; mkdir -p "$HOME"
-          echo "registry latest: $(npm view skills version 2>&1 | tail -1)"
-          echo "npx resolves to: $(npx -y skills --version 2>&1 | grep -aE '^[0-9]+\.[0-9]+' | head -1)"
-          C="$(ls -d "$(npm config get cache)"/_npx/*/node_modules/skills 2>/dev/null | head -1)"
-          echo "pkg dir: $C"
-          node -e 'const p=require(process.argv[1]+"/package.json"); console.log("package.json version:", p.version)' "$C" || true
-          F="$C/dist/cli.mjs"
-          echo "cloneAtSha mentions: $(grep -c "cloneAtSha" "$F" || true)"
-          echo "isCommitSha mentions: $(grep -c "isCommitSha" "$F" || true)"
-          grep -n "function isCommitSha" -A4 "$F" | head -8 || true
-          grep -n "Remote branch .* not found in upstream origin" "$F" | head -3 || true
       - name: real install of one wildcard source (checks argument quoting on this OS)
         shell: bash
         run: |
@@ -72,7 +57,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: bash dry-run (macOS uses /bin/bash 3.2 on purpose)
         shell: bash
         run: |
@@ -82,3 +67,28 @@ jobs:
         run: |
           B=bash; [ "$(uname -s)" = "Darwin" ] && B=/bin/bash
           for f in bootstrap.sh scripts/*.sh; do $B -n "$f" || { echo "syntax error: $f"; exit 1; }; done
+
+  node-too-old:
+    name: old Node is stopped with a clear message (Node 20)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Node installer must refuse before installing anything
+        shell: bash
+        run: |
+          set +e
+          out="$(node scripts/install-skills.mjs 2>&1)"; rc=$?
+          echo "$out" | head -5
+          [ "$rc" = 2 ] || { echo "expected exit 2, got $rc"; exit 1; }
+          echo "$out" | grep -q "22.20" || { echo "message must mention 22.20"; exit 1; }
+      - name: bootstrap.sh must refuse too
+        shell: bash
+        run: |
+          set +e
+          out="$(bash bootstrap.sh --skills-only 2>&1)"; rc=$?
+          echo "$out" | tail -3
+          [ "$rc" != 0 ] || { echo "expected failure on Node 20"; exit 1; }
+          echo "$out" | grep -q "22.20" || { echo "message must mention 22.20"; exit 1; }

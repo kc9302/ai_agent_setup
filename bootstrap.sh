@@ -74,8 +74,14 @@ run() {
 # ---- 사전 점검 --------------------------------------------------------------
 command -v git  >/dev/null 2>&1 || die "git 이 필요합니다."
 if [ "$DO_SKILLS" = 1 ] || [ "$DO_TOOLS" = 1 ]; then
-  command -v node >/dev/null 2>&1 || die "node/npm 이 필요합니다. https://nodejs.org (18+)"
+  command -v node >/dev/null 2>&1 || die "node/npm 이 필요합니다. https://nodejs.org (22.20+)"
   command -v npx  >/dev/null 2>&1 || die "npx 가 필요합니다."
+  # skills CLI(1.5.2x 이후)는 Node 22.20+ 를 요구한다. 더 낮으면 `npx -y skills` 가 조용히 옛 버전(1.5.18)으로 내려가
+  # 고정 커밋 설치가 전부 실패한다. 스킬 단계가 있을 때만 확인하고, --dry-run 은 경고만 한다.
+  if [ "$DO_SKILLS" = 1 ] && ! node -e 'const [a,b]=process.versions.node.split(".").map(Number);process.exit(a>22||(a===22&&b>=20)?0:1)' 2>/dev/null; then
+    nmsg="Node.js 22.20 이상이 필요합니다 (현재 $(node -v)). skills CLI 최신판이 이를 요구하고, 더 낮은 Node 에서는 npx 가 조용히 옛 버전(1.5.18)을 받아 고정 커밋 설치가 모두 실패합니다. https://nodejs.org"
+    if [ "$DRY_RUN" = 1 ]; then warn "$nmsg"; else die "$nmsg"; fi
+  fi
 fi
 
 info "ai_agent_setup bootstrap"

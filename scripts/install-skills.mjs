@@ -3,7 +3,7 @@
 //   node scripts/install-skills.mjs [--dry-run] [--project] [--agent <이름>]... [--tag <태그>] [--wsl]
 // bootstrap.sh 의 스킬 단계와 같은 규칙: manifest/skills.list 의 모든 소스(커밋 고정) +
 // 이 저장소의 skills/ 폴더(로컬 스킬)를 설치하고, 끝나면 이름이 실제로 설치됐는지 확인한다.
-// 필요한 것: Node.js 18+ (npx).
+// 필요한 것: Node.js 22.20+ (npx), git. 낮은 Node 에서는 skills CLI 의 최신판을 받지 못한다(아래 사전 점검 참고).
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { homedir, platform } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -32,8 +32,13 @@ const die = (m) => { console.error(`\n[error] ${m}`); process.exit(2); };
 const warn = (m) => console.warn(`[warn] ${m}`);
 const probe = (cmd, args, opts = {}) => spawnSync(cmd, args, { shell: win, encoding: 'utf8', timeout: 15000, ...opts });
 
-// 1) Node 18+, git, npx (skills CLI 가 GitHub 저장소를 받는다)
-if (Number(process.versions.node.split('.')[0]) < 18) die(`Node.js 18 이상이 필요합니다 (현재 ${process.versions.node}). https://nodejs.org`);
+// 1) Node 22.20+, git, npx. skills CLI(1.5.2x 이후)는 Node 22.20 이상을 요구한다. 그보다 낮은 Node 에서는 `npx -y skills` 가
+//    오류 없이 옛 버전(1.5.18)으로 내려가고, 그 버전은 고정 커밋(owner/repo#<커밋>) 설치를 못 해 모든 스킬이 실패한다.
+const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);
+if (nodeMajor < 22 || (nodeMajor === 22 && nodeMinor < 20)) {
+  const msg = `Node.js 22.20 이상이 필요합니다 (현재 ${process.versions.node}). skills CLI 최신판이 이를 요구하고, 더 낮은 Node 에서는 npx 가 조용히 옛 버전(1.5.18)을 받아 고정 커밋 설치가 모두 실패합니다. https://nodejs.org`;
+  if (dryRun) warn(msg); else die(msg);
+}
 if (probe('git', ['--version']).status !== 0) die('git 이 필요합니다 (skills CLI 가 GitHub 저장소를 받습니다). https://git-scm.com');
 if (probe('npx', ['--version']).status !== 0) die('npx 가 필요합니다 (Node.js 설치에 포함됩니다).');
 
