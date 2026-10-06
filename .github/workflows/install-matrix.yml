@@ -36,6 +36,17 @@ jobs:
             test -f "$H/.claude/skills/$n/SKILL.md" || { echo "missing: $n"; ls -la "$H/.claude/skills" || true; exit 1; }
           done
           echo "local skills installed under $H/.claude/skills"
+      - name: diagnose pinned-commit clone (temporary)
+        shell: bash
+        continue-on-error: true
+        run: |
+          git --version
+          T="$(mktemp -d)"; cd "$T"
+          git init -q && git remote add origin https://github.com/blader/humanizer.git
+          echo "--- fetch by sha"; git fetch --depth 1 origin 225a6f39ac85f76ee48dbad772ea4abe4ed6c9d8 && echo FETCH_OK || echo FETCH_FAILED
+          echo "--- checkout"; git checkout FETCH_HEAD 2>&1 | tail -2 && echo CHECKOUT_DONE
+          echo "--- git config (system/global/local)"; git config --list --show-origin | grep -iE "protocol|uploadpack|safe|url\.|credential|extraheader|init\." | head -10 || true
+          echo "--- node/skills clone path, verbose"; HOME="$RUNNER_TEMP/h-dbg" mkdir -p "$RUNNER_TEMP/h-dbg/.claude"; GIT_TRACE=1 HOME="$RUNNER_TEMP/h-dbg" npx -y skills add blader/humanizer#225a6f39ac85f76ee48dbad772ea4abe4ed6c9d8 --list 2>&1 | grep -aE "trace: (run_command|built-in)|fatal|error|Found|Failed" | head -20
       - name: real install of one wildcard source (checks argument quoting on this OS)
         shell: bash
         run: |
