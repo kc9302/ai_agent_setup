@@ -40,7 +40,7 @@ bash scripts/status.sh       # 설치 결과 확인
 | `scripts/status.sh`    | 현재 환경의 설치 상태 |
 | `scripts/install-skills.mjs` | bash 없이(Node 만으로) 스킬을 설치하고 확인. `bootstrap.sh` 스킬 단계와 같은 규칙. 도구는 설치하지 않는다 |
 | `scripts/export-stakeholder-rehearsal.sh` | `stakeholder-rehearsal` 를 독립 저장소 형태(README·LICENSE·테스트·CI 포함)로 내보낸다. 원본은 `skills/stakeholder-rehearsal/`, 테스트·README 원본은 `packaging/stakeholder-rehearsal/` |
-| `skills/`              | 이 저장소 자체가 정의한 로컬 스킬. `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다 (`ai-setup-sync`, 고정 사본 `web-design-guidelines`, 시뮬레이션 방법론 `stakeholder-rehearsal`, 가상 인물 평가 `persona-sim-review`) |
+| `skills/`              | 이 저장소 자체가 정의한 로컬 스킬. `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다 (`ai-setup-sync`, 고정 사본 `web-design-guidelines`, 시뮬레이션 방법론 `stakeholder-rehearsal`, 가상 인물 평가 `persona-sim-review`, 후보 카드 `skill-radar`) |
 | `CATALOG.md`           | 등록된 각 스킬·도구가 무엇이고 왜 넣었는지, 사용법 상세 설명 |
 
 ## 새 스킬/도구를 추가할 때
