@@ -16,7 +16,7 @@ bash scripts/status.sh       # 설치 결과 확인
 - Node.js 18+ 와 git 이 필요하다. 없으면 먼저 설치한다.
 - 스킬은 `npx skills add` 로 설치되며 Claude Code / Codex / Cursor / Gemini CLI / OpenCode 등을 자동 감지한다.
 - 실패한 항목은 요약에 나온다. 전체를 멈추지 말고 실패한 것만 보고한다.
-- **`bash` 를 쓸 수 없으면**(예: Windows PowerShell) 또는 bash 3.2 인 맥에서는 `node scripts/install-skills.mjs` 를 쓴다. 매니페스트 스킬과 이 저장소의 `skills/` 폴더(로컬 스킬)를 모두 설치하고 이름으로 확인한다. 도구(`manifest/tools.list`)는 `bootstrap.sh --tools-only` 가 필요하다(Git Bash/WSL). **README 의 표나 `manifest/skills.list` 만 보고 손으로 설치하면 로컬 스킬이 빠진다.** 하나만 설치할 때는 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y`.
+- **Windows 에서는 `node scripts/install-skills.mjs` 만 쓴다**(PowerShell 이면 `node scripts\install-skills.mjs`). PowerShell 의 `bash` 는 WSL 의 bash 일 수 있어 스킬이 Windows 가 아니라 WSL 안에 설치된다. 이 스크립트는 매니페스트 스킬과 이 저장소의 `skills/` 폴더(로컬 스킬)를 모두 설치하고 이름으로 확인한다. 도구(`manifest/tools.list`)는 리눅스·맥용이라 Windows 에서는 설치하지 않는다(`bootstrap.sh` 도 Git Bash 에서는 도구를 건너뛰고, WSL 이면 Windows 쪽에만 `.claude` 가 있을 때 멈춘다. WSL 안에 설치하려면 `--wsl`). bash 3.2 인 맥에서도 같은 설치기를 쓸 수 있다. **README 의 표나 `manifest/skills.list` 만 보고 손으로 설치하면 로컬 스킬이 빠진다.** 하나만 설치할 때는 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y`.
 - 설치를 마친 뒤에는 `bash scripts/verify.sh` (또는 `npx skills ls -g`) 로 **스킬 이름이 실제로 보이는지** 확인하고, 사용자에게 **에이전트를 새 세션으로 다시 열어야 새 스킬이 보인다**고 알린다.
 
 ## 저장소 구조

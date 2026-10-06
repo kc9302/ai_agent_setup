@@ -8,6 +8,8 @@
 #   bash bootstrap.sh --tag core      # 태그가 core 인 항목만
 #   bash bootstrap.sh --skills-only | --tools-only
 #   bash bootstrap.sh --dry-run       # 실행할 명령만 출력
+#   bash bootstrap.sh --with-tools    # Windows(Git Bash)에서도 도구 설치를 시도 (기본은 스킬만)
+#   bash bootstrap.sh --wsl           # WSL 안에 설치하는 것이 맞을 때 (WSL 홈에 .claude 가 없고 Windows 쪽에만 있으면 기본은 멈춘다)
 #
 # 스킬은 skills.list 에 적힌 커밋에 고정해 설치하고(모든 환경에서 같은 내용), 설치가 끝나면
 # 정의한 스킬이 실제로 설치됐는지 확인한다(빠진 게 있으면 실패로 보고).
@@ -39,6 +41,8 @@ TAG=""
 DO_SKILLS=1
 DO_TOOLS=1
 DRY_RUN=0
+ALLOW_WSL="${AI_SETUP_ALLOW_WSL:-0}"
+FORCE_TOOLS=0
 
 # 환경변수로도 에이전트 지정 가능: AI_SETUP_AGENTS="claude-code,codex"
 if [ -n "${AI_SETUP_AGENTS:-}" ]; then
@@ -56,6 +60,8 @@ while [ $# -gt 0 ]; do
     --skills-only)  DO_TOOLS=0 ;;
     --tools-only)   DO_SKILLS=0 ;;
     --dry-run|-n)   DRY_RUN=1 ;;
+    --wsl)          ALLOW_WSL=1 ;;
+    --with-tools)   FORCE_TOOLS=1 ;;
     -h|--help)      usage; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
@@ -80,6 +86,22 @@ printf '    scope : %s\n' "$([ -n "$SCOPE_FLAG" ] && echo global || echo project
 printf '    agents: %s\n' "$([ ${#AGENTS[@]} -gt 0 ] && echo "${AGENTS[*]}" || echo '(auto-detect)')"
 printf '    tag   : %s\n' "${TAG:-(all)}"
 [ "$DRY_RUN" = 1 ] && printf '    mode  : dry-run\n'
+
+# Windows(Git Bash/MSYS/Cygwin)에서는 tools.list 의 설치기(curl | sh, apt, cargo 등)가 리눅스·맥 기준이라 도구를 건너뛰고
+# 스킬만 설치한다 (실패가 아니라 건너뜀). 강제로 시도하려면 --with-tools. Windows 에서는 node scripts/install-skills.mjs 를 권한다.
+case "${AI_SETUP_UNAME:-$(uname -s 2>/dev/null)}" in
+  MINGW*|MSYS*|CYGWIN*)
+    if [ "$DO_TOOLS" = 1 ] && [ "$FORCE_TOOLS" != 1 ]; then
+      DO_TOOLS=0
+      info "Windows 환경: 도구(manifest/tools.list)는 건너뛰고 스킬만 설치합니다. (도구까지 시도하려면 --with-tools)"
+      printf '    스킬만 설치할 때는  node scripts\\install-skills.mjs  가 가장 단순합니다.\n'
+    fi ;;
+esac
+
+# WSL 이면 어디에 설치되는지 알리고, Windows 를 의도했을 가능성이 높으면 멈춘다 (--dry-run 은 경고만).
+if ! wsl_guard "$ALLOW_WSL"; then
+  [ "$DRY_RUN" = 1 ] || exit 2
+fi
 
 FAILED=()
 SKIPPED=()

@@ -35,7 +35,7 @@ AI 에이전트에게 맡기려면 이렇게만 말하면 됩니다:
 | `stakeholder-rehearsal` | 이해관계자 반응을 라운드별로 시뮬레이션해 시나리오 리포트를 쓴다 |
 | `persona-sim-review` | 가상 인물 여러 명에게 출시·공개 가능 여부를 평가받는다 |
 
-`bash` 를 쓸 수 없거나 맥의 기본 bash(3.2)가 걱정될 때(예: Windows PowerShell)는 **Node 설치기**를 씁니다. `bootstrap.sh` 의 스킬 단계와 같은 일을 합니다(매니페스트 스킬 전부 + 위 로컬 스킬 + 설치 후 이름 확인). 도구(`manifest/tools.list`)는 설치하지 않습니다. 설치 후에는 **Claude Code 를 새 세션으로 다시 열어야** 새 스킬이 보입니다.
+**Windows 에서는 이 Node 설치기만 쓰세요.** (PowerShell 에서 `bash` 를 치면 Git Bash 가 아니라 WSL 의 bash 가 실행돼 스킬이 Windows 가 아니라 WSL 안에 설치될 수 있습니다. `bootstrap.sh` 는 이를 감지해 멈추고, Git Bash 에서는 도구를 건너뛰고 스킬만 설치하지만, 처음부터 Node 설치기가 가장 단순합니다.) 맥의 기본 bash(3.2)가 걱정될 때도 같습니다. Node 설치기는 `bootstrap.sh` 의 스킬 단계와 같은 일을 합니다. `bootstrap.sh` 의 스킬 단계와 같은 일을 합니다(매니페스트 스킬 전부 + 위 로컬 스킬 + 설치 후 이름 확인). 도구(`manifest/tools.list`)는 리눅스·맥용 설치기라 설치하지 않습니다 — 도구가 필요하면 리눅스·맥·WSL 에서 `bootstrap.sh` 를 쓰세요. 설치 후에는 **Claude Code 를 새 세션으로 다시 열어야** 새 스킬이 보입니다.
 
 ```bash
 git clone --depth 1 https://github.com/kc9302/ai_agent_setup.git

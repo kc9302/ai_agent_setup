@@ -134,3 +134,31 @@ json_num() {
   if command -v jq >/dev/null 2>&1; then jq -r ".${key} // empty"
   else grep -o "\"${key}\"[[:space:]]*:[[:space:]]*[0-9]*" | head -1 | sed 's/.*://; s/[[:space:]]//g'; fi
 }
+
+# ---- WSL 안전장치 -----------------------------------------------------------
+# PowerShell 에서 `bash` 를 치면 Git Bash 가 아니라 WSL 의 bash.exe 가 실행될 수 있다. 그러면 스킬이
+# Windows 의 사용자 폴더가 아니라 WSL 안의 $HOME 에 설치된다. WSL 이고, WSL 홈에는 Claude Code 설정이
+# 없는데 Windows 쪽에는 있으면 사용자가 Windows 를 의도했을 가능성이 높으므로 설치 전에 멈춘다.
+# 테스트용: AI_SETUP_WINDOWS_CLAUDE_GLOB 로 Windows 쪽 .claude 위치 패턴을 바꿀 수 있다.
+is_wsl() { [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/version 2>/dev/null; }
+
+# 사용법: wsl_guard <허용(0|1)>. 멈춰야 하면 1 을 돌려준다.
+wsl_guard() {
+  local allow="${1:-0}" glob="${AI_SETUP_WINDOWS_CLAUDE_GLOB:-/mnt/*/Users/*/.claude}" d
+  local -a win=()
+  is_wsl || return 0
+  for d in $glob; do [ -d "$d" ] && win+=("$d"); done
+  printf '    wsl   : WSL 에서 실행 중 — 설치 위치는 WSL 의 %s 입니다 (Windows 사용자 폴더 아님)\n' "$HOME"
+  if [ ! -d "$HOME/.claude" ] && [ ${#win[@]} -gt 0 ] && [ "$allow" != 1 ]; then
+    error "WSL 의 홈($HOME)에는 Claude Code 설정(.claude)이 없고, Windows 쪽에는 있습니다:"
+    printf '      %s\n' "${win[@]}" >&2
+    cat >&2 <<'MSG'
+    Windows 의 Claude Code 에 설치하려던 것이라면, WSL 이 아니라 Windows 에서 실행하세요:
+      PowerShell :  node scripts\install-skills.mjs
+      PowerShell 에서 도구까지 설치(Git Bash 지정) :  & "$env:ProgramFiles\Git\bin\bash.exe" bootstrap.sh
+    WSL 안에 설치하는 것이 맞다면 --wsl 을 붙여 다시 실행하세요:  bash bootstrap.sh --wsl
+MSG
+    return 1
+  fi
+  return 0
+}
