@@ -93,3 +93,34 @@ jobs:
           echo "$out" | tail -3
           [ "$rc" != 0 ] || { echo "expected failure on Node 20"; exit 1; }
           echo "$out" | grep -q "22.20" || { echo "message must mention 22.20"; exit 1; }
+
+  bootstrap-full-macos:
+    # 실제 맥북과 같은 흐름(스킬 + 도구 전체)을 빈 HOME 에서 끝까지 돌린다. 도구 21개를 설치하므로 오래 걸린다.
+    name: bootstrap.sh full run (macos-latest)
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: full bootstrap in an isolated home (/bin/bash 3.2)
+        run: |
+          H="$RUNNER_TEMP/h-full"
+          mkdir -p "$H/.claude"
+          export HOME="$H"
+          /bin/bash bootstrap.sh 2>&1 | tee "$RUNNER_TEMP/bootstrap.log"
+          exit "${PIPESTATUS[0]}"
+      - name: every defined skill is installed
+        run: |
+          export HOME="$RUNNER_TEMP/h-full"
+          /bin/bash scripts/verify.sh
+      - name: tool status report
+        if: always()
+        run: |
+          export HOME="$RUNNER_TEMP/h-full"
+          /bin/bash scripts/status.sh || true
+      - name: second tools run is idempotent
+        run: |
+          export HOME="$RUNNER_TEMP/h-full"
+          /bin/bash bootstrap.sh --tools-only
