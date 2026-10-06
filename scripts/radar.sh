@@ -8,7 +8,7 @@
 #   GITHUB_TOKEN=... bash scripts/radar.sh     # rate limit 완화 (권장)
 #
 # 옵션: --out FILE  --days N(신규 기준 일수, 30)  --top N(목록당 개수, 10)
-#       --min-stars N(인기 하한, 50)  --min-new-stars N(신규 하한, 5)  --enrich N(상세 조회 상한, 24)
+#       --min-stars N(인기 하한, 50)  --min-new-stars N(신규 하한, 5)  --enrich N(종류별 상세 조회 상한, 24)
 # 테스트용: RADAR_OFFLINE_DIR=<dir> 이면 네트워크 대신 그 폴더의 파일을 읽는다(파일명 = 경로의 영숫자 외 문자를 _ 로 바꾼 것).
 #
 # 출력 필드는 GitHub 메타데이터뿐이다. README·SKILL.md 본문은 읽지 않는다. description 은 남이 쓴 문자열이므로
@@ -85,8 +85,13 @@ ranked="$(printf '%s\n' "$raw" | jq -sc --arg now "$NOW" --argjson known "$known
   | map(.[0] + {kinds: (map(.kind) | unique)})
   | map(select((.archived|not) and (.fork|not) and ((.full_name|ascii_downcase) as $n | $known | index($n) | not)))
   | map(. + {age_days: age_days})
-  | map(. + {score: (if (.kinds|index("new")) then ((.stargazers_count / .age_days) * 100 | round / 100) else ((.stargazers_count + 1 | log) * 10 | round / 10) end)})
-  | sort_by(-.score) | .[0:$enrich]')"
+  | map(. + {vel: ((.stargazers_count / .age_days) * 100 | round / 100)})
+  # 상세 조회 상한은 종류별로 따로 적용한다. 하나로 줄 세우면 증가 속도가 큰 신규 저장소가 상한을 다 차지해 인기 후보가 사라진다.
+  | ([.[] | select(.kinds | index("new"))]     | sort_by(-.vel)                | .[0:$enrich]) as $n
+  | ([.[] | select(.kinds | index("popular"))] | sort_by(-.stargazers_count)  | .[0:$enrich]) as $p
+  | ($n + $p) | unique_by(.full_name)
+  | map(. + {score: (if (.kinds|index("new")) then .vel else ((.stargazers_count + 1 | log) * 10 | round / 10) end)})
+  | sort_by(-.score)')"
 
 info "검색 결과 $(printf '%s' "$raw" | jq -sc 'map(.full_name)|unique|length')개 저장소 중 제외 규칙을 통과한 것 $(printf '%s' "$ranked" | jq length)개 (popular $(printf '%s' "$ranked" | jq '[.[]|select(.kinds|index("popular"))]|length'), new $(printf '%s' "$ranked" | jq '[.[]|select(.kinds|index("new"))]|length'))"
 dropped_detail=0; dropped_noskill=0
