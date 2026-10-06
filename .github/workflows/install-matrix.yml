@@ -40,23 +40,17 @@ jobs:
         shell: bash
         continue-on-error: true
         run: |
-          HOME="$RUNNER_TEMP/h-dbg0" mkdir -p "$RUNNER_TEMP/h-dbg0"
-          HOME="$RUNNER_TEMP/h-dbg0" npx -y skills --version >/dev/null 2>&1 || true
-          C="$(ls -d "$(HOME="$RUNNER_TEMP/h-dbg0" npm config get cache)"/_npx/*/node_modules/skills 2>/dev/null | head -1)"
-          [ -z "$C" ] && C="$(ls -d "$HOME"/.npm/_npx/*/node_modules/skills 2>/dev/null | head -1)"
-          [ -z "$C" ] && C="$(ls -d "$LOCALAPPDATA"/npm-cache/_npx/*/node_modules/skills 2>/dev/null | head -1)"
-          echo "skills package dir: $C"
-          cp -r "$C" "$RUNNER_TEMP/skills-patched"
-          node -e '
-            const fs=require("fs"),p=process.argv[1];
-            let s=fs.readFileSync(p,"utf8");
-            const re=/await cloneAtSha\(url, ref, tempDir\);\s*return tempDir;\s*\} catch \{\}/;
-            console.log("patch point found:", re.test(s));
-            s=s.replace(re,"await cloneAtSha(url, ref, tempDir);return tempDir;} catch (e) { console.error(\"CLONE_AT_SHA_ERROR: \" + (e && (e.stack || e.message))); }");
-            fs.writeFileSync(p,s);
-          ' "$RUNNER_TEMP/skills-patched/dist/cli.mjs"
-          mkdir -p "$RUNNER_TEMP/h-dbg/.claude"
-          HOME="$RUNNER_TEMP/h-dbg" USERPROFILE="$RUNNER_TEMP/h-dbg" node "$RUNNER_TEMP/skills-patched/bin/cli.mjs" add blader/humanizer#225a6f39ac85f76ee48dbad772ea4abe4ed6c9d8 --list 2>&1 | grep -aE "CLONE_AT_SHA_ERROR|Found|Failed|fatal|at |Error" | head -20
+          export HOME="$RUNNER_TEMP/h-dbg0"; mkdir -p "$HOME"
+          echo "registry latest: $(npm view skills version 2>&1 | tail -1)"
+          echo "npx resolves to: $(npx -y skills --version 2>&1 | grep -aE '^[0-9]+\.[0-9]+' | head -1)"
+          C="$(ls -d "$(npm config get cache)"/_npx/*/node_modules/skills 2>/dev/null | head -1)"
+          echo "pkg dir: $C"
+          node -e 'const p=require(process.argv[1]+"/package.json"); console.log("package.json version:", p.version)' "$C" || true
+          F="$C/dist/cli.mjs"
+          echo "cloneAtSha mentions: $(grep -c "cloneAtSha" "$F" || true)"
+          echo "isCommitSha mentions: $(grep -c "isCommitSha" "$F" || true)"
+          grep -n "function isCommitSha" -A4 "$F" | head -8 || true
+          grep -n "Remote branch .* not found in upstream origin" "$F" | head -3 || true
       - name: real install of one wildcard source (checks argument quoting on this OS)
         shell: bash
         run: |
