@@ -88,20 +88,23 @@ ranked="$(printf '%s\n' "$raw" | jq -sc --arg now "$NOW" --argjson known "$known
   | map(. + {score: (if (.kinds|index("new")) then ((.stargazers_count / .age_days) * 100 | round / 100) else ((.stargazers_count + 1 | log) * 10 | round / 10) end)})
   | sort_by(-.score) | .[0:$enrich]')"
 
+info "검색 결과 $(printf '%s' "$raw" | jq -sc 'map(.full_name)|unique|length')개 저장소 중 제외 규칙을 통과한 것 $(printf '%s' "$ranked" | jq length)개 (popular $(printf '%s' "$ranked" | jq '[.[]|select(.kinds|index("popular"))]|length'), new $(printf '%s' "$ranked" | jq '[.[]|select(.kinds|index("new"))]|length'))"
+dropped_detail=0; dropped_noskill=0
 enriched="[]"
 while IFS= read -r c; do
   [ -n "$c" ] || continue
   repo="$(printf '%s' "$c" | jq -r .full_name)"; br="$(printf '%s' "$c" | jq -r '.default_branch // "main"')"
   commit="$(api "/repos/$repo/commits?per_page=1&sha=$(urlencode "$br")" 2>/dev/null | jq -r '.[0].sha // empty' 2>/dev/null || true)"
   tree="$(api "/repos/$repo/git/trees/$(urlencode "$br")?recursive=1" 2>/dev/null || true)"
-  [ -n "$commit" ] && [ -n "$tree" ] || { warn "상세 조회 실패, 건너뜀: $repo"; continue; }
+  [ -n "$commit" ] && [ -n "$tree" ] || { warn "상세 조회 실패, 건너뜀: $repo"; dropped_detail=$((dropped_detail+1)); continue; }
   paths="$(printf '%s' "$tree" | jq -c '[.tree[]? | select(.type=="blob" and (.path|test("(^|/)SKILL\\.md$"))) | .path]')"
-  [ "$(printf '%s' "$paths" | jq length)" -gt 0 ] || continue
+  [ "$(printf '%s' "$paths" | jq length)" -gt 0 ] || { dropped_noskill=$((dropped_noskill+1)); continue; }
   trunc="$(printf '%s' "$tree" | jq '.truncated // false')"
   enriched="$(jq -c --argjson c "$c" --arg commit "$commit" --argjson paths "$paths" --argjson trunc "$trunc" \
     '. + [$c + {commit:$commit, skill_paths:$paths, skill_count:($paths|length), tree_truncated:$trunc}]' <<<"$enriched")"
 done < <(printf '%s' "$ranked" | jq -c '.[]')
 
+info "상세 조회 후: 통과 $(printf '%s' "$enriched" | jq length), SKILL.md 없음 $dropped_noskill, 조회 실패 $dropped_detail"
 jq -n --argjson items "$enriched" --arg now "$NOW" --arg since "$SINCE" --argjson days "$DAYS" --argjson top "$TOP" \
   --argjson minstars "$MIN_STARS" --argjson minnew "$MIN_NEW" '
   def clean: (. // "") | gsub("[\u0001-\u001f\u007f]"; " ") | gsub("\\s+"; " ") | .[0:200];
