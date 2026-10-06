@@ -34,10 +34,17 @@ AI 에이전트에게 맡기려면 이렇게만 말하면 됩니다:
 | `stakeholder-rehearsal` | 이해관계자 반응을 라운드별로 시뮬레이션해 시나리오 리포트를 쓴다 |
 | `persona-sim-review` | 가상 인물 여러 명에게 출시·공개 가능 여부를 평가받는다 |
 
-`bash` 를 쓸 수 없을 때(예: Windows PowerShell)는 스킬 하나씩 이렇게 설치합니다. 설치 후에는 **Claude Code 를 새 세션으로 다시 열어야** 보입니다.
+`bash` 를 쓸 수 없거나 맥의 기본 bash(3.2)가 걱정될 때(예: Windows PowerShell)는 **Node 설치기**를 씁니다. `bootstrap.sh` 의 스킬 단계와 같은 일을 합니다(매니페스트 스킬 전부 + 위 로컬 스킬 + 설치 후 이름 확인). 도구(`manifest/tools.list`)는 설치하지 않습니다. 설치 후에는 **Claude Code 를 새 세션으로 다시 열어야** 새 스킬이 보입니다.
 
 ```bash
-npx skills add kc9302/ai_agent_setup --list                      # 이 저장소가 제공하는 스킬 이름 확인
+git clone --depth 1 https://github.com/kc9302/ai_agent_setup.git
+cd ai_agent_setup
+node scripts/install-skills.mjs               # 전부 설치하고 확인 (--dry-run 으로 명령만 보기, --project 로 현재 프로젝트에만)
+```
+
+스킬 하나만 필요하면:
+
+```bash
 npx skills add kc9302/ai_agent_setup --skill persona-sim-review -g -y
 npx skills ls -g                                                  # 설치된 스킬 확인
 ```

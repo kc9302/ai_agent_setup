@@ -16,7 +16,7 @@ bash scripts/status.sh       # 설치 결과 확인
 - Node.js 18+ 와 git 이 필요하다. 없으면 먼저 설치한다.
 - 스킬은 `npx skills add` 로 설치되며 Claude Code / Codex / Cursor / Gemini CLI / OpenCode 등을 자동 감지한다.
 - 실패한 항목은 요약에 나온다. 전체를 멈추지 말고 실패한 것만 보고한다.
-- **`bash` 를 쓸 수 없으면**(예: Windows PowerShell) Git Bash 나 WSL 로 `bootstrap.sh` 를 실행한다. 그럴 수 없을 때만 수동으로 설치하되, **README 의 표나 `manifest/skills.list` 만 보면 이 저장소의 `skills/` 폴더(로컬 스킬)가 빠진다.** 로컬 스킬은 `npx skills add <이 저장소> --list` 로 이름을 확인하고 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y` 로 하나씩 설치한다.
+- **`bash` 를 쓸 수 없으면**(예: Windows PowerShell) 또는 bash 3.2 인 맥에서는 `node scripts/install-skills.mjs` 를 쓴다. 매니페스트 스킬과 이 저장소의 `skills/` 폴더(로컬 스킬)를 모두 설치하고 이름으로 확인한다. 도구(`manifest/tools.list`)는 `bootstrap.sh --tools-only` 가 필요하다(Git Bash/WSL). **README 의 표나 `manifest/skills.list` 만 보고 손으로 설치하면 로컬 스킬이 빠진다.** 하나만 설치할 때는 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y`.
 - 설치를 마친 뒤에는 `bash scripts/verify.sh` (또는 `npx skills ls -g`) 로 **스킬 이름이 실제로 보이는지** 확인하고, 사용자에게 **에이전트를 새 세션으로 다시 열어야 새 스킬이 보인다**고 알린다.
 
 ## 저장소 구조
@@ -32,6 +32,7 @@ bash scripts/status.sh       # 설치 결과 확인
 | `scripts/pin.sh`       | 스킬 소스를 커밋에 고정(`--fill`)하고 올린다(`--update`). 인자 없이 실행하면 비교표만 출력 |
 | `scripts/verify.sh`    | 정의한 스킬이 이 환경에 **실제로 전부** 설치됐는지 확인 (설치는 하지 않음) |
 | `scripts/status.sh`    | 현재 환경의 설치 상태 |
+| `scripts/install-skills.mjs` | bash 없이(Node 만으로) 스킬을 설치하고 확인. `bootstrap.sh` 스킬 단계와 같은 규칙. 도구는 설치하지 않는다 |
 | `scripts/export-stakeholder-rehearsal.sh` | `stakeholder-rehearsal` 를 독립 저장소 형태(README·LICENSE·테스트·CI 포함)로 내보낸다. 원본은 `skills/stakeholder-rehearsal/`, 테스트·README 원본은 `packaging/stakeholder-rehearsal/` |
 | `skills/`              | 이 저장소 자체가 정의한 로컬 스킬. `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다 (`ai-setup-sync`, 고정 사본 `web-design-guidelines`, 시뮬레이션 방법론 `stakeholder-rehearsal`, 가상 인물 평가 `persona-sim-review`) |
 | `CATALOG.md`           | 등록된 각 스킬·도구가 무엇이고 왜 넣었는지, 사용법 상세 설명 |
