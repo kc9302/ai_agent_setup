@@ -3,6 +3,7 @@ name: install-matrix
 # 세 OS 에서 설치 경로를 실제로 실행해 미리 잡는다.
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:

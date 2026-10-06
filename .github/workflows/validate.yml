@@ -1,6 +1,8 @@
 name: validate
+# main 으로 들어간 푸시와 모든 PR 에서만 돈다. 개발 브랜치에 푸시할 때마다 도는 것을 막아 실패 알림 메일이 불필요하게 오지 않게 한다.
 on:
   push:
+    branches: [main]
   pull_request:
 jobs:
   validate:
