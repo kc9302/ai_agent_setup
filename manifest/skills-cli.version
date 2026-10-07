@@ -1,0 +1,4 @@
+# 설치기(bootstrap.sh, scripts/install-skills.mjs, status.sh, verify.sh)가 쓰는 skills CLI 버전. 한 줄만 적는다.
+# `npx -y skills` 처럼 최신판을 쓰면 CLI 가 바뀔 때마다 설치 동작이 달라진다(옛 1.5.18 은 커밋 고정 설치를 못 한다).
+# 올릴 때: 이 파일과 manifest/tools.list 의 skills-cli 항목을 같은 버전으로 함께 고친다(validate.sh 가 일치를 검사한다).
+1.7.1

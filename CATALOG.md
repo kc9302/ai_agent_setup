@@ -19,7 +19,7 @@ Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담�
 - **소스를 커밋에 고정한다.** `skills.list` 의 소스는 `owner/repo#<40자리 커밋>` 형식이다. 고정하지 않으면 클론한 시점의 최신 `main` 이 설치돼 환경과 시간에 따라 달라진다. 고정은 `bash scripts/pin.sh --fill`, 올릴 때는 `bash scripts/pin.sh --update owner/repo` 이고 비교 링크가 출력된다. 고정한 커밋은 **고정한 날(2026-10-05)의 upstream 최신**이며, 각 스킬을 처음 검토한 시점의 커밋과 다를 수 있다. 올릴 때마다 바뀐 내용을 읽는다(스킬은 에이전트가 따르는 지시문이다). `validate.sh` 는 고정되지 않은 소스를 오류로 처리한다.
 - **설치 후 실제로 설치됐는지 검증한다.** skills CLI 는 `--skill` 을 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값으로 찾고, 맞지 않는 이름은 **오류 없이 건너뛴 채 종료 코드 0** 으로 끝난다(예: `vercel-labs/agent-skills` 에서 4개 중 2개가 조용히 빠졌다). `bootstrap.sh` 는 설치 뒤 `skills ls --json` 과 대조해 이름으로 지정한 스킬이 하나라도 없으면 실패로 보고한다. 와일드카드(`*`) 소스는 스킬이 1개 이상 있는지 본다. 설치 없이 현재 환경만 점검하려면 `bash scripts/verify.sh [--project] [--agent …] [--tag …]`. 도구(`tools.list`)가 설치하는 스킬은 각 도구의 check 로 확인한다.
 - **이 저장소의 스킬도 함께 설치한다.** `skills/` 의 스킬(`ai-setup-sync`, `web-design-guidelines`)은 `bootstrap.sh` 가 클론한 저장소에서 바로 설치한다(로컬 경로 설치는 파일을 복사하므로 임시 클론이 지워져도 남는다). 클론이 곧 고정이다.
-- **알려진 한계**: 도구(`tools.list`)가 설치하는 스킬은 이 고정 방식이 아니라 각 도구의 방식을 따른다. `officecli` 는 바이너리 버전에, `im-not-ai`(스킬 `humanize-korean`)는 커밋에 묶여 있다. 고정하지 않은 도구는 실행 때마다 버전이 달라질 수 있다.
+- **알려진 한계**: 도구(`tools.list`)가 설치하는 스킬은 이 고정 방식이 아니라 각 도구의 방식을 따른다. `officecli` 는 바이너리 버전에, `im-not-ai`(스킬 `humanize-korean`)는 커밋에 묶여 있다. 도구 자체(`tools.list`)는 npm `@버전`·uv `==버전`·git 커밋·해시 확인한 스크립트로 고정하고, 설치기가 쓰는 skills CLI 는 `manifest/skills-cli.version` 으로 고정한다(`validate.sh` 가 강제). 고정되지 않는 것은 고정한 패키지의 전이 의존성이고, 업스트림이 고정한 버전·커밋을 지워도 아직 감시하지 않는다.
 
 ### anthropics/skills — Anthropic 공식 스킬
 - **무엇**: Anthropic 이 직접 관리하는 공식 스킬 모음. 문서 생성(`docx`, `pdf`, `pptx`, `xlsx`), 스킬 제작 도우미(`skill-creator`), Playwright 기반 웹앱 테스트(`webapp-testing`) 등.
