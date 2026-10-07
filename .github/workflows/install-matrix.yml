@@ -191,6 +191,8 @@ jobs:
           node scripts/install-skills.mjs
           node scripts/snapshot.mjs --skills-only > "$RUNNER_TEMP/snap-${{ runner.os }}.json"
           node -e 'const s=require(process.argv[1]).skills;console.log("recorded",Object.keys(s).length,"skills")' "$RUNNER_TEMP/snap-${{ runner.os }}.json"
+          # 두 스냅샷을 서로만 비교하면 "둘 다 똑같이 빠뜨린 것"을 못 잡는다. 이 OS 의 스냅샷을 manifest 와 직접 맞춰 본다.
+          node scripts/snapshot.mjs --check "$RUNNER_TEMP/snap-${{ runner.os }}.json"
       - uses: actions/upload-artifact@v4
         with:
           name: snap-${{ runner.os }}

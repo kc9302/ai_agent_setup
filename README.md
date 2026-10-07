@@ -227,9 +227,10 @@ node scripts/snapshot.mjs > mine.json                   # 스킬 + 도구 스냅
 node scripts/snapshot.mjs --skills-only > mine.json     # 스킬만. bash 가 없는 Windows PowerShell 도 됩니다
 bash scripts/verify.sh --json > mine.json               # 위와 같은 스냅샷 (bash)
 node scripts/snapshot.mjs --diff mine.json other.json   # 두 스냅샷 비교. 다르면 종료 코드 1
+node scripts/snapshot.mjs --check mine.json               # 스냅샷을 manifest 와 대조: 빠진 스킬·다른 커밋이 있으면 종료 코드 1 (--profile minimal 도 됨)
 ```
 
-**"같다"의 정의**: 스킬은 이름·출처·**고정 커밋·폴더 내용 해시**가 모두 같을 때(skills CLI 가 `~/.agents/.skill-lock.json` 에 남기는 값을 씁니다). 이 저장소의 로컬 스킬은 출처 경로가 머신마다 달라 이름만 비교하고, 내용 해시 차이는 참고로만 알립니다(줄바꿈 설정 차이일 수 있음). 도구는 고정한 버전이 설치돼 있을 때(`npm ls -g`, `uv tool list` 기준)이고, 확인하지 않은 쪽(`unchecked`, 예: Windows)은 비교에서 뺍니다. 스냅샷에는 OS·CPU·Node 버전만 들어가고 사용자 이름이나 경로는 들어가지 않습니다.
+**"같다"의 정의**: 스킬은 이름·출처·**고정 커밋·폴더 내용 해시**가 모두 같을 때(skills CLI 가 `~/.agents/.skill-lock.json` 에 남기는 값을 씁니다). 이 저장소의 로컬 스킬은 출처 경로가 머신마다 달라 출처는 보지 않습니다. 두 스냅샷이 **같은 저장소 커밋**에서 설치됐으면 내용도 같아야 하고(다르면 실패), 저장소 커밋이 다르거나 모르면 내용 차이는 참고로만 알립니다. 스냅샷이 비어 있으면 둘 다 비어 있어도 "같다"로 치지 않습니다. 비교 대신 `--check` 는 스냅샷 하나를 manifest 와 직접 대조해, 둘 다 똑같이 빠뜨린 스킬도 잡습니다. 도구는 고정한 버전이 설치돼 있을 때(`npm ls -g`, `uv tool list` 기준)이고, 확인하지 않은 쪽(`unchecked`, 예: Windows)은 비교에서 뺍니다. 스냅샷에는 OS·CPU·Node 버전만 들어가고 사용자 이름이나 경로는 들어가지 않습니다.
 
 ## 고정한 것이 사라지지 않았는지 확인하기
 

@@ -43,9 +43,12 @@ mkhome "$T/h4" git; printf 'ref CHANGED\n' > "$T/h4/.agents/skills/alpha/ref/a.m
 # 줄바꿈만 다름 (github 는 다름으로 취급하되 원인을 구분해서 알린다)
 mkhome "$T/h5" git; printf 'alpha skill\r\nline two\r\n' > "$T/h5/.agents/skills/alpha/SKILL.md"; snap "$T/h5" > "$T/b.json"
 out="$(d "$T/a.json" "$T/b.json")"; chk "CRLF-only difference -> exit 1" "$?" 1; chk "says it is line endings only" "$(printf '%s' "$out" | grep -c 'alpha: 줄바꿈')" 1
-# 로컬 스킬의 내용 차이는 참고로만
+# 로컬 스킬의 내용 차이: 같은 저장소 커밋에서 설치했다면 실패, 저장소 커밋이 다르거나 모르면 참고로만
 mkhome "$T/h6" git; printf 'mine skill CHANGED\n' > "$T/h6/.agents/skills/mine/SKILL.md"; snap "$T/h6" > "$T/b.json"
-out="$(d "$T/a.json" "$T/b.json")"; chk "local skill content difference is a note, exit 0" "$?" 0; chk "the note is printed" "$(printf '%s' "$out" | grep -c '참고: 스킬 mine')" 1
+out="$(d "$T/a.json" "$T/b.json")"; chk "local skill content differs at the same repo commit -> exit 1" "$?" 1; chk "names the local skill" "$(printf '%s' "$out" | grep -c '스킬 mine: 같은 커밋인데')" 1
+node -e 'const fs=require("fs");const a=JSON.parse(fs.readFileSync(process.argv[1]));a.repo={commit:"1".repeat(40)};fs.writeFileSync(process.argv[1],JSON.stringify(a));const b=JSON.parse(fs.readFileSync(process.argv[2]));b.repo={commit:"2".repeat(40)};fs.writeFileSync(process.argv[2],JSON.stringify(b))' "$T/a.json" "$T/b.json"
+out="$(d "$T/a.json" "$T/b.json")"; chk "local skill differs but repo commits differ -> only repo commit is reported" "$(printf '%s' "$out" | grep -c '참고: 스킬 mine')" 1
+snap "$T/h1" > "$T/a.json"
 # 설치된 폴더를 못 읽는 경우
 mkhome "$T/h7" git; rm -rf "$T/h7/.agents/skills/beta"; snap "$T/h7" > "$T/b.json"; out="$(d "$T/a.json" "$T/b.json")"; chk "unreadable folder is reported, not guessed" "$(printf '%s' "$out" | grep -c '참고: 스킬 beta.*읽지 못해')" 1
 
@@ -63,4 +66,25 @@ mut ''; d "$T/a.json" "$T/b.json" >/dev/null; chk "tools: same -> exit 0" "$?" 0
 mut 's.tools.kordoc.check="fail"'; out="$(d "$T/a.json" "$T/b.json")"; chk "tools: pinned version not met on one side -> exit 1" "$?" 1; chk "tools: names the tool" "$(printf '%s' "$out" | grep -c '도구 kordoc')" 1
 mut 's.tools.kordoc.check="unchecked"'; d "$T/a.json" "$T/b.json" >/dev/null; chk "tools: unchecked side is skipped, exit 0" "$?" 0
 mut 's.npm_globals={kordoc:"4.18.8"}'; d "$T/a.json" "$T/b.json" >/dev/null; chk "tools: installed npm version differs -> exit 1" "$?" 1
+
+# 빈 스냅샷은 "같다"가 아니다 (둘 다 비어 있어도 exit 0 이 되던 구멍)
+echo '{"schema":1,"host":{"platform":"x","arch":"y","node":"1"},"skills_cli":{"expected":"1"},"skills":{}}' > "$T/e1.json"; cp "$T/e1.json" "$T/e2.json"
+out="$(d "$T/e1.json" "$T/e2.json")"; chk "two empty snapshots -> exit 1" "$?" 1; chk "says the snapshot has no skills" "$(printf '%s' "$out" | grep -c '스킬이 하나도 없습니다')" 2
+
+# --check: manifest 대조 (가짜 저장소 루트: 작은 manifest + 로컬 스킬 1개)
+R="$T/root"; mkdir -p "$R/scripts" "$R/manifest" "$R/skills/mine"; cp "$ROOT/scripts/snapshot.mjs" "$R/scripts/"
+printf 'x\n' > "$R/manifest/skills-cli.version"; printf -- '---\nname: mine\n---\n' > "$R/skills/mine/SKILL.md"
+cat > "$R/manifest/skills.list" <<LIST
+o/r#$C1 | alpha,beta | core,x | named
+w/all#$C1 | * | y | wildcard, not core
+LIST
+chkj() { node "$R/scripts/snapshot.mjs" --check "$T/c.json" "$@" 2>&1; }
+mkc() { node -e 'const fs=require("fs");const C=process.argv[1];const s={schema:1,skills:{alpha:{type:"github",source:"o/r",ref:C},beta:{type:"github",source:"O/R",ref:C},wild1:{type:"github",source:"w/all",ref:C},mine:{type:"local"}}};eval(process.argv[2]);fs.writeFileSync(process.argv[3],JSON.stringify(s))' "$C1" "$1" "$T/c.json"; }
+mkc ''; out="$(chkj)"; chk "check: complete install -> exit 0" "$?" 0; chk "check: reports a match" "$(printf '%s' "$out" | grep -c '일치')" 1
+mkc 'delete s.skills.beta'; out="$(chkj)"; chk "check: missing named skill -> exit 1" "$?" 1; chk "check: names it" "$(printf '%s' "$out" | grep -c '스킬 beta.*설치되어 있지 않습니다')" 1
+mkc 's.skills.alpha.ref="2".repeat(40)'; out="$(chkj)"; chk "check: wrong commit -> exit 1" "$?" 1; chk "check: names the skill" "$(printf '%s' "$out" | grep -c 'alpha.*커밋이')" 1
+mkc 'delete s.skills.wild1'; out="$(chkj)"; chk "check: wildcard source with no skill -> exit 1" "$?" 1; chk "check: names the source" "$(printf '%s' "$out" | grep -c 'w/all')" 1
+mkc 'delete s.skills.mine'; chkj >/dev/null; chk "check: missing local skill (full) -> exit 1" "$?" 1
+mkc 'delete s.skills.mine;delete s.skills.wild1'; chkj --profile minimal >/dev/null; chk "check: minimal ignores non-core sources and local skills -> exit 0" "$?" 0
+mkc 's.skills={}'; out="$(chkj)"; chk "check: empty snapshot -> exit 1" "$?" 1; chk "check: says the snapshot is empty" "$(printf '%s' "$out" | grep -c '스냅샷에 스킬이 하나도')" 1
 exit $fail
