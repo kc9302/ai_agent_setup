@@ -213,6 +213,23 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 - **스킬**: `npx skills ls -g` 로 이름과 출처를 확인한 뒤 `npx skills remove <이름> [<이름> …] -g -y`. 지정한 스킬만 지워지고 나머지는 남습니다. 프로젝트 범위로 깔았다면 `-g` 를 빼고 그 프로젝트에서 실행합니다. ⚠ `--all` 은 이 저장소가 깔지 않은 스킬까지 전부 지우므로 쓰지 마세요.
 - **도구**: 깐 방식대로 지웁니다. npm 은 `npm uninstall -g <패키지>`, uv 는 `uv tool uninstall <이름>`, MCP 서버는 `claude mcp remove <이름>`(`leann-server`, `context7`, `playwright`). 도구마다 어떻게 설치되는지는 `manifest/tools.list` 의 설치 열에 있습니다.
 
+## 두 환경이 같은지 확인하기
+
+"같다"는 말만으로 믿지 않도록, 설치된 것을 기록해 두 환경을 비교할 수 있습니다.
+
+```bash
+node scripts/snapshot.mjs > mine.json                   # 스킬 + 도구 스냅샷 (bash 가 있으면 도구의 고정 버전 확인까지)
+node scripts/snapshot.mjs --skills-only > mine.json     # 스킬만. bash 가 없는 Windows PowerShell 도 됩니다
+bash scripts/verify.sh --json > mine.json               # 위와 같은 스냅샷 (bash)
+node scripts/snapshot.mjs --diff mine.json other.json   # 두 스냅샷 비교. 다르면 종료 코드 1
+```
+
+**"같다"의 정의**: 스킬은 이름·출처·**고정 커밋·폴더 내용 해시**가 모두 같을 때(skills CLI 가 `~/.agents/.skill-lock.json` 에 남기는 값을 씁니다). 이 저장소의 로컬 스킬은 출처 경로가 머신마다 달라 이름만 비교하고, 내용 해시 차이는 참고로만 알립니다(줄바꿈 설정 차이일 수 있음). 도구는 고정한 버전이 설치돼 있을 때(`npm ls -g`, `uv tool list` 기준)이고, 확인하지 않은 쪽(`unchecked`, 예: Windows)은 비교에서 뺍니다. 스냅샷에는 OS·CPU·Node 버전만 들어가고 사용자 이름이나 경로는 들어가지 않습니다.
+
+## 고정한 것이 사라지지 않았는지 확인하기
+
+업스트림이 저장소를 지우거나 커밋을 없애거나 버전을 내리면 고정한 그대로는 설치되지 않습니다. `bash scripts/pin-alive.sh` 가 스킬 커밋과 도구 버전(npm·PyPI), 해시를 확인하는 설치 스크립트의 내용, git 커밋이 **지금도 받아지는지** 확인합니다. `pin-health` workflow 가 주 1회 이를 돌리고, 받을 수 없는 것이 있으면 이슈를 엽니다. "받아진다"는 지금 받을 수 있다는 뜻이지 앞으로도 그렇다는 보증이 아닙니다.
+
 ## 새 스킬 추가하기
 
 ```bash
@@ -259,6 +276,9 @@ git commit -am "add owner/repo: 이유"
 | `scripts/stars.sh` | 등록된 저장소 별 수 실시간 조회 |
 | `scripts/discover.sh` | 새 후보 탐색 (GitHub 토픽 `agent-skills`, `claude-skills`, `skill-md`, `agentic-skills`) |
 | `scripts/radar.sh` | 인기·신규 후보를 `candidates.json` 으로 만든다. 매일 `radar` workflow 가 돌려 `radar-data` 브랜치에 발행한다. 보여주기만 하고 설치·매니페스트 수정은 하지 않는다 |
+| `scripts/snapshot.mjs` | 설치된 스킬·도구의 JSON 스냅샷을 만들고(`--skills-only` 는 스킬만), `--diff a.json b.json` 으로 두 환경을 비교한다. `verify.sh --json` 이 이것을 부른다 |
+| `scripts/pin-alive.sh` | 고정한 스킬 커밋·도구 버전·설치 스크립트가 지금도 받아지는지 확인한다. 주 1회 `pin-health` workflow 가 돌린다 |
+| `scripts/fetch-verified.sh` | 스크립트를 받아 sha256 이 맞을 때만 실행한다(`tools.list` 가 `curl \| sh` 대신 쓴다) |
 | `scripts/gen-docs.sh` | 이 README 의 숫자 요약과 스킬·도구 표를 manifest 에서 다시 쓴다(`--check` 는 최신 여부만 확인). 표를 손으로 고치지 마세요 |
 | `scripts/validate.sh` | 매니페스트·스크립트·README 일치 검사 (CI 에서도 실행) |
 

@@ -76,6 +76,10 @@ case "$tool_scli" in *"skills@$scli") ;; *) fail "manifest/skills-cli.version($s
 info "testing fetch-verified.sh"
 bash "$REPO_ROOT/scripts/test-fetch-verified.sh" >/dev/null || fail "scripts/test-fetch-verified.sh 실패 (bash scripts/test-fetch-verified.sh 로 상세 확인)"
 
+info "testing snapshot.mjs"
+node --check "$REPO_ROOT/scripts/snapshot.mjs" || fail "syntax error in scripts/snapshot.mjs"
+bash "$REPO_ROOT/scripts/test-snapshot.sh" >/dev/null || fail "scripts/test-snapshot.sh 실패 (bash scripts/test-snapshot.sh 로 상세 확인)"
+
 info "checking local skills/"
 for d in "$REPO_ROOT"/skills/*/; do
   [ -d "$d" ] || continue
