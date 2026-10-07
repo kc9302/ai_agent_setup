@@ -139,11 +139,14 @@ jobs:
         run: |
           export HOME="$RUNNER_TEMP/h-full"
           /bin/bash scripts/verify.sh
-      - name: tool status report
-        if: always()
+      - name: tool status report (every tool must be at its pinned version)
         run: |
           export HOME="$RUNNER_TEMP/h-full"
-          /bin/bash scripts/status.sh || true
+          out="$(/bin/bash scripts/status.sh)"
+          printf '%s\n' "$out"
+          # status 의 check 는 이제 '있다'가 아니라 '고정한 버전이다'를 확인한다. 러너에는 claude CLI 가 없어 MCP 등록 3개가, Node 22 라서 paperclipai 가 빠지는 것만 허용한다.
+          bad="$(printf '%s\n' "$out" | grep '✗' | grep -vE 'leann-mcp|context7-mcp|playwright-mcp|paperclipai' || true)"
+          [ -z "$bad" ] || { echo "도구가 고정 버전과 다릅니다:"; echo "$bad"; exit 1; }
       - name: second tools run is idempotent
         run: |
           export HOME="$RUNNER_TEMP/h-full"

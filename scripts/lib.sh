@@ -61,6 +61,10 @@ has_tag() {
 # ---- 소스 고정 ---------------------------------------------------------------
 # skills.list 의 소스 필드는 'owner/repo#<40자리 커밋>' 형식으로 커밋에 고정한다.
 # 고정하지 않으면 클론한 시점의 최신 코드가 설치돼 환경마다 달라진다.
+# 설치기가 쓰는 skills CLI 는 manifest/skills-cli.version 의 버전으로 고정한다 (npx -y skills 는 최신판을 받아 환경마다 달라진다).
+SKILLS_CLI="skills@$(grep -Ev '^[[:space:]]*(#|$)' "$MANIFEST_DIR/skills-cli.version" 2>/dev/null | head -1 | tr -d '[:space:]')"
+case "$SKILLS_CLI" in skills@[0-9]*) ;; *) echo "[error] manifest/skills-cli.version 을 읽지 못했습니다 (예: 1.7.1)" >&2; exit 1 ;; esac
+
 src_repo() { printf '%s' "${1%%#*}"; }
 src_ref()  { case "$1" in *'#'*) printf '%s' "${1#*#}" ;; esac; }
 
@@ -87,7 +91,7 @@ verify_installed_skills() {
     local -a args=(ls --json)
     [ -n "$scope" ] && args+=("$scope")
     [ -n "$a" ] && args+=(-a "$(trim "$a")")
-    if ! json="$(npx -y skills "${args[@]}" 2>/dev/null)"; then
+    if ! json="$(npx -y "$SKILLS_CLI" "${args[@]}" 2>/dev/null)"; then
       warn "설치 결과를 확인하지 못했습니다 (skills ls 실패)"; return 0
     fi
     # JSON 앞에 다른 출력이 섞여도 첫 '[' 부터 해석한다. 결과는 "이름<TAB>소스" 줄들.

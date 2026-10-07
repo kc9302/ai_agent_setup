@@ -42,8 +42,39 @@ while IFS= read -r -u 3 line; do
   bash -n <(printf '%s\n' "$install") 2>/dev/null || fail "tools.list: install is not valid shell for $name"
   [ -z "${seen_t[$name]:-}" ] || fail "tools.list: duplicate tool $name"
   seen_t[$name]=1
+
+  # 고정 검사: 도구는 설치 시점의 최신판이 아니라 정해진 버전·커밋·해시로 설치돼야 한다.
+  # 고정할 수 없는 도구는 tags 에 `unpinned` 를 쓰고 설명에 `미고정:` 사유를 적는다(README 표에 그대로 나온다).
+  tags="${FIELDS[3]:-}"
+  if has_tag "$tags" unpinned; then
+    case "$desc" in *"미고정:"*) ;; *) fail "tools.list: $name 은 unpinned 인데 설명에 '미고정: <사유>' 가 없습니다" ;; esac
+  else
+    while IFS= read -r tok; do   # npm install -g <패키지>@<버전>
+      [[ "$tok" =~ ^(@[^/@]+/)?[^@/]+@[0-9] ]] || fail "tools.list: $name 의 npm 패키지 '$tok' 에 버전이 없습니다 (<패키지>@<버전>, 또는 tags 에 unpinned + 설명에 '미고정: 사유')"
+    done < <(printf '%s' "$install" | grep -oE 'npm install -g +[^ ;&|]+' | sed -E 's/npm install -g +//')
+    while IFS= read -r tok; do   # npx [-y] <패키지>@<버전>
+      [[ "$tok" =~ ^(@[^/@]+/)?[^@/]+@[0-9] ]] || fail "tools.list: $name 의 npx 패키지 '$tok' 에 버전이 없습니다 (@latest 도 안 됩니다)"
+    done < <(printf '%s' "$install" | grep -oE 'npx +(-y +)?[^ ;&|<>-][^ ;&|<>]*' | sed -E 's/npx +(-y +)?//')
+    while IFS= read -r seg; do   # uv tool install … ==버전 또는 git+…@<40자리 커밋>
+      printf '%s' "$seg" | grep -qE "==[0-9]|@[0-9a-f]{40}" || fail "tools.list: $name 의 'uv tool install' 에 ==버전 또는 @커밋 이 없습니다"
+    done < <(printf '%s' "$install" | grep -oE 'uv tool install[^;&|]*')
+    if printf '%s' "$install" | grep -q 'git clone'; then
+      printf '%s' "$install" | grep -qE '[0-9a-f]{40}' || fail "tools.list: $name 의 git clone 이 커밋에 고정돼 있지 않습니다"
+    fi
+    if printf '%s' "$install" | grep -qE '\bcurl\b|\bwget\b'; then
+      printf '%s' "$install" | grep -q 'fetch-verified.sh' || fail "tools.list: $name 이 받은 스크립트를 해시 확인 없이 실행합니다 (scripts/fetch-verified.sh <url> <sha256> 를 쓰세요)"
+    fi
+  fi
 done 3< <(manifest_lines "$TOOLS_LIST")
 printf '    %d tool(s)\n' "$n"
+
+# 설치기가 쓰는 skills CLI 버전(manifest/skills-cli.version)과 도구 항목(skills-cli)이 같은 버전이어야 한다.
+scli="$(grep -Ev '^[[:space:]]*(#|$)' "$MANIFEST_DIR/skills-cli.version" | head -1 | tr -d '[:space:]')"
+tool_scli="$(manifest_lines "$TOOLS_LIST" | while IFS= read -r l; do split_fields "$l"; if [ "${FIELDS[0]}" = skills-cli ]; then printf '%s' "${FIELDS[2]}"; fi; done)"
+case "$tool_scli" in *"skills@$scli") ;; *) fail "manifest/skills-cli.version($scli) 과 tools.list 의 skills-cli 설치 버전이 다릅니다: $tool_scli" ;; esac
+
+info "testing fetch-verified.sh"
+bash "$REPO_ROOT/scripts/test-fetch-verified.sh" >/dev/null || fail "scripts/test-fetch-verified.sh 실패 (bash scripts/test-fetch-verified.sh 로 상세 확인)"
 
 info "checking local skills/"
 for d in "$REPO_ROOT"/skills/*/; do
@@ -67,8 +98,8 @@ if command -v node >/dev/null 2>&1; then
   info "checking that install-skills.mjs and bootstrap.sh install the same skills"
   node --check "$REPO_ROOT/scripts/install-skills.mjs" || fail "syntax error in scripts/install-skills.mjs"
   for prof in full minimal; do
-    a="$(node "$REPO_ROOT/scripts/install-skills.mjs" --profile "$prof" --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
-    b="$(bash "$REPO_ROOT/bootstrap.sh" --skills-only --profile "$prof" --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
+    a="$(node "$REPO_ROOT/scripts/install-skills.mjs" --profile "$prof" --dry-run 2>&1 | grep -o 'npx -y skills@[0-9.]* add.*' || true)"
+    b="$(bash "$REPO_ROOT/bootstrap.sh" --skills-only --profile "$prof" --dry-run 2>&1 | grep -o 'npx -y skills@[0-9.]* add.*' || true)"
     if [ -z "$a" ] || [ "$a" != "$b" ]; then
       fail "install-skills.mjs 와 bootstrap.sh 가 설치하는 스킬 명령이 다릅니다 (profile=$prof, 한쪽만 고쳤는지 확인)"
       diff <(printf '%s\n' "$a") <(printf '%s\n' "$b") | head -6 >&2 || true
@@ -77,7 +108,7 @@ if command -v node >/dev/null 2>&1; then
   # minimal 은 도구·MCP·로컬 스킬이 없고 core 태그 소스만 설치해야 한다.
   m="$(bash "$REPO_ROOT/bootstrap.sh" --profile minimal --dry-run 2>&1)"
   if printf '%s' "$m" | grep -qE 'installing tools|claude mcp add|astral.sh|\(local\)'; then fail "--profile minimal 에 도구·MCP·로컬 스킬이 섞여 들어갑니다"; fi
-  if ! printf '%s' "$m" | grep -q 'npx -y skills add'; then fail "--profile minimal 이 아무 스킬도 설치하지 않습니다"; fi
+  if ! printf '%s' "$m" | grep -q 'npx -y skills@[0-9.]* add'; then fail "--profile minimal 이 아무 스킬도 설치하지 않습니다"; fi
 fi
 
 # README 의 숫자 요약과 스킬·도구 표는 manifest 에서 생성한다. 손으로 고쳐 어긋나면 여기서 막는다.

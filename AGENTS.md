@@ -73,6 +73,8 @@ bash scripts/pin.sh --update owner/repo   # 한 소스를 최신으로 올림. �
 - 머신에 직접 설치하고 끝내지 않는다. 매니페스트를 고쳐 커밋해야 다른 환경에도 반영된다.
 - 스킬 소스를 고정하지 않은 채 두지 않는다. 최신 `main` 을 받으면 클론한 시점마다 설치되는 내용이 달라진다.
 - 실행할 때마다 원격 파일을 내려받아 지시문으로 쓰는 스킬은 그대로 넣지 않는다. 고정한 사본을 `skills/` 에 두고(예: `web-design-guidelines`), `SOURCE.md` 에 출처 커밋과 해시를 적는다.
+- `tools.list` 의 도구를 버전 없이 넣지 않는다(`npm install -g 패키지@버전`, `uv tool install 패키지==버전`, git 은 커밋). 받은 스크립트를 `curl … | sh` 로 바로 실행하지 말고 `scripts/fetch-verified.sh <url> <sha256>` 를 쓴다. 고정할 수 없으면 `tags` 에 `unpinned`, 설명에 `미고정: 사유`. `validate.sh` 가 막는다.
+- 설치기가 쓰는 skills CLI 버전은 `manifest/skills-cli.version` 한 곳이다(`tools.list` 의 `skills-cli` 와 같아야 한다). `npx -y skills` 처럼 버전 없이 부르는 코드를 설치기에 넣지 않는다.
 - 설치 명령이 성공했다고 스킬이 설치됐다고 믿지 않는다. `verify.sh` 로 확인한다.
 - 선행 조건(예: Node 버전)이 맞지 않아 설치할 수 없는 도구를 실패로 처리하지 않는다. `tools.list` 의 `install` 이 사유를 stderr 에 출력하고
   **종료 코드 75** 로 끝나게 하면 `bootstrap.sh` 가 "건너뜀"으로 보고한다(예: `paperclipai`). 그 밖의 0 이 아닌 코드는 실패다.

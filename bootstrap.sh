@@ -34,6 +34,8 @@ fi
 
 # shellcheck source=scripts/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/scripts/lib.sh"
+# tools.list 의 install/check 가 이 저장소의 보조 스크립트(scripts/fetch-verified.sh)를 부를 때 쓴다.
+export AI_SETUP_ROOT="$REPO_ROOT"
 
 # ---- 옵션 -------------------------------------------------------------------
 SCOPE_FLAG="-g"
@@ -169,7 +171,7 @@ if [ "$DO_SKILLS" = 1 ]; then
     printf '  %s→%s %-40s %s\n' "$C_BOLD" "$C_RESET" "$(src_repo "$src")" "$desc"
 
     # $src 는 'owner/repo#<커밋>' 형식 그대로 넘긴다. CLI 가 그 커밋의 내용을 받는다.
-    cmd=(npx -y skills add "$src" -y)
+    cmd=(npx -y "$SKILLS_CLI" add "$src" -y)
     [ -n "$SCOPE_FLAG" ] && cmd+=("$SCOPE_FLAG")
     for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do cmd+=(-a "$(trim "$a")"); done
     # 저장소 루트에 SKILL.md 가 있으면 CLI 가 하위 스킬을 못 찾는다. 태그 full-depth 로 하위 디렉터리까지 탐색.
@@ -201,7 +203,7 @@ if [ "$DO_SKILLS" = 1 ]; then
     if [ ${#local_names[@]} -gt 0 ]; then
       info "installing this repository's own skills (skills/)"
       printf '  %s→%s %-40s %s\n' "$C_BOLD" "$C_RESET" "(local) $REPO_SLUG" "${local_names[*]}"
-      cmd=(npx -y skills add "$REPO_ROOT" -y)
+      cmd=(npx -y "$SKILLS_CLI" add "$REPO_ROOT" -y)
       [ -n "$SCOPE_FLAG" ] && cmd+=("$SCOPE_FLAG")
       for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do cmd+=(-a "$(trim "$a")"); done
       for n in "${local_names[@]}"; do cmd+=(--skill "$n"); done

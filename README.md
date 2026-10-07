@@ -17,10 +17,12 @@
 |---|---|
 | 외부 스킬 소스 (`manifest/skills.list`) | **고정됨.** 40자리 커밋으로 받고, 설치 뒤 `SKILL.md` 의 이름으로 실제 설치됐는지 확인합니다 |
 | 이 저장소의 로컬 스킬 (`skills/`) | 클론한 체크아웃 그대로입니다(클론 = 고정) |
-| 도구 (`manifest/tools.list`) | **고정되지 않음.** `npm i -g`, `uv tool install`, `curl … \| sh` 로 **실행 시점의 최신판**이 깔립니다. 설치 확인이 통과하면 "있다"는 뜻이지 "같은 버전"이라는 뜻이 아닙니다 |
-| MCP 서버 등록 (leann, context7, playwright) | 버전 고정 없음. `claude` CLI 가 있을 때만 등록됩니다 |
+| 도구 (`manifest/tools.list`) | **버전·커밋·해시로 고정됨(직접 설치하는 패키지까지).** npm·uv 는 `@버전`/`==버전`, git 은 40자리 커밋, 받아서 실행하는 설치 스크립트(uv, orx)는 sha256 을 확인한 뒤 실행합니다. `check` 는 "있다"가 아니라 **그 버전이다**를 확인하므로, 다른 버전이 이미 깔려 있으면 정해진 버전으로 다시 설치합니다(더 새 버전이어도 내려갑니다) |
+| 설치기가 쓰는 skills CLI | **고정됨.** `manifest/skills-cli.version` (`npx -y skills@<버전>`) |
+| MCP 서버 등록 (leann, context7, playwright) | 등록하는 패키지는 고정(`npx -y 패키지@버전`)이지만, 이미 등록돼 있으면 건너뛰므로 **다른 버전으로 등록된 것은 바꾸지 않습니다**. `claude` CLI 가 있을 때만 등록됩니다 |
+| 고정되지 않는 것 | 고정한 패키지의 **전이 의존성**(그 패키지가 끌어오는 다른 패키지)과, 업스트림이 버전·커밋을 지우는 경우. 후자는 아직 감시하지 않습니다 |
 
-그래서 **"어디서나 똑같다"는 스킬에만 해당**합니다. 도구까지 같게 하려면 `tools.list` 의 설치 명령에 버전을 직접 적으세요.
+그래서 **같은 버전의 같은 패키지가 깔린다**까지는 말할 수 있지만, 전이 의존성까지 비트 단위로 같다는 뜻은 아닙니다. 버전을 올릴 때는 `manifest/tools.list` 의 설치 명령과 `check` 의 버전을 함께 고치고(`skills CLI` 는 `manifest/skills-cli.version` 도), `bash scripts/validate.sh` 가 버전 없이 넣은 도구와 해시 확인 없이 받아 실행하는 명령을 막아 줍니다. 고정할 수 없는 도구는 `tags` 에 `unpinned` 를, 설명에 `미고정: 사유` 를 적어야 통과합니다.
 
 ### 어디서 검증됐나
 
@@ -41,7 +43,7 @@
 **ai_agent_setup** installs Agent Skills and CLI tools for AI coding agents from a manifest, and checks afterwards that every skill you defined is really installed.
 
 - Skill sources are pinned to 40-character commits, so every machine gets the same content. After installing, the installer compares the skill *names* against `skills ls` because the skills CLI silently skips names that do not match.
-- CLI tools (`manifest/tools.list`) are **not** pinned: they install the latest version at run time.
+- CLI tools (`manifest/tools.list`) are pinned to exact versions (npm `@x.y.z`, uv `==x.y.z`, git commits, install scripts checked against a sha256). Transitive dependencies are not pinned, and an upstream deleting a pinned version is not monitored yet.
 - Cross-platform path: `git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git`, then `node scripts/install-skills.mjs` (Node.js 22.20+ and git; skills only). `bash bootstrap.sh` installs skills and tools on Linux, macOS, WSL and Git Bash.
 - Verified: a clean Linux environment with Claude Code, and GitHub Actions runners (ubuntu, macOS, Windows). Not verified: a real MacBook, real WSL, Codex, Cursor, Gemini CLI, OpenCode.
 - Fork it and replace `manifest/skills.list` and `manifest/tools.list` with your own lists. `bash scripts/validate.sh` checks the format.
@@ -177,29 +179,29 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 ### 도구 (`manifest/tools.list`)
 
 <!-- BEGIN:generated:tools -->
-| 도구 | 태그 | 설명 |
-|---|---|---|
-| `skills-cli` | core | Agent Skills 설치 CLI (skills.sh). bootstrap 이 스킬 설치에 사용 |
-| `agent-browser` | browser | AI 에이전트용 브라우저 자동화 CLI (Vercel Labs) |
-| `uv` | python,core | 빠른 Python 패키지/도구 관리자 (Astral). 공식 설치 스크립트가 막히면 pip 로 폴백. leann·markitdown 설치에 사용 |
-| `leann` | rag,search,python | 저장공간 97% 절감 로컬 벡터 DB. 코드/문서/메일을 시맨틱 검색·RAG (StarTrail-org/LEANN) |
-| `leann-mcp` | rag,search,mcp | LEANN 을 Claude Code MCP 서버(leann-server)로 등록. leann 이 설치된 경우에만 등록. 코드베이스 시맨틱 검색을 에이전트가 직접 사용 |
-| `markitdown` | docs,python | PDF/Word/PPT/Excel/HTML 등을 Markdown 으로 변환하는 CLI (Microsoft) |
-| `context7-mcp` | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7) |
-| `playwright-mcp` | mcp,browser | 에이전트가 실제 브라우저를 조작·검증하는 MCP (Microsoft Playwright) |
-| `graphify` | code,graph,python | 코드·문서를 질의 가능한 지식 그래프로 변환 (tree-sitter, 벡터 DB 불필요). graphify install 로 /graphify 스킬 등록 (PyPI 패키지명은 graphifyy) |
-| `llmfit` | ml,local-llm,python | 내 하드웨어(CPU/RAM/GPU)에서 돌아가는 오픈 LLM 을 양자화별로 추천 |
-| `kordoc` | docs,korean | 한국 문서 HWP·HWPX·PDF·Office·이미지(OCR) 를 Markdown/JSON 으로 변환 |
-| `officecli` | docs,office | AI 에이전트용 Word/Excel/PowerPoint 읽기·편집·자동화 CLI (내장 렌더링, 수식 계산). 버전을 고정하고 자동 업데이트를 끈다(기본값은 켜짐이라 시간이 지나면 환경마다 버전이 달라진다) |
-| `hyperresearch` | research,python | Claude Code 를 딥 리서치 에이전트로 전환 (16단계 파이프라인, 인용 검증). --global 로 ~/.claude 에 /hyperresearch 스킬과 에이전트만 설치, 프로젝트는 건드리지 않음 |
-| `paperclipai` | agents,orchestration | AI 에이전트 팀을 조직도·예산·목표로 관리하는 Node 서버+React UI 의 CLI. 설치는 CLI 만 하고, 서버 시작은 직접 `paperclipai onboard` (내장 Postgres 와 설정 파일을 만든다) |
-| `graft` | agents,context,code-intel | 코드베이스를 그래프로 만들어 에이전트에 연결하는 컨텍스트 레이어 CLI. 설치 때만 텔레메트리를 끈다(DO_NOT_TRACK). 프로젝트 연결은 직접 `graft init` |
-| `specify` | spec,methodology,python | GitHub 공식 Spec Kit CLI(MIT). 스펙 주도 개발용 프로젝트 골격(.specify/)과 에이전트 슬래시 명령을 만든다. 설치는 CLI 만 하고, 프로젝트 적용은 직접 `specify init <이름> --integration claude` |
-| `agent-reach` | research,web,python | Twitter/X·Reddit·YouTube·Bilibili·샤오홍슈 등 16개 플랫폼을 읽는 CLI(MIT). 검토한 커밋에 고정해 설치(PyPI 의 agent-reach 는 다른 프로젝트). 스킬과 외부 도구 설치(--system)는 자동 실행하지 않음 |
-| `orx` | agents,autoresearch | alphaXiv OpenResearch 의 CLI(orx, MIT): 연구 에이전트용 로컬 워크스페이스·실험 트리·원격 연산 실행. v0.2.15 릴리스에 고정해 체크섬 검증 설치(~/.local/bin/orx, 셸 설정 변경 없음). 첫 실행부터 텔레메트리가 기본 켜짐 — 끄려면 `orx telemetry off`. 서버(orx up)와 스킬(orx install-skills)은 자동 실행하지 않음 |
-| `pdf-inspector` | docs,pdf | Firecrawl 의 PDF 분류·텍스트 추출·Markdown 변환 CLI(Rust 기반, MIT). 텍스트 PDF 를 OCR 없이 로컬에서 빠르게 변환하고 스캔 PDF 는 detect 로 구분한다. markitdown 과 같은 용도의 대안 |
-| `im-not-ai` | writing,korean | 한글 AI 글투 제거(번역투·기계적 병렬·관용구 등). 스킬 4개와 서브에이전트를 ~/.claude 에 심볼릭 링크로 연결(검토한 커밋에 고정, 클론은 ~/.local/share/im-not-ai 에 유지해야 함). blader/humanizer 의 한국어 짝 |
-| `officecli-skills` | docs,office,skills | officecli 에 내장된 스킬 11개(기본 officecli + pptx·word·excel·word-form·morph-ppt·morph-ppt-3d·pitch-deck·academic-paper·data-dashboard·financial-model)를 감지된 에이전트에 설치. 스킬이 바이너리에 내장돼 있어 고정한 officecli 버전과 항상 같다 |
+| 도구 | 고정 버전 | 태그 | 설명 |
+|---|---|---|---|
+| `skills-cli` | 1.7.1 | core | Agent Skills 설치 CLI (skills.sh). bootstrap 이 스킬 설치에 사용 |
+| `agent-browser` | 0.38.2 | browser | AI 에이전트용 브라우저 자동화 CLI (Vercel Labs) |
+| `uv` | 0.12.23 | python,core | 빠른 Python 패키지/도구 관리자 (Astral). 공식 설치 스크립트가 막히면 pip 로 폴백. leann·markitdown 설치에 사용 |
+| `leann` | 0.3.8 | rag,search,python | 저장공간 97% 절감 로컬 벡터 DB. 코드/문서/메일을 시맨틱 검색·RAG (StarTrail-org/LEANN) |
+| `leann-mcp` | — | rag,search,mcp | LEANN 을 Claude Code MCP 서버(leann-server)로 등록. leann 이 설치된 경우에만 등록. 코드베이스 시맨틱 검색을 에이전트가 직접 사용 |
+| `markitdown` | 0.1.8 | docs,python | PDF/Word/PPT/Excel/HTML 등을 Markdown 으로 변환하는 CLI (Microsoft) |
+| `context7-mcp` | 4.2.0 | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7) |
+| `playwright-mcp` | 0.0.83 | mcp,browser | 에이전트가 실제 브라우저를 조작·검증하는 MCP (Microsoft Playwright) |
+| `graphify` | 0.9.79 | code,graph,python | 코드·문서를 질의 가능한 지식 그래프로 변환 (tree-sitter, 벡터 DB 불필요). graphify install 로 /graphify 스킬 등록 (PyPI 패키지명은 graphifyy) |
+| `llmfit` | 1.1.16 | ml,local-llm,python | 내 하드웨어(CPU/RAM/GPU)에서 돌아가는 오픈 LLM 을 양자화별로 추천 |
+| `kordoc` | 4.19.2 | docs,korean | 한국 문서 HWP·HWPX·PDF·Office·이미지(OCR) 를 Markdown/JSON 으로 변환 |
+| `officecli` | 1.0.153 | docs,office | AI 에이전트용 Word/Excel/PowerPoint 읽기·편집·자동화 CLI (내장 렌더링, 수식 계산). 버전을 고정하고 자동 업데이트를 끈다(기본값은 켜짐이라 시간이 지나면 환경마다 버전이 달라진다) |
+| `hyperresearch` | 0.12.0 | research,python | Claude Code 를 딥 리서치 에이전트로 전환 (16단계 파이프라인, 인용 검증). --global 로 ~/.claude 에 /hyperresearch 스킬과 에이전트만 설치, 프로젝트는 건드리지 않음 |
+| `paperclipai` | 2026.1005.0 | agents,orchestration | AI 에이전트 팀을 조직도·예산·목표로 관리하는 Node 서버+React UI 의 CLI. 설치는 CLI 만 하고, 서버 시작은 직접 `paperclipai onboard` (내장 Postgres 와 설정 파일을 만든다) |
+| `graft` | 0.21.1 | agents,context,code-intel | 코드베이스를 그래프로 만들어 에이전트에 연결하는 컨텍스트 레이어 CLI. 설치 때만 텔레메트리를 끈다(DO_NOT_TRACK). 프로젝트 연결은 직접 `graft init` |
+| `specify` | 1.1.1 | spec,methodology,python | GitHub 공식 Spec Kit CLI(MIT). 스펙 주도 개발용 프로젝트 골격(.specify/)과 에이전트 슬래시 명령을 만든다. 설치는 CLI 만 하고, 프로젝트 적용은 직접 `specify init <이름> --integration claude` |
+| `agent-reach` | 커밋 a19a171 | research,web,python | Twitter/X·Reddit·YouTube·Bilibili·샤오홍슈 등 16개 플랫폼을 읽는 CLI(MIT). 검토한 커밋에 고정해 설치(PyPI 의 agent-reach 는 다른 프로젝트). 스킬과 외부 도구 설치(--system)는 자동 실행하지 않음 |
+| `orx` | 0.2.15 | agents,autoresearch | alphaXiv OpenResearch 의 CLI(orx, MIT): 연구 에이전트용 로컬 워크스페이스·실험 트리·원격 연산 실행. v0.2.15 릴리스에 고정해 체크섬 검증 설치(~/.local/bin/orx, 셸 설정 변경 없음). 첫 실행부터 텔레메트리가 기본 켜짐 — 끄려면 `orx telemetry off`. 서버(orx up)와 스킬(orx install-skills)은 자동 실행하지 않음 |
+| `pdf-inspector` | 1.25.2 | docs,pdf | Firecrawl 의 PDF 분류·텍스트 추출·Markdown 변환 CLI(Rust 기반, MIT). 텍스트 PDF 를 OCR 없이 로컬에서 빠르게 변환하고 스캔 PDF 는 detect 로 구분한다. markitdown 과 같은 용도의 대안 |
+| `im-not-ai` | 커밋 2f3d943 | writing,korean | 한글 AI 글투 제거(번역투·기계적 병렬·관용구 등). 스킬 4개와 서브에이전트를 ~/.claude 에 심볼릭 링크로 연결(검토한 커밋에 고정, 클론은 ~/.local/share/im-not-ai 에 유지해야 함). blader/humanizer 의 한국어 짝 |
+| `officecli-skills` | — | docs,office,skills | officecli 에 내장된 스킬 11개(기본 officecli + pptx·word·excel·word-form·morph-ppt·morph-ppt-3d·pitch-deck·academic-paper·data-dashboard·financial-model)를 감지된 에이전트에 설치. 스킬이 바이너리에 내장돼 있어 고정한 officecli 버전과 항상 같다 |
 <!-- END:generated:tools -->
 
 각 항목이 **무엇이고 왜 넣었는지**, 설치 후 사용법은 [`CATALOG.md`](CATALOG.md) 에 정리되어 있습니다.

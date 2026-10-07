@@ -89,6 +89,11 @@ console.log(`==> 설치 대상: ${scope ? '전역(-g)' : '현재 프로젝트'} 
 
 if (profile === 'minimal') console.log('    minimal: 스킬만 설치합니다. 도구·MCP 서버 등록·curl|sh 는 하지 않고 관리자 권한이 필요 없습니다. 같은 이름의 스킬이 이미 있으면 덮어쓰므로 먼저 --diff 로 확인할 수 있습니다.');
 
+// 설치기가 쓰는 skills CLI 는 manifest/skills-cli.version 의 버전으로 고정한다 (bootstrap.sh 의 SKILLS_CLI 와 같은 파일).
+const skillsVer = readFileSync(join(root, 'manifest', 'skills-cli.version'), 'utf8').split(/\r?\n/).map((l) => l.trim()).find((l) => l && !l.startsWith('#')) || '';
+if (!/^\d/.test(skillsVer)) { console.error('[error] manifest/skills-cli.version 을 읽지 못했습니다 (예: 1.7.1)'); process.exit(2); }
+const SKILLS = `skills@${skillsVer}`;
+
 const q = (s) => (win && /[^\w@.:/\\#=,-]/.test(s) ? `"${s}"` : s);
 function npx(args, { capture = false } = {}) {
   const full = ['-y', ...args];
@@ -109,7 +114,7 @@ const agentFlags = agents.flatMap((a) => ['-a', a.trim()]);
 // ---- --diff: 설치하지 않고 기존 스킬과의 겹침을 보여준다 ---------------------------------------------
 // skills CLI 는 같은 이름의 스킬이 이미 있으면 확인도 백업도 없이 덮어쓴다(직접 만든 것이라도). 설치 전에 미리 알려 준다.
 if (diffMode) {
-  const ls = spawnSync('npx', win ? ['-y', 'skills', 'ls', '--json', ...(scope ? [scope] : [])].map(q) : ['-y', 'skills', 'ls', '--json', ...(scope ? [scope] : [])],
+  const ls = spawnSync('npx', win ? ['-y', SKILLS, 'ls', '--json', ...(scope ? [scope] : [])].map(q) : ['-y', SKILLS, 'ls', '--json', ...(scope ? [scope] : [])],
     { shell: win, encoding: 'utf8', timeout: 120000 });
   let installed;
   try { installed = JSON.parse(ls.stdout.slice(ls.stdout.indexOf('['))); } catch { console.error('[error] 설치된 스킬 목록(skills ls --json)을 읽지 못했습니다.'); process.exit(2); }
@@ -131,7 +136,7 @@ if (diffMode) {
     let names;
     if (skillsField === '*') {
       // 와일드카드 소스는 실제 스킬 이름을 알려면 받아서 목록을 봐야 한다.
-      const largs = ['skills', 'add', src, '--list'];
+      const largs = [SKILLS, 'add', src, '--list'];
       if (tags.split(',').map((x) => x.trim()).includes('full-depth')) largs.push('--full-depth');
       console.log(`  … ${repo} 의 스킬 목록 확인 중`);
       const r = spawnSync('npx', win ? ['-y', ...largs].map(q) : ['-y', ...largs], { shell: win, encoding: 'utf8', timeout: 180000 });
@@ -173,7 +178,7 @@ for (const raw of readFileSync(join(root, 'manifest', 'skills.list'), 'utf8').sp
   const [src, skillsField = '*', tags = ''] = fields(line);
   if (!hasTag(tags, tag)) continue;
   const repo = src.split('#')[0];
-  const args = ['skills', 'add', src, '-y'];
+  const args = [SKILLS, 'add', src, '-y'];
   if (scope) args.push(scope);
   args.push(...agentFlags);
   if (tags.split(',').map((x) => x.trim()).includes('full-depth')) args.push('--full-depth');
@@ -199,7 +204,7 @@ if (!tag || tag === 'local') {
   }
   if (localNames.length) {
     console.log(`==> 이 저장소의 로컬 스킬 (skills/): ${localNames.join(', ')}`);
-    const args = ['skills', 'add', root, '-y'];
+    const args = [SKILLS, 'add', root, '-y'];
     if (scope) args.push(scope);
     args.push(...agentFlags);
     for (const n of localNames) args.push('--skill', n);
@@ -214,7 +219,7 @@ if (!tag || tag === 'local') {
 // 설치 명령이 성공해도 일부가 조용히 빠질 수 있으므로 이름으로 확인한다.
 if (!dryRun && (expectNames.length || expectSources.length)) {
   console.log('==> 설치 확인');
-  const lsArgs = ['skills', 'ls', '--json'];
+  const lsArgs = [SKILLS, 'ls', '--json'];
   if (scope) lsArgs.push(scope);
   for (const a of (agents.length ? agents : [''])) {
     const r = npx([...lsArgs, ...(a ? ['-a', a] : [])], { capture: true });

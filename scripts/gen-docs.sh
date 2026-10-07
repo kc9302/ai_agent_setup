@@ -59,12 +59,23 @@ gen_skills() {
   done < <(manifest_lines "$SKILLS_LIST")
 }
 
+# 설치 명령에서 고정 버전을 뽑는다: uv/pip ==버전, npm/npx 패키지@버전, git 커밋, 릴리스 URL 의 버전 순서로 첫 번째.
+pinned_version() {
+  local ins="$1" v
+  # '===' 같은 비교식에 걸리지 않게 앞이 '=' 가 아닌 '==' 만 본다. 릴리스 URL 의 버전을 40자리 hex(커밋 또는 sha256)보다 먼저 본다.
+  v="$(printf '%s' "$ins" | grep -oE "(^|[^=])==[0-9][0-9A-Za-z.+-]*" | head -1 | sed -E 's/^.?==//')"
+  [ -z "$v" ] && v="$(printf '%s' "$ins" | grep -oE "(npm install -g|npx -y) +(@[^/@ ]+/)?[^@/ ]+@[0-9][0-9A-Za-z.+-]*" | head -1 | sed -E 's/.*@//')"
+  [ -z "$v" ] && v="$(printf '%s' "$ins" | grep -oE "/v?[0-9]+\.[0-9]+\.[0-9]+/" | head -1 | tr -d '/v')"
+  [ -z "$v" ] && v="$(printf '%s' "$ins" | grep -oE "(@|checkout -q )[0-9a-f]{40}" | head -1 | grep -oE "[0-9a-f]{40}" | cut -c1-7 | sed 's/^/커밋 /')"
+  printf '%s' "${v:-—}"
+}
+
 gen_tools() {
-  printf '| 도구 | 태그 | 설명 |\n|---|---|---|\n'
+  printf '| 도구 | 고정 버전 | 태그 | 설명 |\n|---|---|---|---|\n'
   local line
   while IFS= read -r line; do
     split_fields "$line"
-    printf '| `%s` | %s | %s |\n' "${FIELDS[0]}" "$(md "${FIELDS[3]:-}")" "$(md "${FIELDS[4]:-}")"
+    printf '| `%s` | %s | %s | %s |\n' "${FIELDS[0]}" "$(md "$(pinned_version "${FIELDS[2]}")")" "$(md "${FIELDS[3]:-}")" "$(md "${FIELDS[4]:-}")"
   done < <(manifest_lines "$TOOLS_LIST")
 }
 

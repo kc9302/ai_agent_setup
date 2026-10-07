@@ -6,9 +6,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 info "skills installed (npx skills list)"
 if command -v npx >/dev/null 2>&1; then
-  npx -y skills list -g 2>/dev/null || warn "npx skills list failed"
+  npx -y "$SKILLS_CLI" list -g 2>/dev/null || warn "npx skills list failed"
   echo
-  npx -y skills list 2>/dev/null || true
+  npx -y "$SKILLS_CLI" list 2>/dev/null || true
 else
   warn "npx not found"
 fi
