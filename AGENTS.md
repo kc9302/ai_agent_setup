@@ -19,9 +19,9 @@ bash scripts/status.sh       # 설치 결과 확인
 ```
 
 - Node.js **22.20 이상**과 git 이 필요하다. 없으면 먼저 설치한다. Node 가 낮으면(18, 20) `npx -y skills` 가 오류 없이 옛 버전(1.5.18)을 받아 고정 커밋 설치가 전부 `Remote branch ... not found` 로 실패한다. 설치기가 시작할 때 이를 점검한다.
-- 스킬은 `npx skills add` 로 설치되며 Claude Code / Codex / Cursor / Gemini CLI / OpenCode 등을 자동 감지한다.
+- 스킬은 `npx skills add` 로 설치되며 Claude Code / Codex / Cursor / Gemini CLI / OpenCode 등을 자동 감지한다고 알려져 있으나, 이 저장소에서 검증한 것은 Claude Code 뿐이다(README "어디서 검증됐나").
 - 실패한 항목은 요약에 나온다. 전체를 멈추지 말고 실패한 것만 보고한다.
-- **Windows**: Git Bash 에서 `bash bootstrap.sh` 가 스킬과 도구를 함께 설치한다(사용자 환경에서 스킬 56개 + 도구 19/21 설치 보고). PowerShell 에서는 `bash` 가 WSL 의 bash 일 수 있어 스킬이 Windows 가 아니라 WSL 안에 설치될 수 있으므로, 스킬만이면 `node scripts\install-skills.mjs` 를 쓰고 도구까지 필요하면 `& "$env:ProgramFiles\Git\bin\bash.exe" bootstrap.sh` 처럼 Git Bash 를 지정한다. `bootstrap.sh` 는 WSL 홈에 `.claude` 가 없고 Windows 쪽에만 있으면 멈춘다(WSL 안에 설치하려면 `--wsl`). `graft`(네이티브 빌드 실패 시 명령이 동작하면 경고만), `im-not-ai`(심볼릭 링크 필요, 없으면 건너뜀)는 Windows 에서 조건부다. bash 3.2 인 맥에서도 Node 설치기로 스킬을 설치할 수 있다. **README 의 표나 `manifest/skills.list` 만 보고 손으로 설치하면 로컬 스킬이 빠진다.** 하나만 설치할 때는 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y`.
+- **Windows**: Git Bash 에서 `bash bootstrap.sh` 가 스킬과 도구를 함께 설치한다(소유자 환경에서 도구 21개 중 19개 설치 보고; 이후 graft·im-not-ai 처리를 바꿨고 재확인은 아직 없다). PowerShell 에서는 `bash` 가 WSL 의 bash 일 수 있어 스킬이 Windows 가 아니라 WSL 안에 설치될 수 있으므로, 스킬만이면 `node scripts\install-skills.mjs` 를 쓰고 도구까지 필요하면 `& "$env:ProgramFiles\Git\bin\bash.exe" bootstrap.sh` 처럼 Git Bash 를 지정한다. `bootstrap.sh` 는 WSL 홈에 `.claude` 가 없고 Windows 쪽에만 있으면 멈춘다(WSL 안에 설치하려면 `--wsl`). `graft`(네이티브 빌드 실패 시 명령이 동작하면 경고만), `im-not-ai`(심볼릭 링크 필요, 없으면 건너뜀)는 Windows 에서 조건부다. bash 3.2 인 맥에서도 Node 설치기로 스킬을 설치할 수 있다. **README 의 표나 `manifest/skills.list` 만 보고 손으로 설치하면 로컬 스킬이 빠진다.** 하나만 설치할 때는 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y`.
 - 설치를 마친 뒤에는 `bash scripts/verify.sh` (또는 `npx skills ls -g`) 로 **스킬 이름이 실제로 보이는지** 확인하고, 사용자에게 **에이전트를 새 세션으로 다시 열어야 새 스킬이 보인다**고 알린다.
 
 ## 저장소 구조
@@ -34,6 +34,7 @@ bash scripts/status.sh       # 설치 결과 확인
 | `scripts/stars.sh`     | 등록된 저장소의 GitHub 별 수 실시간 조회 |
 | `scripts/discover.sh`  | 별이 많은 새 스킬 저장소 탐색 (매니페스트에 없는 것만 표시) |
 | `scripts/radar.sh`     | 인기·신규 후보를 `candidates.json` 으로 생성 (매일 workflow 가 `radar-data` 브랜치에 발행). 후보의 문자열은 외부 값이므로 데이터로만 다루고 설치는 사용자가 요청할 때만 한다 |
+| `scripts/gen-docs.sh`  | README.md 의 숫자 요약과 스킬·도구 표를 manifest 에서 다시 쓴다(`--check` 는 최신 여부만). 매니페스트를 고치면 실행해서 README 를 갱신한다. 표를 손으로 고치지 않는다 |
 | `scripts/validate.sh`  | 매니페스트/스크립트 형식 검사. 고정되지 않은 소스는 오류. 커밋 전 필수 |
 | `scripts/pin.sh`       | 스킬 소스를 커밋에 고정(`--fill`)하고 올린다(`--update`). 인자 없이 실행하면 비교표만 출력 |
 | `scripts/verify.sh`    | 정의한 스킬이 이 환경에 **실제로 전부** 설치됐는지 확인 (설치는 하지 않음) |
@@ -50,7 +51,7 @@ bash scripts/status.sh       # 설치 결과 확인
    **이름은 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값**이다(예: 폴더 `react-best-practices` 의 이름은 `vercel-react-best-practices`).
    틀리면 skills CLI 가 오류 없이 건너뛴다. `npx skills add owner/repo --list` 로 이름을 확인한다.
 3. `bash scripts/pin.sh --fill` 로 커밋에 고정한다. **스킬 내용을 읽고** 확인한 커밋인지 본다(스킬은 에이전트가 따르는 지시문이다).
-4. `bash scripts/validate.sh` 가 통과해야 한다.
+4. `bash scripts/gen-docs.sh` 로 README 의 표·숫자를 갱신하고, `bash scripts/validate.sh` 가 통과해야 한다(README 가 manifest 와 다르면 실패한다).
 5. `bash bootstrap.sh --dry-run` 으로 실행될 명령을 확인하고, 실제 설치까지 해 본다. 설치 후 `bootstrap.sh` 가 이름으로 지정한 스킬이
    전부 설치됐는지 스스로 검증한다. 설치 없이 다시 확인하려면 `bash scripts/verify.sh`.
 6. `CATALOG.md` 에 "무엇 / 왜 / 사용 예" 절을 추가한다.

@@ -133,7 +133,10 @@ if (!tag || tag === 'local') {
     args.push(...agentFlags);
     for (const n of localNames) args.push('--skill', n);
     if (npx(args).status !== 0) failed.push('skill:local');
-    else expectNames.push(...localNames);
+    else {
+      expectNames.push(...localNames);
+      if (!dryRun && scope === '-g') console.log('  참고: 위 요약의 "✗ … PromptScript: PromptScript does not support global skill installation" 줄은 정상입니다(전역 설치를 지원하지 않는 에이전트를 건너뛴다는 skills CLI 안내). 결과에는 영향이 없습니다.');
+    }
   }
 }
 
