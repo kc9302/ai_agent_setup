@@ -9,6 +9,7 @@
 #   bash bootstrap.sh --skills-only | --tools-only
 #   bash bootstrap.sh --dry-run       # 실행할 명령만 출력
 #   bash bootstrap.sh --profile minimal   # 작은 세트: 스킬만(core 태그), 도구·MCP·curl|sh 없음. 처음 받는 사람의 첫 명령
+#   bash bootstrap.sh --backup        # 설치 전에, 덮어써질 기존 스킬(다른 출처·출처 불명)을 ~/.agents/skills-backup/<시각>/ 에 복사해 둔다 (Node 필요)
 #   bash bootstrap.sh --diff          # 설치하지 않고, 이미 가진 스킬과 겹치는/덮어쓸 것을 미리 보여준다 (Node 필요)
 #   bash bootstrap.sh --wsl           # WSL 안에 설치하는 것이 맞을 때 (WSL 홈에 .claude 가 없고 Windows 쪽에만 있으면 기본은 멈춘다)
 #
@@ -52,6 +53,7 @@ DRY_RUN=0
 ALLOW_WSL="${AI_SETUP_ALLOW_WSL:-0}"
 PROFILE="full"
 DIFF=0
+BACKUP=0
 
 # 환경변수로도 에이전트 지정 가능: AI_SETUP_AGENTS="claude-code,codex"
 if [ -n "${AI_SETUP_AGENTS:-}" ]; then
@@ -72,6 +74,7 @@ while [ $# -gt 0 ]; do
     --wsl)          ALLOW_WSL=1 ;;
     --profile)      shift; PROFILE="${1:-}" ;;
     --diff)         DIFF=1 ;;
+    --backup)       BACKUP=1 ;;
     -h|--help)      usage; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
@@ -97,6 +100,18 @@ if [ "$DIFF" = 1 ]; then
   for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do dargs+=(--agent "$(trim "$a")"); done
   command -v node >/dev/null 2>&1 || die "--diff 는 node 가 필요합니다. https://nodejs.org (22.20+)"
   exec node "$(dirname "${BASH_SOURCE[0]}")/scripts/install-skills.mjs" "${dargs[@]}"
+fi
+
+# --backup: 스킬 설치 전에 덮어써질 기존 스킬을 복사해 둔다. 겹침 판정은 Node 설치기가 하므로 거기에 맡기고, 복사에 실패하면 설치하지 않는다.
+if [ "$BACKUP" = 1 ] && [ "$DO_SKILLS" = 1 ]; then
+  bargs=(--backup-only)
+  [ -n "$SCOPE_FLAG" ] || bargs+=(--project)
+  [ -z "$TAG" ] || bargs+=(--tag "$TAG")
+  [ "$PROFILE" = "full" ] || bargs+=(--profile "$PROFILE")
+  [ "$DRY_RUN" = 0 ] || bargs+=(--dry-run)
+  for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do bargs+=(--agent "$(trim "$a")"); done
+  command -v node >/dev/null 2>&1 || die "--backup 은 node 가 필요합니다. https://nodejs.org (22.20+)"
+  node "$(dirname "${BASH_SOURCE[0]}")/scripts/install-skills.mjs" "${bargs[@]}" || die "백업에 실패해 설치하지 않습니다"
 fi
 
 run() {

@@ -60,6 +60,23 @@ jobs:
           echo "$out" | grep -q '출처 불명의 같은 이름.*: 1개' || { echo "expected exactly one overwrite warning (docx)"; exit 1; }
           echo "$out" | grep -q '아무것도 설치하지 않았습니다' || { echo "--diff must say it installed nothing"; exit 1; }
           grep -q '^mine$' "$H/.claude/skills/docx/SKILL.md" || { echo "--diff modified an existing skill"; exit 1; }
+      - name: "--backup copies a hand-made skill before it is overwritten"
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-backup"
+          mkdir -p "$H/.claude/skills/skill-radar"
+          printf -- '---\nname: skill-radar\ndescription: mine\n---\nHAND-MADE-MARKER\n' > "$H/.claude/skills/skill-radar/SKILL.md"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          node scripts/install-skills.mjs --backup --tag local
+          B="$(ls -d "$H"/.agents/skills-backup/*/skill-radar 2>/dev/null | head -1)"
+          test -n "$B" || { echo "no backup was made"; find "$H/.agents" -maxdepth 3 | head -30; exit 1; }
+          grep -q 'HAND-MADE-MARKER' "$B/SKILL.md" || { echo "backup does not hold the original content"; exit 1; }
+          if grep -rq 'HAND-MADE-MARKER' "$H/.agents/skills/skill-radar/SKILL.md"; then echo "the skill was not overwritten by the install"; exit 1; fi
+          # 같은 내용으로 다시 설치할 때는 백업할 것이 없어야 한다
+          out="$(node scripts/install-skills.mjs --backup-only --tag local 2>&1)"
+          echo "$out" | tail -3
+          echo "$out" | grep -q '백업할 기존 스킬이 없습니다' || { echo "re-running with unchanged local skills must not back up again"; exit 1; }
       - name: "--profile minimal installs the core sources only (no local skills)"
         shell: bash
         run: |
