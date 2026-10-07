@@ -3,10 +3,11 @@
 //   node scripts/install-skills.mjs [--dry-run] [--project] [--agent <이름>]... [--tag <태그>] [--profile minimal|full] [--diff] [--wsl]
 //   --profile minimal : core 태그 스킬만(로컬 스킬 제외). 도구는 원래 설치하지 않는다.
 //   --diff            : 설치하지 않고, 이미 설치된 스킬과 겹치는(덮어쓸) 것을 미리 보여준다.
+//   --backup          : 설치 전에, 다른 출처·출처 불명으로 덮어써질 기존 스킬 폴더를 ~/.agents/skills-backup/<시각>/ 에 복사해 둔다 (그다음 설치). --backup-only 는 복사만 하고 끝낸다.
 // bootstrap.sh 의 스킬 단계와 같은 규칙: manifest/skills.list 의 모든 소스(커밋 고정) +
 // 이 저장소의 skills/ 폴더(로컬 스킬)를 설치하고, 끝나면 이름이 실제로 설치됐는지 확인한다.
 // 필요한 것: Node.js 22.20+ (npx), git. 낮은 Node 에서는 skills CLI 의 최신판을 받지 못한다(아래 사전 점검 참고).
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, cpSync, mkdirSync } from 'node:fs';
 import { homedir, platform } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -14,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const argv = process.argv.slice(2);
-let dryRun = false, diffMode = false, profile = 'full', scope = '-g', tag = '', allowWsl = process.env.AI_SETUP_ALLOW_WSL === '1';
+let dryRun = false, diffMode = false, backup = false, backupOnly = false, profile = 'full', scope = '-g', tag = '', allowWsl = process.env.AI_SETUP_ALLOW_WSL === '1';
 const agents = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -25,6 +26,8 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--tag') tag = argv[++i] || '';
   else if (a === '--wsl') allowWsl = true;
   else if (a === '--diff') { diffMode = true; dryRun = true; }
+  else if (a === '--backup') backup = true;
+  else if (a === '--backup-only') { backup = true; backupOnly = true; }
   else if (a === '--profile') profile = argv[++i] || '';
   else if (a === '-h' || a === '--help') { console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 6).map((l) => l.replace(/^\/\/ ?/, '')).join('\n')); process.exit(0); }
   else { console.error(`알 수 없는 옵션: ${a}`); process.exit(2); }
@@ -120,9 +123,20 @@ const hasTag = (tags, t) => !t || tags.split(',').map((x) => x.trim()).includes(
 const agentFlags = agents.flatMap((a) => ['-a', a.trim()]);
 
 
+
+// 두 폴더의 파일 구성과 내용이 같은가 (줄바꿈 차이도 다름으로 본다). 읽지 못하면 다르다고 본다.
+function sameTree(x, y) {
+  const list = (d) => { const out = []; const walk = (c) => { for (const e of readdirSync(c, { withFileTypes: true })) { const f = join(c, e.name); if (e.isDirectory()) { if (e.name !== '.git') walk(f); } else out.push(f.slice(d.length + 1)); } }; walk(d); return out.sort(); };
+  try {
+    const a = list(x), b = list(y);
+    if (a.join('\0') !== b.join('\0')) return false;
+    return a.every((r) => readFileSync(join(x, r)).equals(readFileSync(join(y, r))));
+  } catch { return false; }
+}
+
 // ---- --diff: 설치하지 않고 기존 스킬과의 겹침을 보여준다 ---------------------------------------------
 // skills CLI 는 같은 이름의 스킬이 이미 있으면 확인도 백업도 없이 덮어쓴다(직접 만든 것이라도). 설치 전에 미리 알려 준다.
-if (diffMode) {
+function plan() {
   const ls = spawnSync('npx', win ? ['-y', SKILLS, 'ls', '--json', ...(scope ? [scope] : [])].map(q) : ['-y', SKILLS, 'ls', '--json', ...(scope ? [scope] : [])],
     { shell: win, encoding: 'utf8', timeout: 120000 });
   let installed;
@@ -163,9 +177,19 @@ if (diffMode) {
       const f = join(dir, d.name, 'SKILL.md');
       if (!d.isDirectory() || !existsSync(f)) continue;
       const m = readFileSync(f, 'utf8').match(/^name:\s*["']?([^"'\r\n]+?)["']?\s*$/m);
-      if (m) rows.push({ name: m[1], from: '(이 저장소 skills/)', state: byName.has(m[1]) ? (byName.get(m[1]).source ? 'other' : 'unknown') : 'new' });
+      if (m) {
+        const cur = byName.get(m[1]);
+        // 이 저장소의 로컬 스킬을 다시 설치하는 것은 내용이 같으면 잃을 것이 없다(출처가 로컬 경로라 skills CLI 는 출처 없음으로 보고한다).
+        const state = !cur ? 'new' : (cur.path && sameTree(cur.path, join(dir, d.name))) ? 'same' : (cur.source ? 'other' : 'unknown');
+        rows.push({ name: m[1], from: '(이 저장소 skills/)', state });
+      }
     }
   }
+  return { installed, byName, rows, unresolved };
+}
+
+if (diffMode) {
+  const { installed, byName, rows, unresolved } = plan();
   const label = { new: '신규', same: '같은 출처, 다시 설치(갱신)', other: '다른 출처의 같은 이름 → 덮어씀', unknown: '출처 불명의 같은 이름 → 덮어씀(직접 만든 스킬이거나 로컬 설치)' };
   console.log(`\n==> 설치 전 미리보기 (${scope ? '전역' : '현재 프로젝트'}, 이미 설치된 스킬 ${installed.length}개)`);
   for (const st of ['new', 'same', 'other', 'unknown']) {
@@ -175,9 +199,32 @@ if (diffMode) {
   }
   if (unresolved.length) console.log(`  이름을 확인하지 못한 와일드카드 소스: ${unresolved.join(', ')} (네트워크 문제일 수 있습니다. 이 소스의 겹침은 알 수 없습니다)`);
   const risky = rows.filter((r) => r.state === 'other' || r.state === 'unknown').length;
-  console.log(risky ? `\n[주의] ${risky}개는 같은 이름이 이미 있어 확인 없이 덮어써지고 백업되지 않습니다. 아껴 둔 것이 있으면 먼저 폴더를 복사해 두세요.` : '\n덮어쓰이는 기존 스킬은 없습니다.');
+  console.log(risky ? `\n[주의] ${risky}개는 같은 이름이 이미 있어 확인 없이 덮어써지고 백업되지 않습니다. --backup 을 붙이면 설치 전에 그 폴더들을 복사해 둡니다 (같은 출처의 갱신은 복사하지 않습니다).` : '\n덮어쓰이는 기존 스킬은 없습니다.');
   console.log('아무것도 설치하지 않았습니다.');
   process.exit(0);
+}
+
+// ---- --backup: 덮어써질 기존 스킬(다른 출처·출처 불명)을 설치 전에 복사해 둔다 ------------------------------------
+// skills CLI 는 확인도 백업도 없이 덮어쓴다. 같은 출처의 갱신은 원래 이 저장소가 설치한 것이라 복사하지 않는다.
+if (backup) {
+  const { byName, rows, unresolved } = plan();
+  const risky = [...new Set(rows.filter((r) => r.state === 'other' || r.state === 'unknown').map((r) => r.name))];
+  if (unresolved.length) console.warn(`[경고] 이름을 확인하지 못한 와일드카드 소스(${unresolved.join(', ')})의 겹침은 백업하지 못합니다.`);
+  if (!risky.length) console.log('==> 백업할 기존 스킬이 없습니다 (덮어쓰이는 것 없음).');
+  else {
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const base = scope ? join(homedir(), '.agents', 'skills-backup', stamp) : join(process.cwd(), '.agents', 'skills-backup', stamp);
+    console.log(`==> 덮어써질 기존 스킬 ${risky.length}개를 백업합니다 → ${base}${dryRun ? ' (dry-run: 복사하지 않음)' : ''}`);
+    for (const n of risky) {
+      const from = byName.get(n)?.path;
+      if (!from || !existsSync(from)) { console.warn(`  ! ${n}: 폴더 위치를 알 수 없어 백업하지 못했습니다`); continue; }
+      if (dryRun) { console.log(`  (복사 예정) ${n}  ← ${from}`); continue; }
+      try { mkdirSync(base, { recursive: true }); cpSync(from, join(base, n), { recursive: true, verbatimSymlinks: true }); console.log(`  ✓ ${n}`); }
+      catch (e) { console.error(`[error] ${n} 백업 실패: ${e.message}. 덮어쓰기 전에 멈춥니다.`); process.exit(1); }
+    }
+    if (!dryRun) console.log(`  되돌리려면 위 폴더에서 원하는 스킬을 원래 위치로 복사하세요.`);
+  }
+  if (backupOnly) process.exit(0);
 }
 const failed = [], expectNames = [], expectSources = [];
 console.log('==> manifest/skills.list 의 스킬 설치');
