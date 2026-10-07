@@ -199,4 +199,5 @@ jobs:
       - name: Linux vs macOS
         run: node scripts/snapshot.mjs --diff snaps/snap-Linux.json snaps/snap-macOS.json
       - name: Linux vs Windows
+        if: always()   # 앞 비교가 실패해도 이 비교 결과는 봐야 한다
         run: node scripts/snapshot.mjs --diff snaps/snap-Linux.json snaps/snap-Windows.json
