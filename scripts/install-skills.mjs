@@ -35,6 +35,15 @@ if (profile === 'minimal') {
   tag = 'core';
 } else if (profile !== 'full') { console.error(`[error] 알 수 없는 프로필: ${profile || '(빈 값)'} (full | minimal)`); process.exit(2); }
 
+// skills CLI 가 스킬을 받을 때 쓰는 git 이 줄바꿈을 바꾸지 않게 한다. Windows 의 Git 기본값(core.autocrlf=true)이면 받은 스킬의 텍스트 파일이 CRLF 가 되어
+// Linux·맥과 다른 바이트로 설치되고, 스킬에 든 .sh 는 bash 에서 깨진다(CI 의 세 OS 스냅샷 비교에서 실제로 확인됨). 환경변수 설정은 전역 git 설정보다 우선한다.
+{
+  const n = parseInt(process.env.GIT_CONFIG_COUNT || '0', 10) || 0;
+  process.env.GIT_CONFIG_COUNT = String(n + 1);
+  process.env[`GIT_CONFIG_KEY_${n}`] = 'core.autocrlf';
+  process.env[`GIT_CONFIG_VALUE_${n}`] = 'false';
+}
+
 // ---- 사전 점검: 설치를 시작하기 전에 알려진 함정을 막는다 -----------------------------------------
 const win = process.platform === 'win32';
 const die = (m) => { console.error(`\n[error] ${m}`); process.exit(2); };

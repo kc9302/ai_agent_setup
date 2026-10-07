@@ -1,0 +1,42 @@
+name: pin-health
+# 고정해 둔 스킬 커밋·도구 버전·설치 스크립트가 아직 받아지는지 주 1회 확인한다(scripts/pin-alive.sh).
+# 업스트림이 저장소를 지우거나 커밋을 없애거나 버전을 내리면, 고정한 그대로는 더 이상 설치되지 않는다. 사용자가 설치하다 터지기 전에 이슈로 알린다.
+# 실패하면 열린 이슈에 덧붙이거나 새로 만든다. PR 에서는 이 workflow 와 스크립트를 바꿨을 때만 돌고, 이슈는 만들지 않는다.
+on:
+  schedule:
+    - cron: "30 21 * * 1"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - scripts/pin-alive.sh
+      - .github/workflows/pin-health.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  alive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: check that everything pinned can still be fetched (one retry for transient network errors)
+        run: |
+          set +e
+          bash scripts/pin-alive.sh > "$RUNNER_TEMP/report.txt" 2>&1; rc=$?
+          if [ "$rc" != 0 ]; then echo "first run failed; retrying once in 30 s"; sleep 30; bash scripts/pin-alive.sh > "$RUNNER_TEMP/report.txt" 2>&1; rc=$?; fi
+          cat "$RUNNER_TEMP/report.txt"
+          exit $rc
+      - name: open or update an issue
+        if: failure() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="pin-health: 고정한 항목을 받을 수 없습니다"
+          report="$(sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/report.txt" | tail -60)"
+          body="$(printf '고정해 둔 항목 중 받을 수 없는 것이 있습니다. 그대로 두면 새 환경의 설치가 실패합니다.\n\n```\n%s\n```\n\n실행: %s/%s/actions/runs/%s\n\n대응: 업스트림의 새 커밋·버전을 읽어 보고 `bash scripts/pin.sh --update <소스>` 로 올리거나(도구는 `manifest/tools.list` 의 버전), 항목을 뺀다. 일시적인 네트워크 오류였다면 workflow 를 다시 실행해 본다.' "$report" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")"
+          n="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$n" ]; then gh issue comment "$n" --body "$body"; else gh issue create --title "$title" --body "$body"; fi

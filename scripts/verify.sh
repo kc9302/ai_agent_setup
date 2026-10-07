@@ -5,6 +5,7 @@
 #   bash scripts/verify.sh --project            # 현재 프로젝트 기준
 #   bash scripts/verify.sh --agent claude-code  # 특정 에이전트 기준 (여러 번 가능)
 #   bash scripts/verify.sh --tag core           # 태그가 core 인 소스만
+#   bash scripts/verify.sh --json > mine.json   # 확인 대신 설치 스냅샷(JSON)을 낸다. 두 환경 비교: node scripts/snapshot.mjs --diff a.json b.json
 #
 # 확인 대상: skills.list 가 이름으로 지정한 스킬, '*' 로 받는 소스(스킬이 1개 이상 있어야 함),
 # 이 저장소의 skills/ 가 정의한 스킬. 도구(tools.list)가 설치하는 스킬은 각 도구의 check 로 확인한다 (status.sh).
@@ -12,18 +13,23 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-SCOPE_FLAG="-g"; AGENTS=(); TAG=""
+SCOPE_FLAG="-g"; AGENTS=(); TAG=""; JSON=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --project)    SCOPE_FLAG="" ;;
     --global|-g)  SCOPE_FLAG="-g" ;;
     --agent|-a)   shift; AGENTS+=("$1") ;;
     --tag|-t)     shift; TAG="$1" ;;
+    --json)       JSON=1 ;;
     -h|--help)    sed -n '2,/^set -euo/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
   shift
 done
+if [ "$JSON" = 1 ]; then
+  command -v node >/dev/null 2>&1 || die "--json 은 node 가 필요합니다."
+  exec node "$(dirname "${BASH_SOURCE[0]}")/snapshot.mjs"
+fi
 command -v npx >/dev/null 2>&1 || die "npx 가 필요합니다."
 command -v node >/dev/null 2>&1 || die "node 가 필요합니다."
 

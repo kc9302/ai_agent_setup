@@ -71,6 +71,21 @@ jobs:
           test -d "$H/.claude/skills/karpathy-guidelines" || { echo "missing: karpathy-guidelines (core source)"; ls -la "$H/.claude/skills" || true; exit 1; }
           if [ -d "$H/.claude/skills/skill-radar" ]; then echo "minimal must not install this repository's local skills"; exit 1; fi
 
+      - name: "skills stay LF even when git's autocrlf is on (the Windows default)"
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-eol"
+          mkdir -p "$H/.claude"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          printf '[core]\n\tautocrlf = true\n' > "$RUNNER_TEMP/gitconfig-autocrlf"
+          export GIT_CONFIG_GLOBAL="$(cygpath -w "$RUNNER_TEMP/gitconfig-autocrlf" 2>/dev/null || echo "$RUNNER_TEMP/gitconfig-autocrlf")"
+          node scripts/install-skills.mjs --tag behavior
+          f="$H/.agents/skills/karpathy-guidelines/SKILL.md"
+          test -f "$f" || { echo "missing: $f"; exit 1; }
+          if grep -q $'\r' "$f"; then echo "CRLF found in an installed skill although the installer forces core.autocrlf=false"; exit 1; fi
+          echo "LF only"
+
   bootstrap-dry-run:
     name: bootstrap.sh dry-run (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -151,3 +166,53 @@ jobs:
         run: |
           export HOME="$RUNNER_TEMP/h-full"
           /bin/bash bootstrap.sh --tools-only
+
+  snapshot:
+    # 세 OS 에서 같은 설치기로 스킬 전체를 깔고, 설치 기록(skills CLI 의 잠금 파일: 출처·고정 커밋·폴더 내용 해시)을 남긴다.
+    name: snapshot of installed skills (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: install every skill into an isolated home, then record what was installed
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-snap"
+          mkdir -p "$H/.claude"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          node scripts/install-skills.mjs
+          node scripts/snapshot.mjs --skills-only > "$RUNNER_TEMP/snap-${{ runner.os }}.json"
+          node -e 'const s=require(process.argv[1]).skills;console.log("recorded",Object.keys(s).length,"skills")' "$RUNNER_TEMP/snap-${{ runner.os }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snap-${{ runner.os }}
+          path: ${{ runner.temp }}/snap-${{ runner.os }}.json
+
+  same-everywhere:
+    # 위 세 스냅샷을 비교한다. "세 OS 에 같은 스킬이 같은 내용으로 설치됐다"를 매 실행마다 기록으로 확인한다.
+    name: the three installs are identical
+    needs: snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: snap-*
+          path: snaps
+          merge-multiple: true
+      - name: Linux vs macOS
+        run: node scripts/snapshot.mjs --diff snaps/snap-Linux.json snaps/snap-macOS.json
+      - name: Linux vs Windows
+        if: always()   # 앞 비교가 실패해도 이 비교 결과는 봐야 한다
+        run: node scripts/snapshot.mjs --diff snaps/snap-Linux.json snaps/snap-Windows.json
