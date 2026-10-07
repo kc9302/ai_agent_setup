@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-# README.md 의 "생성 구간"을 manifest 에서 만든다. 손으로 고치면 manifest 와 어긋나므로(스킬 표 13/23, 도구 표 13/21 로 어긋났던 적이 있다)
+# README.md 와 CATALOG.md 의 "생성 구간"을 manifest 에서 만든다. 손으로 고치면 manifest 와 어긋나므로(스킬 표 13/23, 도구 표 13/21 로 어긋났던 적이 있다)
 # 표와 숫자는 이 스크립트가 쓰고, validate.sh 가 --check 로 최신인지 확인한다.
 #
-#   bash scripts/gen-docs.sh            # README.md 의 생성 구간을 다시 쓴다
+#   bash scripts/gen-docs.sh            # README.md, CATALOG.md 의 생성 구간을 다시 쓴다
 #   bash scripts/gen-docs.sh --check    # 최신이 아니면 실패 (README 는 수정하지 않는다)
 #
-# 생성 구간은 README.md 안의 이 표시로 구분한다:
-#   <!-- BEGIN:generated:summary --> ... <!-- END:generated:summary -->   (숫자 요약과 core 구성)
-#   <!-- BEGIN:generated:skills -->  ... <!-- END:generated:skills -->    (외부 스킬 소스 표)
-#   <!-- BEGIN:generated:tools -->   ... <!-- END:generated:tools -->     (도구 표)
+# 생성 구간은 이 표시로 구분한다:
+#   README.md : <!-- BEGIN:generated:summary --> ... <!-- END:generated:summary -->   (숫자 요약과 core 구성)
+#   CATALOG.md: <!-- BEGIN:generated:skills -->  ... <!-- END:generated:skills -->    (외부 스킬 소스 표)
+#   CATALOG.md: <!-- BEGIN:generated:tools -->   ... <!-- END:generated:tools -->     (도구 표)
 # 이 저장소의 로컬 스킬(skills/)은 설명을 한국어로 손으로 쓰되, 폴더가 README 에 빠지면 --check 가 실패한다.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 README="$REPO_ROOT/README.md"
+CATALOG="$REPO_ROOT/CATALOG.md"
 MODE="write"
 case "${1:-}" in
   --check) MODE="check" ;;
@@ -83,7 +84,7 @@ gen_tools() {
 replace_block() {
   local name="$1" content_file="$2" in_file="$3"
   grep -q "<!-- BEGIN:generated:$name -->" "$in_file" && grep -q "<!-- END:generated:$name -->" "$in_file" \
-    || die "README.md 에 <!-- BEGIN:generated:$name --> / <!-- END:generated:$name --> 표시가 없습니다."
+    || die "$(basename "$in_file") 에 <!-- BEGIN:generated:$name --> / <!-- END:generated:$name --> 표시가 없습니다."
   awk -v b="<!-- BEGIN:generated:$name -->" -v e="<!-- END:generated:$name -->" -v cf="$content_file" '
     $0 == b { print; while ((getline l < cf) > 0) print l; skip = 1; next }
     $0 == e { skip = 0 }
@@ -92,11 +93,13 @@ replace_block() {
 }
 
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
-cp "$README" "$tmp/cur.md"
-for blk in summary skills tools; do
+cp "$README" "$tmp/readme.md"; cp "$CATALOG" "$tmp/catalog.md"
+# 블록 이름 → 파일 (summary 는 README, 표 두 개는 CATALOG)
+for spec in summary:readme skills:catalog tools:catalog; do
+  blk="${spec%%:*}"; f="$tmp/${spec##*:}.md"
   "gen_$blk" > "$tmp/$blk.txt"
-  replace_block "$blk" "$tmp/$blk.txt" "$tmp/cur.md" > "$tmp/next.md"
-  mv "$tmp/next.md" "$tmp/cur.md"
+  replace_block "$blk" "$tmp/$blk.txt" "$f" > "$tmp/next.md"
+  mv "$tmp/next.md" "$f"
 done
 
 # 로컬 스킬 폴더가 README 에 빠지지 않았는지
@@ -111,13 +114,22 @@ if [ ${#missing[@]} -gt 0 ]; then
 fi
 
 if [ "$MODE" = "check" ]; then
-  if ! diff -q "$README" "$tmp/cur.md" >/dev/null; then
-    error "README.md 의 생성 구간이 manifest 와 다릅니다. 'bash scripts/gen-docs.sh' 를 실행해 다시 쓰세요."
-    diff "$README" "$tmp/cur.md" | head -8 >&2 || true
-    exit 1
-  fi
-  info "README.md 생성 구간이 manifest 와 일치합니다"
+  stale=0
+  for pair in "$README:readme" "$CATALOG:catalog"; do
+    f="${pair%%:*}"
+    if ! diff -q "$f" "$tmp/${pair##*:}.md" >/dev/null; then
+      error "$(basename "$f") 의 생성 구간이 manifest 와 다릅니다. 'bash scripts/gen-docs.sh' 를 실행해 다시 쓰세요."
+      diff "$f" "$tmp/${pair##*:}.md" | head -8 >&2 || true
+      stale=1
+    fi
+  done
+  [ "$stale" = 0 ] || exit 1
+  info "README.md, CATALOG.md 생성 구간이 manifest 와 일치합니다"
 else
-  if diff -q "$README" "$tmp/cur.md" >/dev/null; then info "README.md 는 이미 최신입니다"
-  else cp "$tmp/cur.md" "$README"; info "README.md 를 갱신했습니다"; fi
+  changed=0
+  for pair in "$README:readme" "$CATALOG:catalog"; do
+    f="${pair%%:*}"
+    if ! diff -q "$f" "$tmp/${pair##*:}.md" >/dev/null; then cp "$tmp/${pair##*:}.md" "$f"; changed=1; fi
+  done
+  if [ "$changed" = 1 ]; then info "README.md, CATALOG.md 를 갱신했습니다"; else info "README.md, CATALOG.md 는 이미 최신입니다"; fi
 fi
