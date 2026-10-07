@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // bash 없이 스킬만 설치한다 (Windows PowerShell 등). 도구(manifest/tools.list)는 설치하지 않는다.
-//   node scripts/install-skills.mjs [--dry-run] [--project] [--agent <이름>]... [--tag <태그>] [--wsl]
+//   node scripts/install-skills.mjs [--dry-run] [--project] [--agent <이름>]... [--tag <태그>] [--profile minimal|full] [--diff] [--wsl]
+//   --profile minimal : core 태그 스킬만(로컬 스킬 제외). 도구는 원래 설치하지 않는다.
+//   --diff            : 설치하지 않고, 이미 설치된 스킬과 겹치는(덮어쓸) 것을 미리 보여준다.
 // bootstrap.sh 의 스킬 단계와 같은 규칙: manifest/skills.list 의 모든 소스(커밋 고정) +
 // 이 저장소의 skills/ 폴더(로컬 스킬)를 설치하고, 끝나면 이름이 실제로 설치됐는지 확인한다.
 // 필요한 것: Node.js 22.20+ (npx), git. 낮은 Node 에서는 skills CLI 의 최신판을 받지 못한다(아래 사전 점검 참고).
@@ -12,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const argv = process.argv.slice(2);
-let dryRun = false, scope = '-g', tag = '', allowWsl = process.env.AI_SETUP_ALLOW_WSL === '1';
+let dryRun = false, diffMode = false, profile = 'full', scope = '-g', tag = '', allowWsl = process.env.AI_SETUP_ALLOW_WSL === '1';
 const agents = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -22,9 +24,16 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--agent' || a === '-a') agents.push(argv[++i]);
   else if (a === '--tag') tag = argv[++i] || '';
   else if (a === '--wsl') allowWsl = true;
+  else if (a === '--diff') { diffMode = true; dryRun = true; }
+  else if (a === '--profile') profile = argv[++i] || '';
   else if (a === '-h' || a === '--help') { console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 6).map((l) => l.replace(/^\/\/ ?/, '')).join('\n')); process.exit(0); }
   else { console.error(`알 수 없는 옵션: ${a}`); process.exit(2); }
 }
+
+if (profile === 'minimal') {
+  if (tag) { console.error('[error] --profile minimal 은 --tag 와 함께 쓸 수 없습니다 (minimal 은 core 태그)'); process.exit(2); }
+  tag = 'core';
+} else if (profile !== 'full') { console.error(`[error] 알 수 없는 프로필: ${profile || '(빈 값)'} (full | minimal)`); process.exit(2); }
 
 // ---- 사전 점검: 설치를 시작하기 전에 알려진 함정을 막는다 -----------------------------------------
 const win = process.platform === 'win32';
@@ -78,6 +87,8 @@ if (existsSync(join(root, '.git'))) {
 }
 console.log(`==> 설치 대상: ${scope ? '전역(-g)' : '현재 프로젝트'}  홈: ${homedir()}${existsSync(join(homedir(), '.claude')) ? '' : '  (Claude Code 설정 폴더 ~/.claude 가 아직 없습니다. 에이전트는 자동 감지됩니다)'}`);
 
+if (profile === 'minimal') console.log('    minimal: 스킬만 설치합니다. 도구·MCP 서버 등록·curl|sh 는 하지 않고 관리자 권한이 필요 없습니다. 같은 이름의 스킬이 이미 있으면 덮어쓰므로 먼저 --diff 로 확인할 수 있습니다.');
+
 const q = (s) => (win && /[^\w@.:/\\#=,-]/.test(s) ? `"${s}"` : s);
 function npx(args, { capture = false } = {}) {
   const full = ['-y', ...args];
@@ -94,6 +105,66 @@ function fields(line) {
 const hasTag = (tags, t) => !t || tags.split(',').map((x) => x.trim()).includes(t);
 const agentFlags = agents.flatMap((a) => ['-a', a.trim()]);
 
+
+// ---- --diff: 설치하지 않고 기존 스킬과의 겹침을 보여준다 ---------------------------------------------
+// skills CLI 는 같은 이름의 스킬이 이미 있으면 확인도 백업도 없이 덮어쓴다(직접 만든 것이라도). 설치 전에 미리 알려 준다.
+if (diffMode) {
+  const ls = spawnSync('npx', win ? ['-y', 'skills', 'ls', '--json', ...(scope ? [scope] : [])].map(q) : ['-y', 'skills', 'ls', '--json', ...(scope ? [scope] : [])],
+    { shell: win, encoding: 'utf8', timeout: 120000 });
+  let installed;
+  try { installed = JSON.parse(ls.stdout.slice(ls.stdout.indexOf('['))); } catch { console.error('[error] 설치된 스킬 목록(skills ls --json)을 읽지 못했습니다.'); process.exit(2); }
+  const byName = new Map(installed.map((x) => [x.name, x]));
+  const rows = [];   // { name, from, state }
+  const classify = (name, repo) => {
+    const cur = byName.get(name);
+    if (!cur) return 'new';
+    if (!cur.source) return 'unknown';
+    return cur.source.toLowerCase() === repo.toLowerCase() ? 'same' : 'other';
+  };
+  const unresolved = [];
+  for (const raw of readFileSync(join(root, 'manifest', 'skills.list'), 'utf8').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const [src, skillsField = '*', tags = ''] = fields(line);
+    if (!hasTag(tags, tag)) continue;
+    const repo = src.split('#')[0];
+    let names;
+    if (skillsField === '*') {
+      // 와일드카드 소스는 실제 스킬 이름을 알려면 받아서 목록을 봐야 한다.
+      const largs = ['skills', 'add', src, '--list'];
+      if (tags.split(',').map((x) => x.trim()).includes('full-depth')) largs.push('--full-depth');
+      console.log(`  … ${repo} 의 스킬 목록 확인 중`);
+      const r = spawnSync('npx', win ? ['-y', ...largs].map(q) : ['-y', ...largs], { shell: win, encoding: 'utf8', timeout: 180000 });
+      const text = ((r.stdout || '') + '\n' + (r.stderr || '')).replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');
+      const at = text.indexOf('Available Skills');
+      const after = at >= 0 ? text.slice(at) : text;
+      names = [...after.matchAll(/^\|\s{4}(\S+)\s*$/gm)].map((m) => m[1]);
+      if (r.status !== 0 || !names.length) { unresolved.push(repo); continue; }
+    } else names = skillsField.split(',').map((x) => x.trim()).filter(Boolean);
+    for (const n of names) rows.push({ name: n, from: repo, state: classify(n, repo) });
+  }
+  if (!tag || tag === 'local') {
+    const dir = join(root, 'skills');
+    if (existsSync(dir)) for (const d of readdirSync(dir, { withFileTypes: true })) {
+      const f = join(dir, d.name, 'SKILL.md');
+      if (!d.isDirectory() || !existsSync(f)) continue;
+      const m = readFileSync(f, 'utf8').match(/^name:\s*["']?([^"'\r\n]+?)["']?\s*$/m);
+      if (m) rows.push({ name: m[1], from: '(이 저장소 skills/)', state: byName.has(m[1]) ? (byName.get(m[1]).source ? 'other' : 'unknown') : 'new' });
+    }
+  }
+  const label = { new: '신규', same: '같은 출처, 다시 설치(갱신)', other: '다른 출처의 같은 이름 → 덮어씀', unknown: '출처 불명의 같은 이름 → 덮어씀(직접 만든 스킬이거나 로컬 설치)' };
+  console.log(`\n==> 설치 전 미리보기 (${scope ? '전역' : '현재 프로젝트'}, 이미 설치된 스킬 ${installed.length}개)`);
+  for (const st of ['new', 'same', 'other', 'unknown']) {
+    const list = rows.filter((r) => r.state === st);
+    console.log(`  ${label[st]}: ${list.length}개`);
+    if (st === 'other' || st === 'unknown') for (const r of list) console.log(`      ! ${r.name}  (설치될 출처: ${r.from}${st === 'other' ? `, 지금 출처: ${byName.get(r.name).source}` : ''})`);
+  }
+  if (unresolved.length) console.log(`  이름을 확인하지 못한 와일드카드 소스: ${unresolved.join(', ')} (네트워크 문제일 수 있습니다. 이 소스의 겹침은 알 수 없습니다)`);
+  const risky = rows.filter((r) => r.state === 'other' || r.state === 'unknown').length;
+  console.log(risky ? `\n[주의] ${risky}개는 같은 이름이 이미 있어 확인 없이 덮어써지고 백업되지 않습니다. 아껴 둔 것이 있으면 먼저 폴더를 복사해 두세요.` : '\n덮어쓰이는 기존 스킬은 없습니다.');
+  console.log('아무것도 설치하지 않았습니다.');
+  process.exit(0);
+}
 const failed = [], expectNames = [], expectSources = [];
 console.log('==> manifest/skills.list 의 스킬 설치');
 for (const raw of readFileSync(join(root, 'manifest', 'skills.list'), 'utf8').split(/\r?\n/)) {

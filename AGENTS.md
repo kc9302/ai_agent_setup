@@ -8,6 +8,7 @@
 사용자가 "세팅해줘", "스킬 설치해줘", "환경 맞춰줘", "보고 적용하자" 류의 요청을 했거나,
 새 환경에서 이 저장소를 처음 열었다면 **먼저 OS 를 확인한다.**
 
+- **처음 받는 사람·회사 노트북·기존 스킬이 있는 환경**: 먼저 `node scripts/install-skills.mjs --profile minimal --diff` 로 겹침을 미리 보고(같은 이름의 스킬은 확인·백업 없이 덮어써진다), 사용자가 원하면 `--profile minimal` 로 설치한다(스킬만, 도구·MCP·curl|sh 없음). 전체는 소유자가 요청할 때.
 - **Windows 또는 macOS**: `node scripts/install-skills.mjs` (PowerShell 이면 `node scripts\install-skills.mjs`). 아래 `bootstrap.sh` 는 bash 3.2(맥)·WSL 혼동 때문에 첫 선택이 아니다.
 - **Linux 또는 WSL**: 아래를 실행한다.
 

@@ -66,12 +66,18 @@ done
 if command -v node >/dev/null 2>&1; then
   info "checking that install-skills.mjs and bootstrap.sh install the same skills"
   node --check "$REPO_ROOT/scripts/install-skills.mjs" || fail "syntax error in scripts/install-skills.mjs"
-  a="$(node "$REPO_ROOT/scripts/install-skills.mjs" --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
-  b="$(bash "$REPO_ROOT/bootstrap.sh" --skills-only --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
-  if [ -z "$a" ] || [ "$a" != "$b" ]; then
-    fail "install-skills.mjs 와 bootstrap.sh 가 설치하는 스킬 명령이 다릅니다 (한쪽만 고쳤는지 확인)"
-    diff <(printf '%s\n' "$a") <(printf '%s\n' "$b") | head -6 >&2 || true
-  fi
+  for prof in full minimal; do
+    a="$(node "$REPO_ROOT/scripts/install-skills.mjs" --profile "$prof" --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
+    b="$(bash "$REPO_ROOT/bootstrap.sh" --skills-only --profile "$prof" --dry-run 2>&1 | grep -o 'npx -y skills add.*' || true)"
+    if [ -z "$a" ] || [ "$a" != "$b" ]; then
+      fail "install-skills.mjs 와 bootstrap.sh 가 설치하는 스킬 명령이 다릅니다 (profile=$prof, 한쪽만 고쳤는지 확인)"
+      diff <(printf '%s\n' "$a") <(printf '%s\n' "$b") | head -6 >&2 || true
+    fi
+  done
+  # minimal 은 도구·MCP·로컬 스킬이 없고 core 태그 소스만 설치해야 한다.
+  m="$(bash "$REPO_ROOT/bootstrap.sh" --profile minimal --dry-run 2>&1)"
+  if printf '%s' "$m" | grep -qE 'installing tools|claude mcp add|astral.sh|\(local\)'; then fail "--profile minimal 에 도구·MCP·로컬 스킬이 섞여 들어갑니다"; fi
+  if ! printf '%s' "$m" | grep -q 'npx -y skills add'; then fail "--profile minimal 이 아무 스킬도 설치하지 않습니다"; fi
 fi
 
 # README 의 숫자 요약과 스킬·도구 표는 manifest 에서 생성한다. 손으로 고쳐 어긋나면 여기서 막는다.

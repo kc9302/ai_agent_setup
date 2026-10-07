@@ -51,6 +51,18 @@
 
 ## 빠른 시작
 
+### 처음이라면: 작은 세트 + 설치 전 미리보기
+
+전체 설치는 스킬과 도구 21개를 모두 깝니다. 처음 받는 사람은 **스킬만, `core` 태그 소스만** 설치하는 `minimal` 로 시작하세요. 도구·MCP 서버 등록·`curl | sh` 가 없고 관리자 권한이 필요 없습니다. 다만 "작다"는 전체보다 작다는 뜻입니다: `core` 소스 중 와일드카드(`*`) 소스가 커서 **2026-10-07 측정으로 스킬 58개**가 설치됩니다. 더 줄이려면 `manifest/skills.list` 의 `core` 태그를 조정하세요.
+
+```
+node scripts/install-skills.mjs --profile minimal --diff    # 설치하지 않고 겹침만 미리 보기 (Windows·맥·Linux 공통)
+node scripts/install-skills.mjs --profile minimal           # 설치
+# bash 를 쓰는 환경:  bash bootstrap.sh --profile minimal --diff   →   bash bootstrap.sh --profile minimal
+```
+
+> **⚠ 같은 이름의 스킬이 이미 있으면 확인도 백업도 없이 덮어씁니다.** (skills CLI 의 동작이며, 직접 만든 스킬도 마찬가지입니다. 빈 환경에서 확인했습니다.) `--diff` 는 설치될 스킬마다 *신규 / 같은 출처 갱신 / 다른 출처·출처 불명(덮어씀)* 으로 나눠 보여줍니다. 아끼는 스킬이 "덮어씀"에 있으면 먼저 폴더를 복사해 두세요. 와일드카드(`*`) 소스는 이름을 알려고 소스를 받아 오므로 몇 초 걸리고 네트워크가 필요합니다. `minimal` 에는 이 저장소의 로컬 스킬(`skills/`)이 포함되지 않습니다. 필요한 것만 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y` 로 추가하세요.
+
 ### 스킬만, 어디서나 (Windows PowerShell · macOS · Linux 공통, 가장 단순)
 
 ```
@@ -121,6 +133,8 @@ npx skills ls -g                                                  # 설치된 �
 bash bootstrap.sh --project                 # 전역(~) 대신 현재 프로젝트에만 스킬 설치
 bash bootstrap.sh --agent claude-code       # 특정 에이전트만 (반복 가능). 기본은 자동 감지
 bash bootstrap.sh --tag core                # 태그가 core 인 항목만
+bash bootstrap.sh --profile minimal         # 작은 세트: 스킬만(core), 도구·MCP·curl|sh 없음 (full 이 기본)
+bash bootstrap.sh --diff                    # 설치하지 않고, 이미 가진 스킬과 겹치는/덮어쓸 것을 미리 보기 (Node 필요)
 bash bootstrap.sh --skills-only             # 스킬만 / --tools-only 도구만
 bash bootstrap.sh --dry-run                 # 실행할 명령만 출력
 AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이전트 지정

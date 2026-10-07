@@ -8,6 +8,8 @@
 #   bash bootstrap.sh --tag core      # 태그가 core 인 항목만
 #   bash bootstrap.sh --skills-only | --tools-only
 #   bash bootstrap.sh --dry-run       # 실행할 명령만 출력
+#   bash bootstrap.sh --profile minimal   # 작은 세트: 스킬만(core 태그), 도구·MCP·curl|sh 없음. 처음 받는 사람의 첫 명령
+#   bash bootstrap.sh --diff          # 설치하지 않고, 이미 가진 스킬과 겹치는/덮어쓸 것을 미리 보여준다 (Node 필요)
 #   bash bootstrap.sh --wsl           # WSL 안에 설치하는 것이 맞을 때 (WSL 홈에 .claude 가 없고 Windows 쪽에만 있으면 기본은 멈춘다)
 #
 # 스킬은 skills.list 에 적힌 커밋에 고정해 설치하고(모든 환경에서 같은 내용), 설치가 끝나면
@@ -41,6 +43,8 @@ DO_SKILLS=1
 DO_TOOLS=1
 DRY_RUN=0
 ALLOW_WSL="${AI_SETUP_ALLOW_WSL:-0}"
+PROFILE="full"
+DIFF=0
 
 # 환경변수로도 에이전트 지정 가능: AI_SETUP_AGENTS="claude-code,codex"
 if [ -n "${AI_SETUP_AGENTS:-}" ]; then
@@ -59,11 +63,34 @@ while [ $# -gt 0 ]; do
     --tools-only)   DO_SKILLS=0 ;;
     --dry-run|-n)   DRY_RUN=1 ;;
     --wsl)          ALLOW_WSL=1 ;;
+    --profile)      shift; PROFILE="${1:-}" ;;
+    --diff)         DIFF=1 ;;
     -h|--help)      usage; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
   shift
 done
+
+case "$PROFILE" in
+  full) ;;
+  minimal)
+    # 작은 세트: 스킬만, core 태그. 도구·MCP 등록·curl|sh 가 없고 관리자 권한이 필요 없다. 이 저장소의 로컬 스킬(skills/)은 core 태그가 없어 포함되지 않는다.
+    [ -z "$TAG" ] || die "--profile minimal 은 --tag 와 함께 쓸 수 없습니다 (minimal 은 core 태그)"
+    [ "$DO_SKILLS" = 1 ] || die "--profile minimal 은 --tools-only 와 함께 쓸 수 없습니다"
+    DO_TOOLS=0; TAG="core" ;;
+  *) die "알 수 없는 프로필: ${PROFILE:-(빈 값)} (full | minimal)" ;;
+esac
+
+# --diff 는 설치하지 않는다. 기존 스킬과의 겹침은 skills ls --json 이 필요해 Node 설치기가 맡는다.
+if [ "$DIFF" = 1 ]; then
+  dargs=(--diff)
+  [ -n "$SCOPE_FLAG" ] || dargs+=(--project)
+  [ -z "$TAG" ] || dargs+=(--tag "$TAG")
+  [ "$PROFILE" = "full" ] || dargs+=(--profile "$PROFILE")
+  for a in "${AGENTS[@]+"${AGENTS[@]}"}"; do dargs+=(--agent "$(trim "$a")"); done
+  command -v node >/dev/null 2>&1 || die "--diff 는 node 가 필요합니다. https://nodejs.org (22.20+)"
+  exec node "$(dirname "${BASH_SOURCE[0]}")/scripts/install-skills.mjs" "${dargs[@]}"
+fi
 
 run() {
   if [ "$DRY_RUN" = 1 ]; then printf '%s$ %s%s\n' "$C_DIM" "$*" "$C_RESET"; return 0; fi
@@ -88,6 +115,10 @@ info "ai_agent_setup bootstrap"
 printf '    scope : %s\n' "$([ -n "$SCOPE_FLAG" ] && echo global || echo project)"
 printf '    agents: %s\n' "$([ ${#AGENTS[@]} -gt 0 ] && echo "${AGENTS[*]}" || echo '(auto-detect)')"
 printf '    tag   : %s\n' "${TAG:-(all)}"
+printf '    profile: %s\n' "$PROFILE"
+if [ "$PROFILE" = "minimal" ]; then
+  printf '    minimal: 스킬만 설치합니다. 도구·MCP 서버 등록·curl|sh 는 하지 않고 관리자 권한이 필요 없습니다. 기존에 같은 이름의 스킬이 있으면 덮어쓰므로 먼저 `bash bootstrap.sh --profile minimal --diff` 로 확인할 수 있습니다.\n'
+fi
 [ "$DRY_RUN" = 1 ] && printf '    mode  : dry-run\n'
 
 # Windows(Git Bash/MSYS/Cygwin)에서도 도구는 시도한다(실제로 대부분 설치됨). 조건이 안 맞는 도구(graft 네이티브 빌드,
