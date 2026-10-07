@@ -178,6 +178,9 @@ if [ "$DO_SKILLS" = 1 ]; then
         warn "failed: local skills"; FAILED+=("skill:local")
       else
         for n in "${local_names[@]}"; do EXPECT_NAMES+=("local:$n"); done
+        if [ "$DRY_RUN" != 1 ] && [ "$SCOPE_FLAG" = "-g" ]; then
+          printf '  %s참고:%s 위 요약의 "✗ … PromptScript: PromptScript does not support global skill installation" 줄은 정상입니다(전역 설치를 지원하지 않는 에이전트를 건너뛴다는 skills CLI 안내). 결과에는 영향이 없습니다.\n' "$C_DIM" "$C_RESET"
+        fi
       fi
     fi
   fi

@@ -74,6 +74,10 @@ if command -v node >/dev/null 2>&1; then
   fi
 fi
 
+# README 의 숫자 요약과 스킬·도구 표는 manifest 에서 생성한다. 손으로 고쳐 어긋나면 여기서 막는다.
+info "checking README generated blocks against manifest"
+bash "$REPO_ROOT/scripts/gen-docs.sh" --check >/dev/null || fail "README.md 가 manifest 와 다릅니다 (bash scripts/gen-docs.sh 로 다시 쓰세요)"
+
 # radar.sh 는 후보 데이터(candidates.json)를 만든다. 제외 규칙과 문자열 정리가 깨지지 않았는지 네트워크 없이 확인한다.
 if command -v jq >/dev/null 2>&1; then
   info "testing radar.sh against offline fixtures"
