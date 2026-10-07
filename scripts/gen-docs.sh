@@ -40,8 +40,8 @@ gen_summary() {
   for f in "$REPO_ROOT"/skills/*/SKILL.md; do [ -f "$f" ] && n_local=$((n_local+1)); done
 
   printf '> **이 저장소가 지금 관리하는 것** (manifest 에서 자동 생성):\n'
-  printf '> 외부 스킬 소스 **%d개**(이름을 지정한 스킬 %d개 + 전체를 받는 `*` 소스 %d개), 이 저장소가 직접 정의한 로컬 스킬 **%d개**, 도구 **%d개**.\n' \
-    "$n_src" "$n_named" "$n_wild" "$n_local" "$n_tools"
+  printf '> 외부 스킬 소스 **%d개**(스킬을 이름으로 지정한 소스 %d개 — 합쳐 스킬 %d개 — + 스킬 전체를 받는 `*` 소스 %d개), 이 저장소가 직접 정의한 로컬 스킬 **%d개**, 도구 **%d개**.\n' \
+    "$n_src" "$((n_src - n_wild))" "$n_named" "$n_wild" "$n_local" "$n_tools"
   printf '>\n'
   printf '> **`--tag core`(작은 세트)**: 스킬 소스 %s, 도구 %s. 로컬 스킬은 포함되지 않습니다.\n' \
     "$(printf '`%s`, ' "${core_src[@]}" | sed 's/, $//')" \

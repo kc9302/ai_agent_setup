@@ -6,7 +6,7 @@
 
 <!-- BEGIN:generated:summary -->
 > **이 저장소가 지금 관리하는 것** (manifest 에서 자동 생성):
-> 외부 스킬 소스 **23개**(이름을 지정한 스킬 52개 + 전체를 받는 `*` 소스 10개), 이 저장소가 직접 정의한 로컬 스킬 **5개**, 도구 **21개**.
+> 외부 스킬 소스 **23개**(스킬을 이름으로 지정한 소스 13개 — 합쳐 스킬 52개 — + 스킬 전체를 받는 `*` 소스 10개), 이 저장소가 직접 정의한 로컬 스킬 **5개**, 도구 **21개**.
 >
 > **`--tag core`(작은 세트)**: 스킬 소스 `anthropics/skills`, `obra/superpowers`, `addyosmani/agent-skills`, `forrestchang/andrej-karpathy-skills`, `DietrichGebert/ponytail`, 도구 `skills-cli`, `uv`. 로컬 스킬은 포함되지 않습니다.
 <!-- END:generated:summary -->
@@ -21,7 +21,7 @@
 | 설치기가 쓰는 skills CLI | **고정됨.** `manifest/skills-cli.version` (`npx -y skills@<버전>`) |
 | MCP 서버 등록 (leann, context7, playwright) | 등록하는 패키지는 고정(`npx -y 패키지@버전`)이지만, 이미 등록돼 있으면 건너뛰므로 **다른 버전으로 등록된 것은 바꾸지 않습니다**. `claude` CLI 가 있을 때만 등록됩니다 |
 | 줄바꿈 | 설치기가 skills CLI 의 git 에 `core.autocrlf=false` 를 강제하고, 이 저장소는 `.gitattributes` 로 체크아웃을 LF 로 고정합니다. Windows 의 Git 기본값(`autocrlf=true`)이면 받은 스킬이 CRLF 가 되어 Linux·맥과 다른 바이트로 설치되고, 스킬에 든 `.sh` 는 bash 에서 깨졌습니다(CI 의 세 OS 비교에서 확인). **이 수정 전에 Windows 에 설치한 스킬은 CRLF 일 수 있으니 설치기를 다시 실행하세요** |
-| 고정되지 않는 것 | 고정한 패키지의 **전이 의존성**(그 패키지가 끌어오는 다른 패키지)과, 업스트림이 버전·커밋을 지우는 경우. 후자는 아직 감시하지 않습니다 |
+| 고정되지 않는 것 | 고정한 패키지의 **전이 의존성**(그 패키지가 끌어오는 다른 패키지)과, 업스트림이 버전·커밋을 지우는 경우. 후자는 막을 수 없고, 주 1회 `pin-health` 가 받을 수 있는지만 점검해 이슈로 알립니다(아래 "고정한 것이 사라지지 않았는지 확인하기") |
 
 그래서 **같은 버전의 같은 패키지가 깔린다**까지는 말할 수 있지만, 전이 의존성까지 비트 단위로 같다는 뜻은 아닙니다. 버전을 올릴 때는 `manifest/tools.list` 의 설치 명령과 `check` 의 버전을 함께 고치고(`skills CLI` 는 `manifest/skills-cli.version` 도), `bash scripts/validate.sh` 가 버전 없이 넣은 도구와 해시 확인 없이 받아 실행하는 명령을 막아 줍니다. 고정할 수 없는 도구는 `tags` 에 `unpinned` 를, 설명에 `미고정: 사유` 를 적어야 통과합니다.
 
@@ -31,7 +31,7 @@
 |---|---|
 | Linux 빈 환경 + Claude Code | 검증됨. `bootstrap.sh` 전체, `verify.sh`, 2차 실행(멱등), Node 설치기를 반복해서 확인했습니다 |
 | GitHub Actions (ubuntu / macOS / Windows) | 검증됨. 세 OS 에서 Node 설치기 dry-run·로컬 스킬 실제 설치·와일드카드 소스 1개 실제 설치. macOS 러너에서는 `bootstrap.sh` 전체(스킬 + 도구)를 실제로 실행하고 `verify.sh`·2차 실행까지 확인합니다 |
-| 소유자의 Windows PC | 소유자 보고: Git Bash `bootstrap.sh` 로 스킬과 도구 21개 중 19개 설치, PowerShell Node 설치기로 스킬 설치 정상. 이후 `graft`·`im-not-ai` 처리와 Node 사전 점검을 바꿨고 **그 뒤의 재실행 기록은 아직 없습니다** |
+| 소유자의 Windows PC | 소유자 보고: Git Bash `bootstrap.sh` 로 스킬과 도구 21개 중 19개 설치(실패한 2개는 `graft` 와 `im-not-ai`, 이후 처리를 바꿈), PowerShell Node 설치기로 스킬 설치 정상. 이후 `graft`·`im-not-ai` 처리와 Node 사전 점검을 바꿨고 **그 뒤의 재실행 기록은 아직 없습니다** |
 | 세 OS 의 설치 결과 비교 | CI 가 ubuntu·macOS·Windows 에서 같은 설치기로 스킬 전체를 깔고 설치된 파일을 직접 해시해 비교합니다(`scripts/snapshot.mjs --diff`). 다르면 CI 가 실패합니다. 이 비교가 Windows 의 CRLF 문제를 찾아냈습니다 |
 | 실제 맥북 | **미검증.** 맥은 CI 러너에서만 확인했습니다 |
 | 실제 WSL | **미검증.** WSL 오설치 감지 로직만 시험했습니다 |
@@ -45,7 +45,7 @@
 **ai_agent_setup** installs Agent Skills and CLI tools for AI coding agents from a manifest, and checks afterwards that every skill you defined is really installed.
 
 - Skill sources are pinned to 40-character commits, so every machine gets the same content. After installing, the installer compares the skill *names* against `skills ls` because the skills CLI silently skips names that do not match.
-- CLI tools (`manifest/tools.list`) are pinned to exact versions (npm `@x.y.z`, uv `==x.y.z`, git commits, install scripts checked against a sha256). Transitive dependencies are not pinned, and an upstream deleting a pinned version is not monitored yet.
+- CLI tools (`manifest/tools.list`) are pinned to exact versions (npm `@x.y.z`, uv `==x.y.z`, git commits, install scripts checked against a sha256). Transitive dependencies are not pinned, and an upstream deleting a pinned version or commit cannot be prevented; a weekly `pin-health` workflow only checks that every pin can still be fetched and opens an issue if not.
 - Cross-platform path: `git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git`, then `node scripts/install-skills.mjs` (Node.js 22.20+ and git; skills only). `bash bootstrap.sh` installs skills and tools on Linux, macOS, WSL and Git Bash.
 - Verified: a clean Linux environment with Claude Code, and GitHub Actions runners (ubuntu, macOS, Windows). Not verified: a real MacBook, real WSL, Codex, Cursor, Gemini CLI, OpenCode.
 - Fork it and replace `manifest/skills.list` and `manifest/tools.list` with your own lists. `bash scripts/validate.sh` checks the format.
@@ -60,18 +60,22 @@
 전체 설치는 스킬과 도구 21개를 모두 깝니다. 처음 받는 사람은 **스킬만, `core` 태그 소스만** 설치하는 `minimal` 로 시작하세요. 도구·MCP 서버 등록·`curl | sh` 가 없고 관리자 권한이 필요 없습니다. 다만 "작다"는 전체보다 작다는 뜻입니다: `core` 소스 중 와일드카드(`*`) 소스가 커서 **2026-10-07 측정으로 스킬 58개**가 설치됩니다. 더 줄이려면 `manifest/skills.list` 의 `core` 태그를 조정하세요.
 
 ```
+git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git
+cd ai_agent_setup
 node scripts/install-skills.mjs --profile minimal --diff    # 설치하지 않고 겹침만 미리 보기 (Windows·맥·Linux 공통)
 node scripts/install-skills.mjs --profile minimal           # 설치
 # bash 를 쓰는 환경:  bash bootstrap.sh --profile minimal --diff   →   bash bootstrap.sh --profile minimal
 ```
 
+용어: **`core`** 는 매니페스트의 태그(작은 세트의 기준)이고, **`--profile minimal`** 은 "`core` 소스의 스킬만, 도구·MCP·로컬 스킬 없이" 설치하는 프로필입니다. `--tag core` 는 `core` 항목을 **도구까지 포함해** 설치하므로 `minimal` 과 다릅니다.
+
 > **⚠ 같은 이름의 스킬이 이미 있으면 확인도 백업도 없이 덮어씁니다.** (skills CLI 의 동작이며, 직접 만든 스킬도 마찬가지입니다. 빈 환경에서 확인했습니다.) `--diff` 는 설치될 스킬마다 *신규 / 같은 출처 갱신 / 다른 출처·출처 불명(덮어씀)* 으로 나눠 보여줍니다. 아끼는 스킬이 "덮어씀"에 있으면 먼저 폴더를 복사해 두세요. 와일드카드(`*`) 소스는 이름을 알려고 소스를 받아 오므로 몇 초 걸리고 네트워크가 필요합니다. `minimal` 에는 이 저장소의 로컬 스킬(`skills/`)이 포함되지 않습니다. 필요한 것만 `npx skills add kc9302/ai_agent_setup --skill <이름> -g -y` 로 추가하세요.
 
-### 스킬만, 어디서나 (Windows PowerShell · macOS · Linux 공통, 가장 단순)
+### 스킬만 전부, 어디서나 (Windows PowerShell · macOS · Linux 공통, 가장 단순)
+
+위의 클론 폴더에서(`minimal` 이 아니라 **스킬 전부**를 받습니다):
 
 ```
-git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git
-cd ai_agent_setup
 node scripts/install-skills.mjs
 ```
 
@@ -88,7 +92,8 @@ git clone --depth 1 --branch main https://github.com/kc9302/ai_agent_setup.git ~
   || { git -C ~/.ai_agent_setup fetch --depth 1 origin main && git -C ~/.ai_agent_setup reset --hard FETCH_HEAD; }
 bash ~/.ai_agent_setup/bootstrap.sh
 
-# 또는 클론 없이 한 줄
+# 클론 없이 한 줄: 편하지만 "그 순간의 main" 스크립트를 바로 실행하므로, 이 저장소가 내세우는 고정·검토와는 맞지 않습니다.
+# 위의 클론 후 실행을 권장하고, 이 한 줄은 일회용 컨테이너처럼 어차피 믿고 쓰는 환경에서만 쓰세요.
 curl -fsSL https://raw.githubusercontent.com/kc9302/ai_agent_setup/main/bootstrap.sh | bash
 ```
 
@@ -110,17 +115,15 @@ AI 에이전트에게 맡기려면 이렇게만 말하면 됩니다:
 | `skill-radar` | 매일 갱신되는 인기·신규 스킬 후보를 카드로 보여주고, 요청할 때만 설치를 돕는다 |
 | `persona-sim-review` | 가상 인물 여러 명에게 출시·공개 가능 여부를 평가받는다 |
 
+**이미 Windows 에 설치해 두었다면:** 줄바꿈 수정(`core.autocrlf=false` 강제) 전에 받은 스킬은 CRLF 일 수 있습니다. 클론을 최신으로 맞추고 설치기를 다시 실행하면 같은 이름이 LF 로 덮어써집니다. 확인은 `node scripts/snapshot.mjs --skills-only` 의 `content_lf` 와 `content` 가 같은지로 합니다.
+
 **Windows 에서는** 두 가지 중 하나를 쓰세요.
-- **Git Bash 에서 `bash bootstrap.sh`**: 스킬과 도구를 한 번에 설치합니다. 소유자의 Windows 실행에서 스킬과 도구 21개 중 19개가 설치된 것이 보고됐습니다(위 "어디서 검증됐나" 참고). 빌드 도구가 없으면 `graft` 는 네이티브 모듈 빌드가 실패해도 명령이 동작하면 경고만 남기고, 심볼릭 링크가 필요한 `im-not-ai` 는 개발자 모드와 `MSYS=winsymlinks:nativestrict` 가 없으면 "건너뜀"으로 표시됩니다.
+- **Git Bash 에서 `bash bootstrap.sh`**: 스킬과 도구를 한 번에 설치합니다. 소유자의 Windows 실행에서 스킬과 도구 21개 중 19개(실패 2개는 `graft`·`im-not-ai`)가 설치된 것이 보고됐습니다(위 "어디서 검증됐나" 참고). 빌드 도구가 없으면 `graft` 는 네이티브 모듈 빌드가 실패해도 명령이 동작하면 경고만 남기고, 심볼릭 링크가 필요한 `im-not-ai` 는 개발자 모드와 `MSYS=winsymlinks:nativestrict` 가 없으면 "건너뜀"으로 표시됩니다.
 - **PowerShell 에서 Node 설치기**(아래): 스킬만 설치합니다. PowerShell 에서 `bash` 를 치면 Git Bash 가 아니라 WSL 의 bash 가 실행돼 스킬이 Windows 가 아니라 WSL 안에 설치될 수 있습니다. `bootstrap.sh` 는 이를 감지해(WSL 홈에는 `.claude` 가 없고 Windows 쪽에만 있을 때) 멈추고 안내합니다. WSL 안에 설치하려면 `--wsl`. PowerShell 에서 Git Bash 를 쓰려면 `& "$env:ProgramFiles\Git\bin\bash.exe" bootstrap.sh`.
 
 맥의 기본 bash(3.2)가 걱정될 때도 Node 설치기를 쓸 수 있습니다. Node 설치기는 `bootstrap.sh` 의 스킬 단계와 같은 일을 합니다(매니페스트 스킬 전부 + 위 로컬 스킬 + 설치 후 이름 확인). 도구(`manifest/tools.list`)는 설치하지 않으므로 도구가 필요하면 `bootstrap.sh` 를 쓰세요. 설치 후에는 **Claude Code 를 새 세션으로 다시 열어야** 새 스킬이 보입니다.
 
-```bash
-git clone --depth 1 https://github.com/kc9302/ai_agent_setup.git
-cd ai_agent_setup
-node scripts/install-skills.mjs               # 전부 설치하고 확인 (--dry-run 으로 명령만 보기, --project 로 현재 프로젝트에만)
-```
+Node 설치기의 옵션은 `--dry-run`(명령만 보기), `--project`(현재 프로젝트에만), `--profile minimal`, `--diff` 입니다.
 
 스킬 하나만 필요하면:
 
@@ -186,7 +189,7 @@ AI_SETUP_AGENTS=claude-code,codex bash bootstrap.sh   # 환경변수로 에이�
 | `skills-cli` | 1.7.1 | core | Agent Skills 설치 CLI (skills.sh). bootstrap 이 스킬 설치에 사용 |
 | `agent-browser` | 0.38.2 | browser | AI 에이전트용 브라우저 자동화 CLI (Vercel Labs) |
 | `uv` | 0.12.23 | python,core | 빠른 Python 패키지/도구 관리자 (Astral). 공식 설치 스크립트가 막히면 pip 로 폴백. leann·markitdown 설치에 사용 |
-| `leann` | 0.3.8 | rag,search,python | 저장공간 97% 절감 로컬 벡터 DB. 코드/문서/메일을 시맨틱 검색·RAG (StarTrail-org/LEANN) |
+| `leann` | 0.3.8 | rag,search,python | 저장공간 97% 절감(업스트림 주장, 미검증) 로컬 벡터 DB. 코드/문서/메일을 시맨틱 검색·RAG (StarTrail-org/LEANN) |
 | `leann-mcp` | — | rag,search,mcp | LEANN 을 Claude Code MCP 서버(leann-server)로 등록. leann 이 설치된 경우에만 등록. 코드베이스 시맨틱 검색을 에이전트가 직접 사용 |
 | `markitdown` | 0.1.8 | docs,python | PDF/Word/PPT/Excel/HTML 등을 Markdown 으로 변환하는 CLI (Microsoft) |
 | `context7-mcp` | 4.2.0 | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7) |
@@ -296,5 +299,5 @@ npx skills add kc9302/ai_agent_setup -g
 
 - **매니페스트가 유일한 진실.** 머신에 손으로 깔지 말고 매니페스트를 고쳐 커밋한다.
 - **별 수는 기록하지 않는다.** 금방 낡기 때문에 `stars.sh` 로 실시간 조회한다.
-- **의존성 최소.** bash + git + node 만 있으면 동작한다. jq/yq 불필요 (discover 만 jq 사용).
+- **필수 의존성은 적게.** 스킬만 설치할 때는 git + Node 22.20+ 만 있으면 된다(Windows PowerShell 포함). 도구까지 깔 때는 bash 와 각 도구의 설치기(npm, uv 등)가 필요하다. jq 는 discover·radar 에만 쓴다.
 - **부분 실패 허용.** 하나가 실패해도 나머지는 계속 설치하고, 마지막에 실패 목록을 보여준다.
