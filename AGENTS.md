@@ -38,7 +38,7 @@ bash scripts/status.sh       # 설치 결과 확인
 | `scripts/snapshot.mjs` | 설치된 스킬·도구의 JSON 스냅샷(`--skills-only`), `--diff a.json b.json` 로 두 환경 비교. "같은 환경" 주장은 이 스냅샷으로 근거를 남긴다 |
 | `scripts/pin-alive.sh` | 고정한 커밋·버전·스크립트가 지금도 받아지는지 확인(주 1회 `pin-health` workflow). 실패하면 이슈가 열린다 |
 | `scripts/fetch-verified.sh` | 받은 스크립트를 sha256 확인 후 실행. `tools.list` 에서 `curl … \| sh` 대신 쓴다 |
-| `scripts/gen-docs.sh`  | README.md 의 숫자 요약과 스킬·도구 표를 manifest 에서 다시 쓴다(`--check` 는 최신 여부만). 매니페스트를 고치면 실행해서 README 를 갱신한다. 표를 손으로 고치지 않는다 |
+| `scripts/gen-docs.sh`  | README.md 의 숫자 요약과 CATALOG.md 의 스킬·도구 표를 manifest 에서 다시 쓴다(`--check` 는 최신 여부만). 매니페스트를 고치면 실행해서 README 를 갱신한다. 표를 손으로 고치지 않는다 |
 | `scripts/validate.sh`  | 매니페스트/스크립트 형식 검사. 고정되지 않은 소스는 오류. 커밋 전 필수 |
 | `scripts/pin.sh`       | 스킬 소스를 커밋에 고정(`--fill`)하고 올린다(`--update`). 인자 없이 실행하면 비교표만 출력 |
 | `scripts/verify.sh`    | 정의한 스킬이 이 환경에 **실제로 전부** 설치됐는지 확인 (설치는 하지 않음) |
@@ -55,7 +55,7 @@ bash scripts/status.sh       # 설치 결과 확인
    **이름은 폴더 이름이 아니라 `SKILL.md` 의 `name:` 값**이다(예: 폴더 `react-best-practices` 의 이름은 `vercel-react-best-practices`).
    틀리면 skills CLI 가 오류 없이 건너뛴다. `npx skills add owner/repo --list` 로 이름을 확인한다.
 3. `bash scripts/pin.sh --fill` 로 커밋에 고정한다. PR 은 `.github/pull_request_template.md` 의 "고정 갱신·추가"(비교 링크, 읽은 범위, 새 실행 코드)를 채운다. **스킬 내용을 읽고** 확인한 커밋인지 본다(스킬은 에이전트가 따르는 지시문이다).
-4. `bash scripts/gen-docs.sh` 로 README 의 표·숫자를 갱신하고, `bash scripts/validate.sh` 가 통과해야 한다(README 가 manifest 와 다르면 실패한다).
+4. `bash scripts/gen-docs.sh` 로 README 의 숫자 요약과 CATALOG 의 표를 갱신하고, `bash scripts/validate.sh` 가 통과해야 한다(README·CATALOG 가 manifest 와 다르면 실패한다).
 5. `bash bootstrap.sh --dry-run` 으로 실행될 명령을 확인하고, 실제 설치까지 해 본다. 설치 후 `bootstrap.sh` 가 이름으로 지정한 스킬이
    전부 설치됐는지 스스로 검증한다. 설치 없이 다시 확인하려면 `bash scripts/verify.sh`.
 6. `CATALOG.md` 에 "무엇 / 왜 / 사용 예" 절을 추가한다.

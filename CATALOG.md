@@ -5,6 +5,72 @@
 
 ---
 
+## 한눈에 보기 (manifest 에서 자동 생성)
+
+아래 두 표는 `manifest/` 에서 `bash scripts/gen-docs.sh` 가 만든다. 손으로 고치지 않는다(`validate.sh` 가 어긋나면 실패). 항목별 설명은 이 표 아래의 절에 있다.
+
+### 스킬 소스 (`manifest/skills.list`)
+
+<!-- BEGIN:generated:skills -->
+| 저장소 | 설치 스킬 | 태그 | 설명 |
+|---|---|---|---|
+| [anthropics/skills](https://github.com/anthropics/skills) | docx, pdf, pptx, xlsx, skill-creator, webapp-testing, doc-coauthoring, mcp-builder, frontend-design, theme-factory, canvas-design, web-artifacts-builder | official,docs,design,core | Anthropic 공식 스킬. 문서 생성(docx/pdf/pptx/xlsx)·공동 문서 작성, MCP 서버 제작, 프론트엔드/테마/캔버스 디자인, 웹 아티팩트, 스킬 제작, 웹앱 테스트 |
+| [obra/superpowers](https://github.com/obra/superpowers) | 전체 | methodology,core | TDD·브레인스토밍·계획 등 개발 방법론 스킬 프레임워크 |
+| [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | 전체 | methodology,core | Addy Osmani 의 프로덕션급 엔지니어링 스킬 모음 (spec-driven, debugging, code-review 등) |
+| [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 전체 | behavior,core | Karpathy 가 지적한 LLM 코딩 함정을 피하도록 하는 행동 규칙 스킬 |
+| [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | 전체 | methodology,core | "가장 게으른 동작하는 해법" 강제. stdlib·내장 기능 우선, 과잉 설계 방지. review/audit/debt 스킬 포함 |
+| [tt-a1i/archify](https://github.com/tt-a1i/archify) | 전체 | diagram,visual | 설명·코드를 인터랙티브 아키텍처/시퀀스/데이터플로우 다이어그램(HTML)으로 변환 |
+| [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 전체 | design,frontend | UI/UX 디자인 인텔리전스 (ui-ux-pro-max) + design-system, ui-styling, banner-design, slides(HTML 발표자료), brand, design |
+| [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | vercel-react-best-practices, vercel-composition-patterns, writing-guidelines | frontend,web | Vercel 의 React/작문 가이드라인 스킬. web-design-guidelines 는 실행마다 원격 규칙을 내려받아 고정되지 않으므로 이 저장소의 skills/web-design-guidelines(고정 사본)로 대체 |
+| [blader/humanizer](https://github.com/blader/humanizer) | 전체 | writing | AI 특유의 말투(not X but Y, 강조 마무리, 억지 3단 나열 등 26개 패턴)를 제거해 사람이 쓴 글처럼 고침 (영어) |
+| [huggingface/skills](https://github.com/huggingface/skills) | hf-cli, huggingface-llm-trainer, huggingface-datasets, huggingface-papers, huggingface-gradio, huggingface-trackio, huggingface-local-models, huggingface-community-evals, huggingface-spaces | ml | Hugging Face 공식 스킬. Hub CLI, TRL 학습, 데이터셋, 논문, Gradio, 실험 추적, 로컬 모델, 평가, Spaces 배포 |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | grill-me, handoff, to-spec, writing-for-agents | methodology,productivity | Matt Pocock 스킬 중 superpowers 와 안 겹치는 것만: 집요한 질문으로 설계 검증(grill-me), 세션 인수인계(handoff), 스펙 작성(to-spec), 에이전트용 문서 작성법(writing-for-agents) |
+| [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | 전체 | diagram,visual | 편집 디자인 품질의 다이어그램 42종 (HTML/SVG/PNG). draw.io/Mermaid/Excalidraw 가져오기, 브랜드 색상 반영 |
+| [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | design-taste-frontend | design,frontend | 뻔한 AI식 UI 를 피하는 프론트엔드 디자인 스킬. 13개 중 기본 1개만 (ui-ux-pro-max 와 겹치지 않게) |
+| [trailofbits/skills](https://github.com/trailofbits/skills) | differential-review, sharp-edges, property-based-testing, semgrep-rule-creator | security,review,testing | Trail of Bits 보안 스킬 중 범용 4개: 변경분 보안 리뷰, 위험한 API/설정 탐지, 속성 기반 테스트, Semgrep 룰 작성 (블록체인·퍼징 전용은 제외) |
+| [muratcankoylan/Agent-Skills-for-Context-Engineering](https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering) | context-fundamentals, context-degradation, context-compression, context-optimization, multi-agent-patterns, memory-systems, tool-design, filesystem-context, evaluation | context,agents,methodology,full-depth | 컨텍스트 엔지니어링 선별 9개: 컨텍스트 윈도우 원리·열화 진단·압축·최적화, 멀티 에이전트 패턴, 메모리, 도구 설계, 파일 기반 컨텍스트, 에이전트 평가 |
+| [hamelsmu/evals-skills](https://github.com/hamelsmu/evals-skills) | 전체 | ml,evals | Hamel Husain 의 LLM 평가 스킬 7개: 오류 분석, 합성 데이터, 심판 프롬프트 작성·검증, RAG 평가, 리뷰 UI, 평가 감사 |
+| [addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) | 전체 | web,quality,frontend | Lighthouse 기반 웹 품질 스킬 6개: 접근성(WCAG 2.2), Core Web Vitals, 성능, SEO, 모범 사례, 통합 품질 감사 |
+| [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | security-audit | security,review | Cloudflare 의 코드베이스 보안 감사 스킬: 정찰→공격 유형별 탐색→검증→JSON 보고서(스키마 검증 스크립트 포함). 웹/RPC/클라우드/공급망/AI·LLM 등 영역별 체크리스트 |
+| [emilkowalski/skills](https://github.com/emilkowalski/skills) | emil-design-eng, animate, review-animations, break-ui, animation-vocabulary | design,frontend,animation | Emil Kowalski 의 UI 마감·모션 스킬 중 웹용 5개: 디자인 엔지니어링 철학, 애니메이션 설계, 모션 코드 리뷰, 최악 데이터로 UI 깨보기, 모션 용어 사전 (Swift/Expo/모바일 전용은 제외) |
+| [Jakeschincariol/arena-skill](https://github.com/Jakeschincariol/arena-skill) | arena | agents,methodology,heavy | 같은 작업을 서브에이전트 N개(기본 100, --quick 16)에게 맡겨 서로 공격·방어시키는 토너먼트로 해법 하나를 남김. 기본 100개는 서브에이전트 595회 호출이라 비용이 크다 — 일상에는 --quick(91회) 권장 |
+| [opendataloader-project/opendataloader-pdf](https://github.com/opendataloader-project/opendataloader-pdf) | odl-pdf | pdf,docs | opendataloader-pdf(ODL)로 PDF 를 Markdown/JSON/HTML 로 추출하는 절차: 설치된 --help 를 먼저 읽고, 최소 명령을 만들고, 종료 코드 0 이 곧 성공이 아님을 전제로 추출 결과를 검증한다. 런타임(Java 11+ 와 pip/npm 패키지)은 따로 설치해야 한다 |
+| [mikehasa/golive-skill](https://github.com/mikehasa/golive-skill) | golive | deploy,devops | 에이전트가 만든 앱을 사용자 본인의 호스팅·DB·인증·결제·이메일·DNS 계정에서 실서비스로 올리는 절차. 계획을 사람이 승인하기 전에는 계정에 쓰지 않는다 (알파 0.1.0-alpha.8) |
+| [QingYunA/answer-me-with-html](https://github.com/QingYunA/answer-me-with-html) | answer-me-with-html | docs,visual | 복잡한 답을 Markdown 초안으로 쓰면 번들 CLI 가 한 페이지 HTML 설명서(템플릿, SVG 자동 배치, 문체 점검)로 만들어 준다. 상시 모드 플러그인은 포함하지 않는다 |
+<!-- END:generated:skills -->
+
+현재 별 수 보기: `bash scripts/stars.sh`
+
+### 도구 (`manifest/tools.list`)
+
+<!-- BEGIN:generated:tools -->
+| 도구 | 고정 버전 | 태그 | 설명 |
+|---|---|---|---|
+| `skills-cli` | 1.7.1 | core | Agent Skills 설치 CLI (skills.sh). bootstrap 이 스킬 설치에 사용 |
+| `agent-browser` | 0.38.2 | browser | AI 에이전트용 브라우저 자동화 CLI (Vercel Labs) |
+| `uv` | 0.12.23 | python,core | 빠른 Python 패키지/도구 관리자 (Astral). 공식 설치 스크립트가 막히면 pip 로 폴백. leann·markitdown 설치에 사용 |
+| `leann` | 0.3.8 | rag,search,python | 저장공간 97% 절감(업스트림 주장, 미검증) 로컬 벡터 DB. 코드/문서/메일을 시맨틱 검색·RAG (StarTrail-org/LEANN) |
+| `leann-mcp` | — | rag,search,mcp | LEANN 을 Claude Code MCP 서버(leann-server)로 등록. leann 이 설치된 경우에만 등록. 코드베이스 시맨틱 검색을 에이전트가 직접 사용 |
+| `markitdown` | 0.1.8 | docs,python | PDF/Word/PPT/Excel/HTML 등을 Markdown 으로 변환하는 CLI (Microsoft) |
+| `context7-mcp` | 4.2.0 | mcp,docs | 라이브러리 최신 공식 문서를 에이전트에 실시간 제공하는 MCP (Upstash Context7) |
+| `playwright-mcp` | 0.0.83 | mcp,browser | 에이전트가 실제 브라우저를 조작·검증하는 MCP (Microsoft Playwright) |
+| `graphify` | 0.9.79 | code,graph,python | 코드·문서를 질의 가능한 지식 그래프로 변환 (tree-sitter, 벡터 DB 불필요). graphify install 로 /graphify 스킬 등록 (PyPI 패키지명은 graphifyy) |
+| `llmfit` | 1.1.16 | ml,local-llm,python | 내 하드웨어(CPU/RAM/GPU)에서 돌아가는 오픈 LLM 을 양자화별로 추천 |
+| `kordoc` | 4.19.2 | docs,korean | 한국 문서 HWP·HWPX·PDF·Office·이미지(OCR) 를 Markdown/JSON 으로 변환 |
+| `officecli` | 1.0.153 | docs,office | AI 에이전트용 Word/Excel/PowerPoint 읽기·편집·자동화 CLI (내장 렌더링, 수식 계산). 버전을 고정하고 자동 업데이트를 끈다(기본값은 켜짐이라 시간이 지나면 환경마다 버전이 달라진다) |
+| `hyperresearch` | 0.12.0 | research,python | Claude Code 를 딥 리서치 에이전트로 전환 (16단계 파이프라인, 인용 검증). --global 로 ~/.claude 에 /hyperresearch 스킬과 에이전트만 설치, 프로젝트는 건드리지 않음 |
+| `paperclipai` | 2026.1005.0 | agents,orchestration | AI 에이전트 팀을 조직도·예산·목표로 관리하는 Node 서버+React UI 의 CLI. 설치는 CLI 만 하고, 서버 시작은 직접 `paperclipai onboard` (내장 Postgres 와 설정 파일을 만든다) |
+| `graft` | 0.21.1 | agents,context,code-intel | 코드베이스를 그래프로 만들어 에이전트에 연결하는 컨텍스트 레이어 CLI. 설치 때만 텔레메트리를 끈다(DO_NOT_TRACK). 프로젝트 연결은 직접 `graft init` |
+| `specify` | 1.1.1 | spec,methodology,python | GitHub 공식 Spec Kit CLI(MIT). 스펙 주도 개발용 프로젝트 골격(.specify/)과 에이전트 슬래시 명령을 만든다. 설치는 CLI 만 하고, 프로젝트 적용은 직접 `specify init <이름> --integration claude` |
+| `agent-reach` | 커밋 a19a171 | research,web,python | Twitter/X·Reddit·YouTube·Bilibili·샤오홍슈 등 16개 플랫폼을 읽는 CLI(MIT). 검토한 커밋에 고정해 설치(PyPI 의 agent-reach 는 다른 프로젝트). 스킬과 외부 도구 설치(--system)는 자동 실행하지 않음 |
+| `orx` | 0.2.15 | agents,autoresearch | alphaXiv OpenResearch 의 CLI(orx, MIT): 연구 에이전트용 로컬 워크스페이스·실험 트리·원격 연산 실행. v0.2.15 릴리스에 고정해 체크섬 검증 설치(~/.local/bin/orx, 셸 설정 변경 없음). 첫 실행부터 텔레메트리가 기본 켜짐 — 끄려면 `orx telemetry off`. 서버(orx up)와 스킬(orx install-skills)은 자동 실행하지 않음 |
+| `pdf-inspector` | 1.25.2 | docs,pdf | Firecrawl 의 PDF 분류·텍스트 추출·Markdown 변환 CLI(Rust 기반, MIT). 텍스트 PDF 를 OCR 없이 로컬에서 빠르게 변환하고 스캔 PDF 는 detect 로 구분한다. markitdown 과 같은 용도의 대안 |
+| `im-not-ai` | 커밋 2f3d943 | writing,korean | 한글 AI 글투 제거(번역투·기계적 병렬·관용구 등). 스킬 4개와 서브에이전트를 ~/.claude 에 심볼릭 링크로 연결(검토한 커밋에 고정, 클론은 ~/.local/share/im-not-ai 에 유지해야 함). blader/humanizer 의 한국어 짝 |
+| `officecli-skills` | — | docs,office,skills | officecli 에 내장된 스킬 11개(기본 officecli + pptx·word·excel·word-form·morph-ppt·morph-ppt-3d·pitch-deck·academic-paper·data-dashboard·financial-model)를 감지된 에이전트에 설치. 스킬이 바이너리에 내장돼 있어 고정한 officecli 버전과 항상 같다 |
+<!-- END:generated:tools -->
+
+---
+
 ## 스킬 (Agent Skills)
 
 Agent Skills 는 `SKILL.md`(YAML frontmatter + 마크다운 지시문) 를 담은 폴더입니다.

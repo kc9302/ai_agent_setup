@@ -44,7 +44,7 @@ while IFS= read -r -u 3 line; do
   seen_t[$name]=1
 
   # 고정 검사: 도구는 설치 시점의 최신판이 아니라 정해진 버전·커밋·해시로 설치돼야 한다.
-  # 고정할 수 없는 도구는 tags 에 `unpinned` 를 쓰고 설명에 `미고정:` 사유를 적는다(README 표에 그대로 나온다).
+  # 고정할 수 없는 도구는 tags 에 `unpinned` 를 쓰고 설명에 `미고정:` 사유를 적는다(CATALOG 표에 그대로 나온다).
   tags="${FIELDS[3]:-}"
   if has_tag "$tags" unpinned; then
     case "$desc" in *"미고정:"*) ;; *) fail "tools.list: $name 은 unpinned 인데 설명에 '미고정: <사유>' 가 없습니다" ;; esac
@@ -115,9 +115,9 @@ if command -v node >/dev/null 2>&1; then
   if ! printf '%s' "$m" | grep -q 'npx -y skills@[0-9.]* add'; then fail "--profile minimal 이 아무 스킬도 설치하지 않습니다"; fi
 fi
 
-# README 의 숫자 요약과 스킬·도구 표는 manifest 에서 생성한다. 손으로 고쳐 어긋나면 여기서 막는다.
-info "checking README generated blocks against manifest"
-bash "$REPO_ROOT/scripts/gen-docs.sh" --check >/dev/null || fail "README.md 가 manifest 와 다릅니다 (bash scripts/gen-docs.sh 로 다시 쓰세요)"
+# README 의 숫자 요약과 CATALOG 의 스킬·도구 표는 manifest 에서 생성한다. 손으로 고쳐 어긋나면 여기서 막는다.
+info "checking README/CATALOG generated blocks against manifest"
+bash "$REPO_ROOT/scripts/gen-docs.sh" --check >/dev/null || fail "README.md 또는 CATALOG.md 가 manifest 와 다릅니다 (bash scripts/gen-docs.sh 로 다시 쓰세요)"
 
 # radar.sh 는 후보 데이터(candidates.json)를 만든다. 제외 규칙과 문자열 정리가 깨지지 않았는지 네트워크 없이 확인한다.
 if command -v jq >/dev/null 2>&1; then
