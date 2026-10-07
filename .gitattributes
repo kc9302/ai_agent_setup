@@ -1,0 +1,15 @@
+# 이 저장소의 모든 텍스트 파일은 어느 OS 에서 체크아웃해도 LF 로 둔다.
+# Windows 의 Git 기본값(core.autocrlf=true)이면 .sh 가 CRLF 가 되어 bash 에서 `$'\r': command not found` 로 깨지고,
+# skills/ 의 로컬 스킬이 Linux·맥과 다른 바이트로 설치된다(CI 의 스냅샷 비교에서 실제로 확인됨).
+* text=auto eol=lf
+*.sh text eol=lf
+*.mjs text eol=lf
+*.list text eol=lf
+*.gif binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary

@@ -20,6 +20,7 @@
 | 도구 (`manifest/tools.list`) | **버전·커밋·해시로 고정됨(직접 설치하는 패키지까지).** npm·uv 는 `@버전`/`==버전`, git 은 40자리 커밋, 받아서 실행하는 설치 스크립트(uv, orx)는 sha256 을 확인한 뒤 실행합니다. `check` 는 "있다"가 아니라 **그 버전이다**를 확인하므로, 다른 버전이 이미 깔려 있으면 정해진 버전으로 다시 설치합니다(더 새 버전이어도 내려갑니다) |
 | 설치기가 쓰는 skills CLI | **고정됨.** `manifest/skills-cli.version` (`npx -y skills@<버전>`) |
 | MCP 서버 등록 (leann, context7, playwright) | 등록하는 패키지는 고정(`npx -y 패키지@버전`)이지만, 이미 등록돼 있으면 건너뛰므로 **다른 버전으로 등록된 것은 바꾸지 않습니다**. `claude` CLI 가 있을 때만 등록됩니다 |
+| 줄바꿈 | 설치기가 skills CLI 의 git 에 `core.autocrlf=false` 를 강제하고, 이 저장소는 `.gitattributes` 로 체크아웃을 LF 로 고정합니다. Windows 의 Git 기본값(`autocrlf=true`)이면 받은 스킬이 CRLF 가 되어 Linux·맥과 다른 바이트로 설치되고, 스킬에 든 `.sh` 는 bash 에서 깨졌습니다(CI 의 세 OS 비교에서 확인). **이 수정 전에 Windows 에 설치한 스킬은 CRLF 일 수 있으니 설치기를 다시 실행하세요** |
 | 고정되지 않는 것 | 고정한 패키지의 **전이 의존성**(그 패키지가 끌어오는 다른 패키지)과, 업스트림이 버전·커밋을 지우는 경우. 후자는 아직 감시하지 않습니다 |
 
 그래서 **같은 버전의 같은 패키지가 깔린다**까지는 말할 수 있지만, 전이 의존성까지 비트 단위로 같다는 뜻은 아닙니다. 버전을 올릴 때는 `manifest/tools.list` 의 설치 명령과 `check` 의 버전을 함께 고치고(`skills CLI` 는 `manifest/skills-cli.version` 도), `bash scripts/validate.sh` 가 버전 없이 넣은 도구와 해시 확인 없이 받아 실행하는 명령을 막아 줍니다. 고정할 수 없는 도구는 `tags` 에 `unpinned` 를, 설명에 `미고정: 사유` 를 적어야 통과합니다.
@@ -31,6 +32,7 @@
 | Linux 빈 환경 + Claude Code | 검증됨. `bootstrap.sh` 전체, `verify.sh`, 2차 실행(멱등), Node 설치기를 반복해서 확인했습니다 |
 | GitHub Actions (ubuntu / macOS / Windows) | 검증됨. 세 OS 에서 Node 설치기 dry-run·로컬 스킬 실제 설치·와일드카드 소스 1개 실제 설치. macOS 러너에서는 `bootstrap.sh` 전체(스킬 + 도구)를 실제로 실행하고 `verify.sh`·2차 실행까지 확인합니다 |
 | 소유자의 Windows PC | 소유자 보고: Git Bash `bootstrap.sh` 로 스킬과 도구 21개 중 19개 설치, PowerShell Node 설치기로 스킬 설치 정상. 이후 `graft`·`im-not-ai` 처리와 Node 사전 점검을 바꿨고 **그 뒤의 재실행 기록은 아직 없습니다** |
+| 세 OS 의 설치 결과 비교 | CI 가 ubuntu·macOS·Windows 에서 같은 설치기로 스킬 전체를 깔고 설치된 파일을 직접 해시해 비교합니다(`scripts/snapshot.mjs --diff`). 다르면 CI 가 실패합니다. 이 비교가 Windows 의 CRLF 문제를 찾아냈습니다 |
 | 실제 맥북 | **미검증.** 맥은 CI 러너에서만 확인했습니다 |
 | 실제 WSL | **미검증.** WSL 오설치 감지 로직만 시험했습니다 |
 | Codex · Cursor · Gemini CLI · OpenCode | **미검증.** skills CLI 가 에이전트를 자동 감지해 각 폴더에 설치한다고 하지만 이 저장소에서 확인한 적은 없습니다. 검증은 Claude Code 에서만 했습니다 |

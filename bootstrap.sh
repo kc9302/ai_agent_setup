@@ -36,6 +36,11 @@ fi
 source "$(dirname "${BASH_SOURCE[0]}")/scripts/lib.sh"
 # tools.list 의 install/check 가 이 저장소의 보조 스크립트(scripts/fetch-verified.sh)를 부를 때 쓴다.
 export AI_SETUP_ROOT="$REPO_ROOT"
+# skills CLI 와 도구가 쓰는 git 이 줄바꿈을 바꾸지 않게 한다. Windows 의 Git 기본값(core.autocrlf=true)이면 받은 스킬·스크립트가 CRLF 가 되어
+# Linux·맥과 다른 바이트로 설치되고 .sh 는 bash 에서 깨진다. 환경변수 설정은 전역 git 설정보다 우선한다.
+_gc="${GIT_CONFIG_COUNT:-0}"
+export "GIT_CONFIG_KEY_${_gc}=core.autocrlf" "GIT_CONFIG_VALUE_${_gc}=false" "GIT_CONFIG_COUNT=$((_gc + 1))"
+unset _gc
 
 # ---- 옵션 -------------------------------------------------------------------
 SCOPE_FLAG="-g"

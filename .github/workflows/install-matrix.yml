@@ -71,6 +71,21 @@ jobs:
           test -d "$H/.claude/skills/karpathy-guidelines" || { echo "missing: karpathy-guidelines (core source)"; ls -la "$H/.claude/skills" || true; exit 1; }
           if [ -d "$H/.claude/skills/skill-radar" ]; then echo "minimal must not install this repository's local skills"; exit 1; fi
 
+      - name: "skills stay LF even when git's autocrlf is on (the Windows default)"
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-eol"
+          mkdir -p "$H/.claude"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          printf '[core]\n\tautocrlf = true\n' > "$RUNNER_TEMP/gitconfig-autocrlf"
+          export GIT_CONFIG_GLOBAL="$(cygpath -w "$RUNNER_TEMP/gitconfig-autocrlf" 2>/dev/null || echo "$RUNNER_TEMP/gitconfig-autocrlf")"
+          node scripts/install-skills.mjs --tag behavior
+          f="$H/.agents/skills/karpathy-guidelines/SKILL.md"
+          test -f "$f" || { echo "missing: $f"; exit 1; }
+          if grep -q $'\r' "$f"; then echo "CRLF found in an installed skill although the installer forces core.autocrlf=false"; exit 1; fi
+          echo "LF only"
+
   bootstrap-dry-run:
     name: bootstrap.sh dry-run (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
