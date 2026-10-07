@@ -47,6 +47,30 @@ jobs:
           node scripts/install-skills.mjs --tag writing
           test -d "$H/.claude/skills/humanizer" || { echo "missing: humanizer"; ls -la "$H/.claude/skills" || true; exit 1; }
 
+      - name: "--diff warns about a pre-existing skill with the same name and changes nothing"
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-diff"
+          mkdir -p "$H/.claude/skills/docx"
+          printf -- '---\nname: docx\ndescription: mine\n---\nmine\n' > "$H/.claude/skills/docx/SKILL.md"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          out="$(node scripts/install-skills.mjs --profile minimal --diff 2>&1)"
+          echo "$out" | tail -14
+          echo "$out" | grep -q '출처 불명의 같은 이름.*: 1개' || { echo "expected exactly one overwrite warning (docx)"; exit 1; }
+          echo "$out" | grep -q '아무것도 설치하지 않았습니다' || { echo "--diff must say it installed nothing"; exit 1; }
+          grep -q '^mine$' "$H/.claude/skills/docx/SKILL.md" || { echo "--diff modified an existing skill"; exit 1; }
+      - name: "--profile minimal installs the core sources only (no local skills)"
+        shell: bash
+        run: |
+          H="$RUNNER_TEMP/h-min"
+          mkdir -p "$H/.claude"
+          export HOME="$H"
+          export USERPROFILE="$(cygpath -w "$H" 2>/dev/null || echo "$H")"
+          node scripts/install-skills.mjs --profile minimal
+          test -d "$H/.claude/skills/karpathy-guidelines" || { echo "missing: karpathy-guidelines (core source)"; ls -la "$H/.claude/skills" || true; exit 1; }
+          if [ -d "$H/.claude/skills/skill-radar" ]; then echo "minimal must not install this repository's local skills"; exit 1; fi
+
   bootstrap-dry-run:
     name: bootstrap.sh dry-run (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
